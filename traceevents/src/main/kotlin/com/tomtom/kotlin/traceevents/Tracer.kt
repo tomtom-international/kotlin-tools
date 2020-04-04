@@ -203,7 +203,7 @@ class Tracer private constructor(
             } else {
 
                 // Only format the message for non-standard Log events. Use the annotated log level.
-                logAtLevel(logLevel, tagOwnerClass, "event=${createLogMessage(event)}")
+                Log.log(logLevel, tagOwnerClass, "event=${createLogMessage(event)}")
             }
         }
         offerTraceEvent(event, now)
@@ -268,10 +268,6 @@ class Tracer private constructor(
                     incorrectLogSignatureFound()
                 }
             } else {
-                logAtLevel(
-                        traceEvent.logLevel, tagOwnerClass,
-                        "event=${createLogMessage(traceEvent)}"
-                )
             }
         }
     }
@@ -443,13 +439,14 @@ class Tracer private constructor(
             }
             val message = args[0] as String
             val e: Throwable? = args.let { if (args.size == 2) args[1] as Throwable else null }
-            when (functionName) {
-                FUN_VERBOSE -> Log.log(Log.Level.VERBOSE, tag, message, e)
-                FUN_DEBUG -> Log.log(Log.Level.DEBUG, tag, message, e)
-                FUN_INFO -> Log.log(Log.Level.INFO, tag, message, e)
-                FUN_WARN -> Log.log(Log.Level.WARN, tag, message, e)
-                FUN_ERROR -> Log.log(Log.Level.ERROR, tag, message, e)
+            val level = when (functionName) {
+                FUN_VERBOSE -> Log.Level.VERBOSE
+                FUN_DEBUG -> Log.Level.DEBUG
+                FUN_INFO -> Log.Level.INFO
+                FUN_WARN -> Log.Level.WARN
+                else -> Log.Level.ERROR
             }
+            Log.log(level, tag, message, e)
             return true
         }
 
@@ -466,16 +463,6 @@ class Tracer private constructor(
             return "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
                     "${traceEvent.functionName}(${traceEvent.args.joinToString()}) " +
                     "- $traceEvent.ownerClass"
-        }
-
-        internal fun logAtLevel(logLevel: Log.Level, tag: String?, msg: String) {
-            when (logLevel) {
-                Log.Level.VERBOSE -> Log.log(Log.Level.VERBOSE, tag, msg)
-                Log.Level.DEBUG -> Log.log(Log.Level.DEBUG, tag, msg)
-                Log.Level.INFO -> Log.log(Log.Level.INFO, tag, msg)
-                Log.Level.WARN -> Log.log(Log.Level.WARN, tag, msg)
-                Log.Level.ERROR -> Log.log(Log.Level.ERROR, tag, msg)
-            }
         }
     }
 }
