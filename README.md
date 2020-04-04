@@ -79,12 +79,18 @@ You can replace the default logger, which logs to `println` with your own by cre
 instance of the interface `Log.Logger` like this:
 
 ```
-object MySimpleLogger : Logger {
-    override fun log(level: String, tag: String?, message: String, e: Throwable?) =
-        println("[$level] $tag: $message, $e")
+import android.util.Log
+
+object MyAndroidLogger : Logger {
+    override fun log(level: Log.Level, tag: String?, message: String, e: Throwable?) =
+        when (level) {
+            Log.Level.DEBUG -> Log.d(tag, message, e)
+            Log.Level.INFO -> Log.d(tag, message, e)
+            ...
+        }
 }
 
-setLogger(MySimpleLogger) 
+setLogger(MyAndroidLogger) 
 ```
 
 Or, to reset it to the default implementation:

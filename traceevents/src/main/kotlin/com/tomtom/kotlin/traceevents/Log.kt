@@ -7,10 +7,10 @@ interface Log {
     enum class Level { VERBOSE, DEBUG, INFO, WARN, ERROR }
 
     /**
-     * Implement this interface for your own logger and set [theLogger] accordingly.
+     * Implement this interface for your own logger and set [log] accordingly.
      */
     interface Logger {
-        fun log(level: String, tag: String?, message: String, e: Throwable? = null)
+        fun log(level: Level, tag: String?, message: String, e: Throwable? = null)
     }
 
     companion object {
@@ -23,26 +23,22 @@ interface Log {
         }
 
         /**
-         * Default implementation for [theLogger].
+         * Function to log a string message with a log level.
          */
-        object DefaultLoggerToStdout : Logger {
-            override fun log(level: String, tag: String?, message: String, e: Throwable?) {
+        internal fun log(level: Level, tag: String?, message: String, e: Throwable? = null) =
+                theLogger.log(level, tag, message, e)
+
+        /**
+         * Default implementation for [log].
+         */
+        internal object DefaultLoggerToStdout : Logger {
+            override fun log(level: Level, tag: String?, message: String, e: Throwable?) {
                 val exceptionMsg = e?.message?.let { ", $it" } ?: ""
                 println("${LocalDateTime.now()}: [$level] $tag: $message$exceptionMsg}")
             }
         }
 
-        private var theLogger: Logger = DefaultLoggerToStdout
+        internal var theLogger: Logger = DefaultLoggerToStdout
 
-        /**
-         * This method is called in this library only.
-         */
-        internal fun log(level: Level, tag: String?, message: String, e: Throwable? = null) = when (level) {
-            Level.VERBOSE -> theLogger.log("VERBOSE", tag, message, e)
-            Level.DEBUG -> theLogger.log("DEBUG", tag, message, e)
-            Level.INFO -> theLogger.log("INFO", tag, message, e)
-            Level.WARN -> theLogger.log("WARN", tag, message, e)
-            Level.ERROR -> theLogger.log("ERROR", tag, message, e)
-        }
     }
 }
