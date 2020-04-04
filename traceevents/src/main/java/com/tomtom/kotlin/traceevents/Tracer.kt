@@ -131,8 +131,7 @@ class Tracer private constructor(
              * Get an event logger for a specific class.
              *
              * @param ownerClass Class to get an event logger for, specified as `this::class`.
-             * @return [TraceEventListener]-derived object, normally called the "tracer",
-             * to be used as `tracer.someEvent()`.
+             * @return The "tracer", to be used as `tracer.someEvent()`.
              */
             inline fun <reified T : TraceEventListener> create(ownerClass: KClass<*>) =
                     createForListener<T>(ownerClass, T::class)
