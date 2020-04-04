@@ -45,7 +45,7 @@ data class TraceEvent(
         if (ownerClass != other.ownerClass) return false
         if (interfaceName != other.interfaceName) return false
         if (functionName != other.functionName) return false
-        if (!args.contentEquals(other.args)) return false
+        if (!args.contentDeepEquals(other.args)) return false
 
         return true
     }
@@ -56,7 +56,7 @@ data class TraceEvent(
         result = 31 * result + ownerClass.hashCode()
         result = 31 * result + interfaceName.hashCode()
         result = 31 * result + functionName.hashCode()
-        result = 31 * result + args.contentHashCode()
+        result = 31 * result + args.contentDeepHashCode()
         return result
     }
 }

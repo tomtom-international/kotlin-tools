@@ -76,13 +76,22 @@ always processed in asynchronous mode.
 ## Using your own default logger (such as Android Log)
 
 You can replace the default logger, which logs to `println` with your own by creating an
-instance of the interface `Log.Logger` and calling:
+instance of the interface `Log.Logger` like this:
 
 ```
-Log.theLogger = myLogger 
+object MySimpleLogger : Logger {
+    override fun log(level: String, tag: String?, message: String, e: Throwable?) =
+        println("[$level] $tag: $message, $e")
+}
+
+setLogger(MySimpleLogger) 
 ```
 
-This way you can use the tracer to send trace events to the Android `Log` class.
+Or, to reset it to the default implementation:
+
+```
+setLogger() 
+```
 
 ## Logging in tests
 

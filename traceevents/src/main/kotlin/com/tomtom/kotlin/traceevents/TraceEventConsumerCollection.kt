@@ -10,7 +10,6 @@
  */
 package com.tomtom.kotlin.traceevents
 
-import com.tomtom.kotlin.traceevents.Log
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass

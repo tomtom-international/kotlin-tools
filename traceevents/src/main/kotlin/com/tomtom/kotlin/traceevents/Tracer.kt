@@ -218,8 +218,8 @@ class Tracer private constructor(
         if (!traceEventChannel.offer(event)) {
             if (syncLoggingEnabled) {
 
-                // Don't repeat the event if it was logged already by Android Log. If the event
-                // was a Android Log event, don't even mention the overflow (not useful).
+                // Don't repeat the event if it was logged already by the logger. If the event
+                // was a simple log event, don't even mention the overflow (not useful).
                 if (!predefinedLogFunctionNames.contains(event.functionName)) {
                     Log.log(Log.Level.DEBUG, tagOwnerClass, "Event lost, event=(see previous line)")
                 }
@@ -258,7 +258,7 @@ class Tracer private constructor(
             val tagOwnerClass = tagFromOwnerClassName(traceEvent.ownerClass)
             if (predefinedLogFunctionNames.contains(traceEvent.functionName)) {
 
-                // Don't reformat the message if this is a standard Android Log message.
+                // Don't reformat the message if this is a standard log message.
                 if (!usePredefinedLogFunction(
                                 tagOwnerClass,
                                 traceEvent.functionName, traceEvent.args
@@ -427,7 +427,7 @@ class Tracer private constructor(
         ): Boolean {
 
             /**
-             * The first 2 arguments of an Android Log function must be String and Throwable. This
+             * The first 2 arguments of a log function must be String and Throwable. This
              * can only happen if you override the log functions with an incorrect signature.
              * Nevertheless, we want to be robust against this sort of mistake as we cannot
              * resolve this compile-time.

@@ -11,8 +11,6 @@
 
 package com.tomtom.kotlin.traceevents
 
-import com.tomtom.kotlin.traceevents.Log
-import io.mockk.MockKMatcherScope
 import io.mockk.coVerifySequence
 import io.mockk.spyk
 import io.mockk.verify
@@ -23,15 +21,12 @@ import kotlinx.coroutines.runBlocking
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Before
 import org.junit.Test
-import kotlin.reflect.jvm.jvmName
+import org.mockito.ArgumentMatchers.eq
 
 class TracerTest {
 
     interface MyEvents : TraceEventListener {
 
-        /**
-         * Define some event functions.
-         */
         fun eventNoArgs()
 
         fun eventString(message: String)
@@ -45,51 +40,28 @@ class TracerTest {
         fun d()
     }
 
-    private val TAG = TracerTest::class.simpleName
-
     class SpecificConsumer : MyEvents, TraceEventConsumer {
-        override fun eventNoArgs() {
-            Log.log(Log.Level.DEBUG, "TAG", "eventNoArgs()")
-        }
+        override fun eventNoArgs() =
+                Log.log(Log.Level.DEBUG, "TAG", "eventNoArgs()")
 
-        override fun eventString(message: String) {
-            Log.log(Log.Level.DEBUG, "TAG", "eventString()")
-        }
+        override fun eventString(message: String) =
+                Log.log(Log.Level.DEBUG, "TAG", "eventString()")
 
-        override fun eventIntsString(number1: Int, number2: Int, message: String) {
-            Log.log(Log.Level.DEBUG, "TAG", "eventIntsString()")
-        }
+        override fun eventIntsString(number1: Int, number2: Int, message: String) =
+                Log.log(Log.Level.DEBUG, "TAG", "eventIntsString()")
 
-        override fun d() {
-            Log.log(Log.Level.DEBUG, "TAG", "d()")
-        }
+        override fun d() =
+                Log.log(Log.Level.DEBUG, "TAG", "d()")
     }
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
-        override suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
-            Log.log(Log.Level.DEBUG,
-                    "TAG", "event=${traceEvent.functionName}, " +
-                    "args=${traceEvent.args.joinToString {
-                        it.javaClass.simpleName + ":" + it.toString()
-                    }}"
-            )
-        }
+        override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
+                Log.log(Log.Level.DEBUG, "TAG", "${traceEvent.functionName}")
     }
 
-    private val sut = Tracer.Factory.create<MyEvents>(this::class)
+    private val TAG = TracerTest::class.simpleName
 
-    private fun MockKMatcherScope.traceEq(
-            logLevel: Log.Level,
-            functionName: String,
-            vararg args: Any
-    ) = match<TraceEvent> { traceEvent ->
-        traceEvent.logLevel == logLevel &&
-                traceEvent.ownerClass == TracerTest::class.qualifiedName &&
-                traceEvent.interfaceName == MyEvents::class.jvmName &&
-                traceEvent.functionName == functionName &&
-                traceEvent.args.map { it.javaClass } == args.map { it.javaClass } &&
-                traceEvent.args.contentDeepEquals(args)
-    }
+    private val sut = Tracer.Factory.create<TracerTest.MyEvents>(this::class)
 
     @Before
     fun setUp() {
@@ -112,7 +84,7 @@ class TracerTest {
     @Test
     fun `specific consumer`() {
         // GIVEN
-        val consumer = spyk(SpecificConsumer())
+        val consumer = spyk(TracerTest.SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -123,15 +95,15 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString("abc")
-            consumer.eventIntsString(10, 20, "abc")
+            consumer.eventString(eq("abc"))
+            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
         }
     }
 
     @Test
     fun `generic consumer`() {
         // GIVEN
-        val consumer = spyk(GenericConsumer())
+        val consumer = spyk(TracerTest.GenericConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -150,7 +122,7 @@ class TracerTest {
     @Test
     fun `duplicate events`() {
         // GIVEN
-        val consumer = spyk(SpecificConsumer())
+        val consumer = spyk(TracerTest.SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -164,7 +136,7 @@ class TracerTest {
     @Test
     fun `remove consumer`() {
         // GIVEN
-        val consumer = spyk(SpecificConsumer())
+        val consumer = spyk(TracerTest.SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
         Tracer.removeTraceEventConsumer(consumer)
 
@@ -178,7 +150,7 @@ class TracerTest {
     @Test
     fun `duplicate consumer`() {
         // GIVEN
-        val consumer = spyk(SpecificConsumer())
+        val consumer = spyk(TracerTest.SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
         Tracer.addTraceEventConsumer(consumer)
 
@@ -192,8 +164,8 @@ class TracerTest {
     @Test
     fun `multiple consumers`() {
         // GIVEN
-        val consumer1 = spyk(SpecificConsumer())
-        val consumer2 = spyk(SpecificConsumer())
+        val consumer1 = spyk(TracerTest.SpecificConsumer())
+        val consumer2 = spyk(TracerTest.SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer1)
         Tracer.addTraceEventConsumer(consumer2)
 
@@ -223,8 +195,8 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString("abc")
-            consumer.eventIntsString(10, 20, "abc")
+            consumer.eventString(eq("abc"))
+            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
         }
 
         // WHEN
@@ -250,11 +222,11 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString("abc")
-            consumer.eventIntsString(10, 20, "abc")
+            consumer.eventString(eq("abc"))
+            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
 
             // Make sure we only have the last added event here.
-            consumer.eventIntsString(11, 22, "xyz")
+            consumer.eventIntsString(eq(11), eq(22), eq("xyz"))
         }
     }
 
@@ -271,10 +243,10 @@ class TracerTest {
 
         // THEN
         verifySequence {
-            consumer.d("abc")
+            consumer.d(eq("abc"))
             consumer.incorrectLogSignatureFound()
             consumer.d()
-            consumer.d("xyz")
+            consumer.d(eq("xyz"))
         }
     }
 

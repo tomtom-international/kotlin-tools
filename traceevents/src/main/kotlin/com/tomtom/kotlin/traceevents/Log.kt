@@ -13,13 +13,26 @@ interface Log {
         fun log(level: String, tag: String?, message: String, e: Throwable? = null)
     }
 
-
     companion object {
         /**
-         * Override this function if you need to use a different logger than the default
+         * Call this function if you need to use a different logger than the default
          * implementation, which uses [println].
          */
-        var theLogger: Logger = PrinLnLogger()
+        fun setLogger(logger: Logger = DefaultLoggerToStdout) {
+            theLogger = logger
+        }
+
+        /**
+         * Default implementation for [theLogger].
+         */
+        object DefaultLoggerToStdout : Logger {
+            override fun log(level: String, tag: String?, message: String, e: Throwable?) {
+                val exceptionMsg = e?.message?.let { ", $it" } ?: ""
+                println("${LocalDateTime.now()}: [$level] $tag: $message$exceptionMsg}")
+            }
+        }
+
+        private var theLogger: Logger = DefaultLoggerToStdout
 
         /**
          * This method is called in this library only.
@@ -30,16 +43,6 @@ interface Log {
             Level.INFO -> theLogger.log("INFO", tag, message, e)
             Level.WARN -> theLogger.log("WARN", tag, message, e)
             Level.ERROR -> theLogger.log("ERROR", tag, message, e)
-        }
-
-        /**
-         * Default implementation for [theLogger].
-         */
-        private class PrinLnLogger : Logger {
-            override fun log(level: String, tag: String?, message: String, e: Throwable?) {
-                val exceptionMsg = e?.message?.let { ", $it" } ?: ""
-                println("${LocalDateTime.now()}: [$level] $tag: $message$exceptionMsg}")
-            }
         }
     }
 }
