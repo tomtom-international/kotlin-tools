@@ -119,7 +119,7 @@ import kotlin.reflect.full.isSubclassOf
  * ```
  */
 class Tracer private constructor(
-        private val ownerClass: KClass<*>
+    private val ownerClass: KClass<*>
 ) : InvocationHandler {
 
     private val tagOwnerClass = tagFromOwnerClassName(ownerClass.java.name)
@@ -134,16 +134,16 @@ class Tracer private constructor(
              * @return The "tracer", to be used as `tracer.someEvent()`.
              */
             inline fun <reified T : TraceEventListener> create(ownerClass: KClass<*>) =
-                    createForListener<T>(ownerClass, T::class)
+                createForListener<T>(ownerClass, T::class)
 
             @Suppress("UNCHECKED_CAST")
             fun <T : TraceEventListener> createForListener(
-                    ownerClass: KClass<*>,
-                    traceEventListener: KClass<out TraceEventListener>
+                ownerClass: KClass<*>,
+                traceEventListener: KClass<out TraceEventListener>
             ) = Proxy.newProxyInstance(
-                    ownerClass.java.classLoader,
-                    arrayOf<Class<*>?>(traceEventListener.java),
-                    Tracer(ownerClass)
+                ownerClass.java.classLoader,
+                arrayOf<Class<*>?>(traceEventListener.java),
+                Tracer(ownerClass)
             ) as T
         }
     }
@@ -167,7 +167,7 @@ class Tracer private constructor(
          */
         proxy as TraceEventListener
         val logLevel =
-                method.getDeclaredAnnotation(LogLevel::class.java)?.logLevel ?: Log.Level.DEBUG
+            method.getDeclaredAnnotation(LogLevel::class.java)?.logLevel ?: Log.Level.DEBUG
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -181,12 +181,12 @@ class Tracer private constructor(
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
         val event = TraceEvent(
-                now,
-                logLevel,
-                ownerClass.java.name,
-                method.declaringClass.name,
-                method.name,
-                args ?: arrayOf()
+            now,
+            logLevel,
+            ownerClass.java.name,
+            method.declaringClass.name,
+            method.name,
+            args ?: arrayOf()
         )
 
         /**
@@ -211,8 +211,8 @@ class Tracer private constructor(
     }
 
     private fun offerTraceEvent(
-            event: TraceEvent,
-            now: LocalDateTime?
+        event: TraceEvent,
+        now: LocalDateTime?
     ) {
         if (!traceEventChannel.offer(event)) {
             if (syncLoggingEnabled) {
@@ -225,7 +225,11 @@ class Tracer private constructor(
             } else {
 
                 // Only format the message for lost events that weren't logged already.
-                Log.log(Log.Level.WARN, tagOwnerClass, "Event lost, event=${createLogMessage(event)}")
+                Log.log(
+                    Log.Level.WARN,
+                    tagOwnerClass,
+                    "Event lost, event=${createLogMessage(event)}"
+                )
             }
             ++nrLostTraceEventsSinceLastMsg
             ++nrLostTraceEventsTotal
@@ -233,13 +237,14 @@ class Tracer private constructor(
 
         // If we lost events, write a log message to indicate so, but at most once every x seconds.
         if (nrLostTraceEventsSinceLastMsg > 0 &&
-                timeLastLostTraceEvent.plusSeconds(LIMIT_WARN_SECS).isBefore(now)
+            timeLastLostTraceEvent.plusSeconds(LIMIT_WARN_SECS).isBefore(now)
         ) {
-            Log.log(Log.Level.WARN,
-                    tagOwnerClass,
-                    "Trace event channel is full, " +
-                            "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
-                            "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
+            Log.log(
+                Log.Level.WARN,
+                tagOwnerClass,
+                "Trace event channel is full, " +
+                    "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
+                    "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
             )
             nrLostTraceEventsSinceLastMsg = 0L
             timeLastLostTraceEvent = now
@@ -259,9 +264,9 @@ class Tracer private constructor(
 
                 // Don't reformat the message if this is a standard log message.
                 if (!usePredefinedLogFunction(
-                                tagOwnerClass,
-                                traceEvent.functionName, traceEvent.args
-                        )
+                        tagOwnerClass,
+                        traceEvent.functionName, traceEvent.args
+                    )
                 ) {
 
                     // Signal the listener an incorrect signature was found.
@@ -282,7 +287,7 @@ class Tracer private constructor(
         private const val FUN_ERROR = "e"
 
         internal val predefinedLogFunctionNames =
-                setOf(FUN_VERBOSE, FUN_DEBUG, FUN_INFO, FUN_WARN, FUN_ERROR)
+            setOf(FUN_VERBOSE, FUN_DEBUG, FUN_INFO, FUN_WARN, FUN_ERROR)
 
         /**
          * Set to true to start processing, false to discard events.
@@ -347,9 +352,9 @@ class Tracer private constructor(
              */
             if (!::eventProcessorJob.isInitialized || eventProcessorJob.isCancelled) {
                 eventProcessorJob =
-                        eventProcessorScope.launch(CoroutineName("processTraceEvents")) {
-                            processTraceEvents()
-                        }
+                    eventProcessorScope.launch(CoroutineName("processTraceEvents")) {
+                        processTraceEvents()
+                    }
             }
         }
 
@@ -416,9 +421,9 @@ class Tracer private constructor(
         }
 
         internal fun usePredefinedLogFunction(
-                tag: String,
-                functionName: String,
-                args: Array<out Any>?
+            tag: String,
+            functionName: String,
+            args: Array<out Any>?
         ): Boolean {
 
             /**
@@ -428,9 +433,12 @@ class Tracer private constructor(
              * resolve this compile-time.
              */
             if (args == null || args.isEmpty() || args[0]::class != String::class ||
-                    (args.size == 2 && args[1]::class.isSubclassOf(Throwable::class)) || args.size > 2
+                (args.size == 2 && args[1]::class.isSubclassOf(Throwable::class)) || args.size > 2
             ) {
-                Log.log(Log.Level.ERROR, TAG, "Incorrect log call, expected arguments (String, Throwable), " +
+                Log.log(
+                    Log.Level.ERROR,
+                    TAG,
+                    "Incorrect log call, expected arguments (String, Throwable), " +
                         "args=${args?.joinToString {
                             it.javaClass.simpleName + ":" + it.toString()
                         }}"
@@ -461,8 +469,8 @@ class Tracer private constructor(
 
         internal fun createLogMessage(traceEvent: TraceEvent): String {
             return "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
-                    "${traceEvent.functionName}(${traceEvent.args.joinToString()}) " +
-                    "- $traceEvent.ownerClass"
+                "${traceEvent.functionName}(${traceEvent.args.joinToString()}) " +
+                "- $traceEvent.ownerClass"
         }
     }
 }

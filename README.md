@@ -296,6 +296,18 @@ To build the library JAR:
 mvn clean package
 ```
 
+## Contributing and coding formatting
+
+If you wish to contribute to this project, please feel free to do so and send us pull requests.
+The source code formatting must obey to the standard Kotlin formatting rules.
+
+If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this: 
+```
+Preferences -> Editor -> Code Style -> Kotlin -> (Scheme) Set From...
+```
+
+And then choose the pre-defined style `Kotlin Style Guide`. Voila!
+
 ## Credits
 
 Author: Rijn Buve
@@ -312,3 +324,8 @@ licensee agreement between you and TomTom. If you are the licensee, you are only
 to use this Software in accordance with the terms of your license agreement. If you are
 not the licensee then you are not authorised to use this software in any manner and should
 immediately return it to TomTom N.V.
+
+## Release notes
+
+* 1.0.3: `TAG` is non-nullable for loggers. 
+* 1.0.0-1.0.2: Initial release

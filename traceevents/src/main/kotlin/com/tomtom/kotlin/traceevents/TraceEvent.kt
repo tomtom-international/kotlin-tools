@@ -23,12 +23,12 @@ import java.time.LocalDateTime
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
  */
 data class TraceEvent(
-        val dateTime: LocalDateTime,
-        val logLevel: Log.Level,
-        val ownerClass: String,
-        val interfaceName: String,
-        val functionName: String,
-        val args: Array<Any>
+    val dateTime: LocalDateTime,
+    val logLevel: Log.Level,
+    val ownerClass: String,
+    val interfaceName: String,
+    val functionName: String,
+    val args: Array<Any>
 ) {
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains

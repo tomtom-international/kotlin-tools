@@ -58,8 +58,8 @@ internal class TraceEventConsumerCollection {
     }
 
     private suspend fun handleSpecificConsumer(
-            traceEventConsumer: TraceEventConsumer,
-            traceEvent: TraceEvent
+        traceEventConsumer: TraceEventConsumer,
+        traceEvent: TraceEvent
     ) {
         try {
             val traceEventListener = Class.forName(traceEvent.interfaceName).kotlin
@@ -68,10 +68,10 @@ internal class TraceEventConsumerCollection {
                 @Suppress("UNCHECKED_CAST")
                 traceEventListener as KClass<out TraceEventListener>
                 val method = findAndCacheFunction(
-                        traceEventConsumer::class,
-                        traceEventListener,
-                        traceEvent.functionName,
-                        traceEvent.args.size
+                    traceEventConsumer::class,
+                    traceEventListener,
+                    traceEvent.functionName,
+                    traceEvent.args.size
                 )
                 if (method != null) {
                     try {
@@ -79,13 +79,15 @@ internal class TraceEventConsumerCollection {
                     } catch (e: Exception) {
 
                         // Catch all exceptions, to avoid killing the event processor.
-                        Log.log(Log.Level.ERROR, TAG, "Cannot invoke consumer, " +
+                        Log.log(
+                            Log.Level.ERROR, TAG, "Cannot invoke consumer, " +
                                 "method=${method.name}, " +
                                 "args=(${traceEvent.args.joinToString()})", e
                         )
                     }
                 } else {
-                    Log.log(Log.Level.ERROR, TAG, "Method not found, " +
+                    Log.log(
+                        Log.Level.ERROR, TAG, "Method not found, " +
                             "traceEventConsumer=${traceEventConsumer::class}" +
                             "traceEventListener=$traceEventListener" +
                             "traceEvent.functionName=${traceEvent.functionName}" +
@@ -95,74 +97,83 @@ internal class TraceEventConsumerCollection {
             } else {
 
                 // Error: the trace event was not from a [TraceEvents]-derived class.
-                Log.log(Log.Level.ERROR, TAG, "Event is not a subclass of ${TraceEventListener::class}, " +
+                Log.log(
+                    Log.Level.ERROR,
+                    TAG,
+                    "Event is not a subclass of ${TraceEventListener::class}, " +
                         "traceEventListener=${traceEvent.interfaceName}"
                 )
             }
 
             // Catch (unexpected) exceptions, just to avoid killing the event processor.
         } catch (e: ClassNotFoundException) {
-            Log.log(Log.Level.ERROR, TAG, "Class not found, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e)
+            Log.log(
+                Log.Level.ERROR, TAG, "Class not found, " +
+                    "traceEventListener=${traceEvent.interfaceName}", e
+            )
         } catch (e: LinkageError) {
-            Log.log(Log.Level.ERROR, TAG, "Linkage error, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e)
+            Log.log(
+                Log.Level.ERROR, TAG, "Linkage error, " +
+                    "traceEventListener=${traceEvent.interfaceName}", e
+            )
         } catch (e: ExceptionInInitializerError) {
-            Log.log(Log.Level.ERROR, TAG, "Initialization error, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e)
+            Log.log(
+                Log.Level.ERROR, TAG, "Initialization error, " +
+                    "traceEventListener=${traceEvent.interfaceName}", e
+            )
         }
     }
 
     private suspend fun findFunctionByInspection(
-            traceEventsConsumerClass: KClass<*>,
-            traceEventListenerInterface: KClass<out TraceEventListener>,
-            traceEventFunction: String,
-            nrArgs: Int
+        traceEventsConsumerClass: KClass<*>,
+        traceEventListenerInterface: KClass<out TraceEventListener>,
+        traceEventFunction: String,
+        nrArgs: Int
     ): Method? {
 
         // First, check if the function is defined in the interface of the tracer.
         if (traceEventsConsumerClass.isSuperclassOf(traceEventListenerInterface)) {
             traceEventsConsumerClass.declaredFunctions
-                    .filter { it.name == traceEventFunction && it.valueParameters.size == nrArgs }
-                    .map { it.javaMethod }
-                    .firstOrNull()?.let { return it }
+                .filter { it.name == traceEventFunction && it.valueParameters.size == nrArgs }
+                .map { it.javaMethod }
+                .firstOrNull()?.let { return it }
         }
 
         // Otherwise, recursively find the method from a super class.
         traceEventsConsumerClass.allSuperclasses.mapNotNull {
             findFunctionByInspection(
-                    it,
-                    traceEventListenerInterface,
-                    traceEventFunction,
-                    nrArgs
+                it,
+                traceEventListenerInterface,
+                traceEventFunction,
+                nrArgs
             )
         }
-                .firstOrNull()?.let { return it }
+            .firstOrNull()?.let { return it }
 
         // Or fail, if the method isn't found.
         return null
     }
 
     private suspend fun findAndCacheFunction(
-            traceEventConsumerClass: KClass<out TraceEventConsumer>,
-            traceEventListenerInterface: KClass<out TraceEventListener>,
-            traceEventFunction: String,
-            nrArgs: Int
+        traceEventConsumerClass: KClass<out TraceEventConsumer>,
+        traceEventListenerInterface: KClass<out TraceEventListener>,
+        traceEventFunction: String,
+        nrArgs: Int
     ): Method? {
 
         // First, try the cache.
         val key = Key(
-                traceEventConsumerClass, traceEventListenerInterface, traceEventFunction,
-                nrArgs
+            traceEventConsumerClass, traceEventListenerInterface, traceEventFunction,
+            nrArgs
         )
         traceEventFunctions[key]?.let { return it }
 
         // Otherwise, try inspection.
         findFunctionByInspection(
-                traceEventConsumerClass,
-                traceEventListenerInterface,
-                traceEventFunction,
-                nrArgs
+            traceEventConsumerClass,
+            traceEventListenerInterface,
+            traceEventFunction,
+            nrArgs
         )?.let {
 
             // And remember in cache.
@@ -176,10 +187,10 @@ internal class TraceEventConsumerCollection {
 
     // Key for cached map of trace event functions.
     private data class Key(
-            val traceEventConsumerClass: KClass<out TraceEventConsumer>,
-            val traceEventListenerInterface: KClass<out TraceEventListener>,
-            val traceEventFunction: String,
-            val nrArgs: Int
+        val traceEventConsumerClass: KClass<out TraceEventConsumer>,
+        val traceEventListenerInterface: KClass<out TraceEventListener>,
+        val traceEventFunction: String,
+        val nrArgs: Int
     )
 
     /**
@@ -196,6 +207,6 @@ internal class TraceEventConsumerCollection {
     private val traceEventFunctions = HashMap<Key, Method>()
 
     companion object {
-        val TAG = TraceEventConsumerCollection::class.simpleName
+        val TAG = TraceEventConsumerCollection::class.simpleName!!
     }
 }

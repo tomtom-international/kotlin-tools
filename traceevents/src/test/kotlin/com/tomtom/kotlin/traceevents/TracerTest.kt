@@ -21,7 +21,6 @@ import kotlinx.coroutines.runBlocking
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.eq
 
 class TracerTest {
 
@@ -42,21 +41,21 @@ class TracerTest {
 
     class SpecificConsumer : MyEvents, TraceEventConsumer {
         override fun eventNoArgs() =
-                Log.log(Log.Level.DEBUG, "TAG", "eventNoArgs()")
+            Log.log(Log.Level.DEBUG, "TAG", "eventNoArgs()")
 
         override fun eventString(message: String) =
-                Log.log(Log.Level.DEBUG, "TAG", "eventString()")
+            Log.log(Log.Level.DEBUG, "TAG", "eventString()")
 
         override fun eventIntsString(number1: Int, number2: Int, message: String) =
-                Log.log(Log.Level.DEBUG, "TAG", "eventIntsString()")
+            Log.log(Log.Level.DEBUG, "TAG", "eventIntsString()")
 
         override fun d() =
-                Log.log(Log.Level.DEBUG, "TAG", "d()")
+            Log.log(Log.Level.DEBUG, "TAG", "d()")
     }
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-                Log.log(Log.Level.DEBUG, "TAG", "${traceEvent.functionName}")
+            Log.log(Log.Level.DEBUG, "TAG", "${traceEvent.functionName}")
     }
 
     private val TAG = TracerTest::class.simpleName

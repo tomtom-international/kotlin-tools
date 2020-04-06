@@ -17,7 +17,7 @@
 
     <groupId>com.tomtom.kotlin</groupId>
     <artifactId>kotlin-tools</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Kotlin Tools</name>
@@ -74,6 +74,7 @@
 
         <!-- Java and build properties. -->
         <jdk.version>1.8</jdk.version>
+        <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
