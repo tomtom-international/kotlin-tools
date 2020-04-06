@@ -1,5 +1,10 @@
 # Kotlin Tools
 
+[![Build Status](https://img.shields.io/travis/tomtom-international/kotlin-tools.svg?maxAge=3600&branch=master)](https://travis-ci.org/tomtom-international/kotlin-tools)
+[![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
+[![Release](https://img.shields.io/github/release/tomtom-international/kotlin-tools.svg?maxAge=3600)](https://github.com/tomtom-international/kotlin-tools/releases)
+[![Maven Central](https://img.shields.io/maven-central/v/com.tomtom.kotlin/kotlin-tools.svg?maxAge=3600)](https://maven-badges.herokuapp.com/maven-central/com.tomtom.kotlin/kotlin-tools)
+
 Copyright (C) 2020, TomTom International BV
 
 ## Logging events using "trace events"
