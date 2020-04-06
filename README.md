@@ -299,7 +299,7 @@ mvn clean package
 ## Contributing and coding formatting
 
 If you wish to contribute to this project, please feel free to do so and send us pull requests.
-The source code formatting must obey to the standard Kotlin formatting rules.
+The source code formatting must adhere to the standard Kotlin formatting rules.
 
 If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this: 
 ```
