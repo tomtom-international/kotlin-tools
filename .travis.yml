@@ -13,10 +13,6 @@ script:
   - export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8"
   - mvn verify -Dgpg.skip
 
-after_success:
-  - export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8"
-  - mvn coveralls:report -Dgpg.skip
-
 cache:
   directories:
     - $HOME/.m2
