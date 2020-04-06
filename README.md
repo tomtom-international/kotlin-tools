@@ -327,5 +327,11 @@ immediately return it to TomTom N.V.
 
 ## Release notes
 
-* 1.0.3: `TAG` is non-nullable for loggers. 
-* 1.0.0-1.0.2: Initial release
+### 1.0.3
+* `TAG` is non-nullable for loggers. 
+* Renamed directory structure from `src/main/kotlin` to `/src/main/java` for IntelliJ to
+understand package names
+ 
+### 1.0.0-1.0.2
+
+* Initial release
