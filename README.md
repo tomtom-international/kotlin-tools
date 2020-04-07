@@ -370,6 +370,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ### 1.0.4
 
+* Bug fixes to simple loggers `Tracer.d(message, exception)`.
+
+* Fixed formatting of event parameters for arrays and lists.
+
 * Fixed unit test helper method.
 
 ### 1.0.3

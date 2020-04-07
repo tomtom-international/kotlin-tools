@@ -51,7 +51,7 @@ interface Log {
         internal object DefaultLoggerToStdout : Logger {
             override fun log(level: Level, tag: String, message: String, e: Throwable?) {
                 val exceptionMsg = e?.message?.let { ", $it" } ?: ""
-                println("${LocalDateTime.now()}: [$level] $tag: $message$exceptionMsg}")
+                println("${LocalDateTime.now()}: [$level] $tag: $message$exceptionMsg")
             }
         }
 

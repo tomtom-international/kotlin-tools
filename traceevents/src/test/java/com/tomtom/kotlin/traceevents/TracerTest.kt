@@ -33,6 +33,12 @@ class TracerTest {
         @LogLevel(Log.Level.ERROR)
         fun eventIntsString(number1: Int, number2: Int, message: String)
 
+        fun eventNullable(value: Int?)
+
+        fun eventList(list: List<Int?>)
+
+        fun eventArray(array: Array<Int?>)
+
         /**
          * Overload a reserved name for Log functions.
          */
@@ -48,6 +54,15 @@ class TracerTest {
 
         override fun eventIntsString(number1: Int, number2: Int, message: String) =
             Log.log(Log.Level.DEBUG, "TAG", "eventIntsString()")
+
+        override fun eventNullable(value: Int?) =
+            Log.log(Log.Level.DEBUG, "TAG", "eventNullable()")
+
+        override fun eventList(list: List<Int?>) =
+            Log.log(Log.Level.DEBUG, "TAG", "eventList()")
+
+        override fun eventArray(array: Array<Int?>) =
+            Log.log(Log.Level.DEBUG, "TAG", "eventArray()")
 
         override fun d() =
             Log.log(Log.Level.DEBUG, "TAG", "d()")
@@ -230,22 +245,99 @@ class TracerTest {
     }
 
     @Test
-    fun `wrong log function arguments`() {
+    fun `correct log function arguments`() {
+        // GIVEN
+        val consumer = spyk(SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+        val e = Throwable()
+
+        // WHEN
+        sut.d("abc")
+        sut.d("null", null)
+        sut.d("non-null", e)
+
+        // THEN
+        verifySequence {
+            consumer.d(eq("abc"))
+            consumer.d(eq("null"), isNull())
+            consumer.d(eq("non-null"), eq(e))
+        }
+    }
+
+    @Test
+    fun `incorrect log function arguments`() {
         // GIVEN
         val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
-        sut.d("abc")
         sut.d()
-        sut.d("xyz")
 
         // THEN
         verifySequence {
-            consumer.d(eq("abc"))
             consumer.incorrectLogSignatureFound()
             consumer.d()
-            consumer.d(eq("xyz"))
+        }
+    }
+
+    @Test
+    fun `nullable arguments`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        // WHEN
+        sut.eventNullable(1)
+        sut.eventNullable(null)
+        sut.eventNullable(2)
+
+        // THEN
+        verifySequence {
+            consumer.eventNullable(eq(1))
+            consumer.eventNullable(isNull())
+            consumer.eventNullable(eq(2))
+        }
+    }
+
+    @Test
+    fun `list with null objects`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        // WHEN
+        sut.eventList(listOf(1, 2))
+        sut.eventList(listOf(3, null))
+        sut.eventList(listOf(null, 4))
+        sut.eventList(listOf(null, null))
+
+        // THEN
+        verifySequence {
+            consumer.eventList(eq(listOf<Int?>(1, 2)))
+            consumer.eventList(eq(listOf<Int?>(3, null)))
+            consumer.eventList(eq(listOf<Int?>(null, 4)))
+            consumer.eventList(eq(listOf<Int?>(null, null)))
+        }
+    }
+
+    @Test
+    fun `array with null objects`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        // WHEN
+        sut.eventArray(arrayOf(1, 2))
+        sut.eventArray(arrayOf(3, null))
+        sut.eventArray(arrayOf(null, 4))
+        sut.eventArray(arrayOf(null, null))
+
+        // THEN
+        verifySequence {
+            consumer.eventArray(eq(arrayOf<Int?>(1, 2)))
+            consumer.eventArray(eq(arrayOf<Int?>(3, null)))
+            consumer.eventArray(eq(arrayOf<Int?>(null, 4)))
+            consumer.eventArray(eq(arrayOf<Int?>(null, null)))
         }
     }
 

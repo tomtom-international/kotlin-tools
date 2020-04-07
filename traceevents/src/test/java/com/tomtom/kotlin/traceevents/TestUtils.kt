@@ -27,6 +27,6 @@ internal fun MockKMatcherScope.traceEq(
             traceEvent.ownerClass == TracerTest::class.jvmName &&
             traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
             traceEvent.functionName == functionName &&
-            traceEvent.args.map { it.javaClass } == args.map { it.javaClass } &&
+            traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
             traceEvent.args.contentDeepEquals(args)
     }

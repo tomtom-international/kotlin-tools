@@ -31,29 +31,19 @@ package com.tomtom.kotlin.traceevents
 interface TraceEventListener {
 
     // Verbose
-    fun v(message: String) {}
-
-    fun v(message: String, e: Throwable) {}
+    fun v(message: String, e: Throwable? = null) {}
 
     // Debug
-    fun d(message: String) {}
-
-    fun d(message: String, e: Throwable) {}
+    fun d(message: String, e: Throwable? = null) {}
 
     // Info
-    fun i(message: String) {}
-
-    fun i(message: String, e: Throwable) {}
+    fun i(message: String, e: Throwable? = null) {}
 
     // Warn
-    fun w(message: String) {}
-
-    fun w(message: String, e: Throwable) {}
+    fun w(message: String, e: Throwable? = null) {}
 
     // Error
-    fun e(message: String) {}
-
-    fun e(message: String, e: Throwable) {}
+    fun e(message: String, e: Throwable? = null) {}
 
     // Called if an incorrect log function signature was used by a subclass.
     fun incorrectLogSignatureFound() {}

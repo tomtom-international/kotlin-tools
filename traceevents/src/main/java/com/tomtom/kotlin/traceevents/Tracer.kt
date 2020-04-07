@@ -159,7 +159,7 @@ class Tracer private constructor(
      * @param args Additional arguments to method, may be null.
      * @return Always null; the signature of events functions must be void/Unit.
      */
-    override fun invoke(proxy: Any, method: Method, args: Array<Any>?): Any? {
+    override fun invoke(proxy: Any, method: Method, args: Array<Any?>?): Any? {
 
         /**
          * The [proxy] is always a [TraceEventListener] as [Factory.create] creates a proxy
@@ -186,7 +186,7 @@ class Tracer private constructor(
             ownerClass.java.name,
             method.declaringClass.name,
             method.name,
-            args ?: arrayOf()
+            args ?: arrayOf<Any?>()
         )
 
         /**
@@ -423,7 +423,7 @@ class Tracer private constructor(
         internal fun usePredefinedLogFunction(
             tag: String,
             functionName: String,
-            args: Array<out Any>?
+            args: Array<Any?>?
         ): Boolean {
 
             /**
@@ -432,21 +432,28 @@ class Tracer private constructor(
              * Nevertheless, we want to be robust against this sort of mistake as we cannot
              * resolve this compile-time.
              */
-            if (args == null || args.isEmpty() || args[0]::class != String::class ||
-                (args.size == 2 && args[1]::class.isSubclassOf(Throwable::class)) || args.size > 2
+            if (args == null || args.isEmpty() ||
+                args[0] == null || args[0]!!::class != String::class ||
+                (args.size == 2 &&
+                    args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
+                args.size > 2
             ) {
                 Log.log(
                     Log.Level.ERROR,
                     TAG,
                     "Incorrect log call, expected arguments (String, Throwable), " +
                         "args=${args?.joinToString {
-                            it.javaClass.simpleName + ":" + it.toString()
+                            it?.let {
+                                it.javaClass.simpleName + ":" + it.toString()
+                            } ?: "null"
                         }}"
                 )
                 return false
             }
             val message = args[0] as String
-            val e: Throwable? = args.let { if (args.size == 2) args[1] as Throwable else null }
+            val e: Throwable? = args.let {
+                if (args.size == 2 && args[1] != null) args[1] as Throwable else null
+            }
             val level = when (functionName) {
                 FUN_VERBOSE -> Log.Level.VERBOSE
                 FUN_DEBUG -> Log.Level.DEBUG
@@ -469,8 +476,14 @@ class Tracer private constructor(
 
         internal fun createLogMessage(traceEvent: TraceEvent): String {
             return "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
-                "${traceEvent.functionName}(${traceEvent.args.joinToString()}) " +
-                "- $traceEvent.ownerClass"
+                "${traceEvent.functionName}(${traceEvent.args.map {
+                    it?.let {
+                        when (it.javaClass) {
+                            Array<Int?>::class.java -> "[${(it as Array<*>).joinToString()}]"
+                            else -> it.toString()
+                        }
+                    } ?: "null"
+                }.joinToString()}), from ${traceEvent.ownerClass}"
         }
     }
 }

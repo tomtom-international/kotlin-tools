@@ -28,7 +28,7 @@ data class TraceEvent(
     val ownerClass: String,
     val interfaceName: String,
     val functionName: String,
-    val args: Array<Any>
+    val args: Array<Any?>
 ) {
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
