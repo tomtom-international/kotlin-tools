@@ -383,6 +383,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.5
+
+* Added `Tracer.RegisterToString` to register string handlers for class types.
+ 
 ### 1.0.4
 
 * Fixed license and copyright messages to Apache License 2.0.
