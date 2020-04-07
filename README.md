@@ -283,6 +283,17 @@ to send logs to another system for analysis.
 **Note:** Using the `Log.x` functions on tracers defeats the advantages of using type-safe
 arguments. Always consider using trace event functions, when possible.
 
+### Formatting trace arguments
+
+By default, trace event arguments are formatted using their default `toString` function.
+If you wish to override them, use `Tracer.registerToString<T>{ <toString implementation> }` to 
+override the `toString` method.
+
+By default, the `toString` for `Array`s is replaced with one that provides a list of
+elements, rather than an object reference.
+
+Use `Tracer.resetToDefaults()` to de-register all custom `toString` handlers.
+
 ### Advanced examples
 
 Advanced examples of using this trace event mechanism are:
@@ -372,6 +383,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.5
+
+* Added `Tracer.RegisterToString` to register string handlers for class types.
+ 
 ### 1.0.4
 
 * Fixed license and copyright messages to Apache License 2.0.

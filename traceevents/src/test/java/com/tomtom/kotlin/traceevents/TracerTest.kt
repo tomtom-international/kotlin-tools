@@ -24,43 +24,28 @@ import kotlinx.coroutines.runBlocking
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class TracerTest {
 
     interface MyEvents : TraceEventListener {
-
         fun eventNoArgs()
-
         fun eventString(message: String)
 
         @LogLevel(Log.Level.ERROR)
         fun eventIntsString(number1: Int, number2: Int, message: String)
-
         fun eventNullable(value: Int?)
-
         fun eventList(list: List<Int?>)
-
         fun eventArray(array: Array<Int?>)
     }
 
     class SpecificConsumer : MyEvents, TraceEventConsumer {
-        override fun eventNoArgs() =
-            Log.log(Log.Level.DEBUG, "TAG", "eventNoArgs()")
-
-        override fun eventString(message: String) =
-            Log.log(Log.Level.DEBUG, "TAG", "eventString()")
-
-        override fun eventIntsString(number1: Int, number2: Int, message: String) =
-            Log.log(Log.Level.DEBUG, "TAG", "eventIntsString()")
-
-        override fun eventNullable(value: Int?) =
-            Log.log(Log.Level.DEBUG, "TAG", "eventNullable()")
-
-        override fun eventList(list: List<Int?>) =
-            Log.log(Log.Level.DEBUG, "TAG", "eventList()")
-
-        override fun eventArray(array: Array<Int?>) =
-            Log.log(Log.Level.DEBUG, "TAG", "eventArray()")
+        override fun eventNoArgs() {}
+        override fun eventString(message: String) {}
+        override fun eventIntsString(number1: Int, number2: Int, message: String) {}
+        override fun eventNullable(value: Int?) {}
+        override fun eventList(list: List<Int?>) {}
+        override fun eventArray(array: Array<Int?>) {}
     }
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
@@ -82,9 +67,12 @@ class TracerTest {
         override fun w(msg: String, e: Throwable, rest: Int) = Log.log(Log.Level.WARN, "TAG", "w()")
     }
 
-    private val TAG = TracerTest::class.simpleName
-
-    private val sut = Tracer.Factory.create<TracerTest.MyEvents>(this::class)
+    companion object {
+        private val TAG = TracerTest::class.simpleName
+        private val sut = Tracer.Factory.create<TracerTest.MyEvents>(this)
+        val sutWrong = Tracer.Factory.create<TracerTest.WrongListener>(this)
+        val sutWithoutToString = Tracer.Factory.create<TracerTest.ListenerWithoutToString>(this)
+    }
 
     @Before
     fun setUp() {
@@ -101,6 +89,7 @@ class TracerTest {
             Tracer.removeAllTraceEventConsumers()
             Tracer.cancelAndJoinEventProcessor()
             Tracer.flushTraceEvents()
+            Tracer.resetToDefaults()
         }
     }
 
@@ -276,16 +265,15 @@ class TracerTest {
     @Test
     fun `wrong arguments for v,d,i,w`() {
         // GIVEN
-        val sut = Tracer.Factory.create<TracerTest.WrongListener>(this::class)
         val consumer = spyk(WrongConsumer())
         Tracer.addTraceEventConsumer(consumer)
         val e = Exception()
 
         // WHEN
-        sut.v()
-        sut.d(1)
-        sut.i("test", 2)
-        sut.w("test", e, 3)
+        sutWrong.v()
+        sutWrong.d(1)
+        sutWrong.i("test", 2)
+        sutWrong.w("test", e, 3)
 
         // THEN
         verifySequence {
@@ -359,6 +347,70 @@ class TracerTest {
             consumer.eventArray(eq(arrayOf<Int?>(null, 4)))
             consumer.eventArray(eq(arrayOf<Int?>(null, null)))
         }
+    }
+
+    class ClassWithoutToString {
+        @Suppress("unused")
+        val x = 1
+
+        @Suppress("unused")
+        val y = 2
+    }
+
+    class AnotherClassWithoutToString {
+        val a = 100
+    }
+
+    interface ListenerWithoutToString : TraceEventListener {
+        fun eventWithoutToString(classWithoutToString: Any)
+    }
+
+    class ConsumerWithoutToString : ListenerWithoutToString, TraceEventConsumer {
+        override fun eventWithoutToString(classWithoutToString: Any) {}
+    }
+
+    @Test
+    fun `register toString`() {
+        // GIVEN
+        val consumerWithoutToString = spyk(ConsumerWithoutToString())
+        Tracer.addTraceEventConsumer(consumerWithoutToString)
+        val objectWithoutToString = ClassWithoutToString()
+        val anotherObjectWithoutToString = AnotherClassWithoutToString()
+
+        Tracer.registerToString<ClassWithoutToString> { "($x, $y)" }
+
+        // WHEN
+        sutWithoutToString.eventWithoutToString(objectWithoutToString)
+        sutWithoutToString.eventWithoutToString(anotherObjectWithoutToString)
+
+        // THEN
+        coVerifySequence {
+            consumerWithoutToString.eventWithoutToString(eq(objectWithoutToString))
+            consumerWithoutToString.eventWithoutToString(eq(anotherObjectWithoutToString))
+        }
+    }
+
+    @Test
+    fun `do not register toString for Boolean`() {
+        assertEquals("true", Tracer.toString(true))
+        assertEquals("false", Tracer.toString(false))
+    }
+
+    @Test
+    fun `register toString for Boolean`() {
+        Tracer.registerToString<Boolean> { if (this) "T" else "F" }
+        assertEquals("T", Tracer.toString(true))
+        assertEquals("F", Tracer.toString(false))
+    }
+
+    class SomeClass {
+        val x = 10
+    }
+
+    @Test
+    fun `register toString for SomeClass`() {
+        Tracer.registerToString<SomeClass> { "x=$x" }
+        assertEquals("x=10", Tracer.toString(SomeClass()))
     }
 
     @Test

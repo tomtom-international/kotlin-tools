@@ -20,8 +20,6 @@ import kotlin.test.assertTrue
 
 class SetLoggerTest {
 
-    private val sut = Tracer.Factory.create<TraceEventListener>(this::class)
-
     object MyLogger : Log.Logger {
         override fun log(level: Log.Level, tag: String, message: String, e: Throwable?) {
             println("LOG: $level, $tag, $message, $e")
@@ -48,6 +46,7 @@ class SetLoggerTest {
     }
 
     companion object {
+        private val sut = Tracer.Factory.create<TraceEventListener>(this)
         var called = false
     }
 }
