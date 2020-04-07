@@ -372,9 +372,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
-### 1.0.3
+### 1.0.4
 
 * Fixed license and copyright messages to Apache License 2.0.
+
+### 1.0.3
 
 * Bug fixes to simple loggers `Tracer.d(message, exception)`.
 
