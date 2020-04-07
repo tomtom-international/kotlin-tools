@@ -123,32 +123,45 @@ import kotlin.reflect.full.isSubclassOf
  * ```
  */
 class Tracer private constructor(
-    private val ownerClass: KClass<*>
+    private val ownerClassName: String
 ) : InvocationHandler {
 
-    private val tagOwnerClass = tagFromOwnerClassName(ownerClass.java.name)
+    private val tagOwnerClass = getTagFromOwnerClassName(ownerClassName)
 
     class Factory {
         companion object {
 
             /**
-             * Get an event logger for a specific class.
+             * Get an event logger for a specific class. Should be created once per class rather
+             * than instance. I.e., it should be created from within a class's `companion object`.
              *
-             * @param ownerClass Class to get an event logger for, specified as `this::class`.
-             * @return The "tracer", to be used as `tracer.someEvent()`.
+             * @param T The interface type containing the events that may be traced.
+             *
+             * @param companionObject Companion object of the class using the event logger,
+             *     specified as `this` from the companion object.
+             * @return [TraceEventListener]-derived object, normally called the "tracer", to be used
+             *     as `tracer.someEvent()`.
              */
-            inline fun <reified T : TraceEventListener> create(ownerClass: KClass<*>) =
-                createForListener<T>(ownerClass, T::class)
+            inline fun <reified T : TraceEventListener> create(companionObject: Any) =
+                createForListener<T>(companionObject::class, T::class)
 
             @Suppress("UNCHECKED_CAST")
             fun <T : TraceEventListener> createForListener(
-                ownerClass: KClass<*>,
+                companionClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>
-            ) = Proxy.newProxyInstance(
-                ownerClass.java.classLoader,
-                arrayOf<Class<*>?>(traceEventListener.java),
-                Tracer(ownerClass)
-            ) as T
+            ): T {
+                require(companionClass.isCompanion) {
+                    "Tracers may only be created from companion objects, with `this` to prevent " +
+                        "duplicate instances, companionClass=$companionClass"
+                }
+
+                val ownerClass = companionClass.javaObjectType.enclosingClass?.kotlin!!
+                return Proxy.newProxyInstance(
+                    ownerClass.java.classLoader,
+                    arrayOf<Class<*>?>(traceEventListener.java),
+                    Tracer(ownerClass.java.name)
+                ) as T
+            }
         }
     }
 
@@ -187,7 +200,7 @@ class Tracer private constructor(
         val event = TraceEvent(
             now,
             logLevel,
-            ownerClass.java.name,
+            ownerClassName,
             method.declaringClass.name,
             method.name,
             args ?: arrayOf<Any?>()
@@ -263,7 +276,7 @@ class Tracer private constructor(
     internal class LoggingTraceEventConsumer : GenericTraceEventConsumer {
 
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
-            val tagOwnerClass = tagFromOwnerClassName(traceEvent.ownerClass)
+            val tagOwnerClass = getTagFromOwnerClassName(traceEvent.ownerClass)
             if (predefinedLogFunctionNames.contains(traceEvent.functionName)) {
 
                 // Don't reformat the message if this is a standard log message.
@@ -347,7 +360,7 @@ class Tracer private constructor(
          */
         fun resetToDefaults() {
             registeredToStrings.clear()
-            registerToString<Array<Int>> { "[${joinToString()}]" }
+            registerToString<Array<*>> { "[${joinToString()}]" }
         }
 
         internal fun toString(item: Any?) = if (item == null) "null" else
@@ -493,7 +506,7 @@ class Tracer private constructor(
             return true
         }
 
-        internal fun tagFromOwnerClassName(ownerClassName: String): String {
+        internal fun getTagFromOwnerClassName(ownerClassName: String): String {
             val indexPeriod = ownerClassName.lastIndexOf('.')
             if (indexPeriod >= 0 && ownerClassName.length > indexPeriod) {
                 return ownerClassName.substring(indexPeriod + 1)

@@ -67,9 +67,12 @@ class TracerTest {
         override fun w(msg: String, e: Throwable, rest: Int) = Log.log(Log.Level.WARN, "TAG", "w()")
     }
 
-    private val TAG = TracerTest::class.simpleName
-
-    private val sut = Tracer.Factory.create<TracerTest.MyEvents>(this::class)
+    companion object {
+        private val TAG = TracerTest::class.simpleName
+        private val sut = Tracer.Factory.create<TracerTest.MyEvents>(this)
+        val sutWrong = Tracer.Factory.create<TracerTest.WrongListener>(this)
+        val sutWithoutToString = Tracer.Factory.create<TracerTest.ListenerWithoutToString>(this)
+    }
 
     @Before
     fun setUp() {
@@ -262,16 +265,15 @@ class TracerTest {
     @Test
     fun `wrong arguments for v,d,i,w`() {
         // GIVEN
-        val sut = Tracer.Factory.create<TracerTest.WrongListener>(this::class)
         val consumer = spyk(WrongConsumer())
         Tracer.addTraceEventConsumer(consumer)
         val e = Exception()
 
         // WHEN
-        sut.v()
-        sut.d(1)
-        sut.i("test", 2)
-        sut.w("test", e, 3)
+        sutWrong.v()
+        sutWrong.d(1)
+        sutWrong.i("test", 2)
+        sutWrong.w("test", e, 3)
 
         // THEN
         verifySequence {
@@ -370,22 +372,21 @@ class TracerTest {
     @Test
     fun `register toString`() {
         // GIVEN
-        val sutWithout = Tracer.Factory.create<TracerTest.ListenerWithoutToString>(this::class)
-        val consumerWithout = spyk(ConsumerWithoutToString())
-        Tracer.addTraceEventConsumer(consumerWithout)
+        val consumerWithoutToString = spyk(ConsumerWithoutToString())
+        Tracer.addTraceEventConsumer(consumerWithoutToString)
         val objectWithoutToString = ClassWithoutToString()
         val anotherObjectWithoutToString = AnotherClassWithoutToString()
 
         Tracer.registerToString<ClassWithoutToString> { "($x, $y)" }
 
         // WHEN
-        sutWithout.eventWithoutToString(objectWithoutToString)
-        sutWithout.eventWithoutToString(anotherObjectWithoutToString)
+        sutWithoutToString.eventWithoutToString(objectWithoutToString)
+        sutWithoutToString.eventWithoutToString(anotherObjectWithoutToString)
 
         // THEN
         coVerifySequence {
-            consumerWithout.eventWithoutToString(eq(objectWithoutToString))
-            consumerWithout.eventWithoutToString(eq(anotherObjectWithoutToString))
+            consumerWithoutToString.eventWithoutToString(eq(objectWithoutToString))
+            consumerWithoutToString.eventWithoutToString(eq(anotherObjectWithoutToString))
         }
     }
 
