@@ -7,7 +7,43 @@
 
 Copyright (C) 2020, TomTom International BV
 
-## Logging events using "trace events"
+## Introduction
+
+This class library contains a number of useful tools when coding in Kotlin. The code has been
+made open-source by TomTom so others can use it and contribute to it.
+
+Currently, the library contains:
+
+* `traceevents` - This is a library to log semantic events in an application, where perhaps normally
+logging and log analysis would be used.
+
+### Building and testing the library
+
+Use Maven to run the unit tests as follows:
+
+```
+mvn clean test
+```
+
+To build the library JAR:
+
+```
+mvn clean package
+```
+
+### Contributing and coding formatting
+
+If you wish to contribute to this project, please feel free to do so and send us pull requests.
+The source code formatting must adhere to the standard Kotlin formatting rules.
+
+If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this: 
+```
+Preferences -> Editor -> Code Style -> Kotlin -> (Scheme) Set From...
+```
+
+And then choose the pre-defined style `Kotlin Style Guide`. Voila!
+
+## Module: Trace events
 
 Trace events offer a flexible way of logging semantic events during the run of an application.
 Semantic events are events that have some "external meaning", like "a route is planned", "the radio
@@ -27,7 +63,7 @@ By default, a simple event logger is provided which logs all events directly to 
 Although it is enabled by default, you can turn it off, or replace it with your own.
 It's easy to modify this to, for example, use the standard Android`Log` logger.
 
-## Trace events vs normal Log
+### Trace events vs normal Log
 
 What makes this event logger different from a normal `Log` or, for example, Android Log directly,
 is that the events are 'type-safe':
@@ -78,7 +114,7 @@ switched to asynchronous mode. using `Tracer.setTraceEventLoggingMode`.
 Note that only the logging consumer can be synchronous or asynchronous; custom event consumers are
 always processed in asynchronous mode.
 
-## Using your own default logger (such as Android Log)
+### Using your own default logger (such as Android Log)
 
 You can replace the default logger, which logs to `println` with your own by creating an
 instance of the interface `Log.Logger` like this:
@@ -104,12 +140,12 @@ Or, to reset it to the default implementation:
 setLogger() 
 ```
 
-## Logging in tests
+### Logging in tests
 
 Trace events are used for production code. Test cases should not use trace events. Test cases should
 use the logging tools of the test framework, or simply the Android log, to show progress or states.
 
-## Logging trace events at specific log levels
+### Logging trace events at specific log levels
 
 By default, trace events are logged at `Log.DEBUG` level to the default logger, that can be
 redirected to, for example Android `Log`. If you prefer to have certain events logged at 
@@ -126,12 +162,12 @@ interface MyTraceEvents : TraceEventListener {
 }
 ```
 
-## Coding conventions
+### Coding conventions for events
  
 This paragraph describes some simple coding conventions to promote consistent declaration and usage
 of events.
 
-## Declaration of event interfaces
+#### Declaration of event interfaces
 
 In general, events are coupled to specific classes and as such it is advised to declare them
 inside the class file that uses the events. Place the interface declaration at the end of the class.
@@ -139,7 +175,7 @@ inside the class file that uses the events. Place the interface declaration at t
 *Tip: In IntelliJ or Android Studio you can easily view all trace event interfaces by clicking 
 on any occurrence of `TraceEventListener` and pressing `Ctrl-Alt-B` (or `Option-Cmd-B`)*
 
-## Naming conventions for trace events
+#### Naming conventions for trace events
 
 The following naming conventions apply to events function names in a `TraceEventListener`:
 
@@ -160,7 +196,7 @@ Examples of incorrect names:
 Note that there's not always a crystal-clear distinction between what events and states are, but for
 the naming convention that doesn't matter.
 
-## Trace event arguments
+#### Trace event arguments
 
 Trace event arguments are type-safe. They don't need to be strings. In fact, it's often better to
 pass the original object, rather than some form of string representation of it, as the object itself
@@ -179,7 +215,7 @@ fun connectionLost(reason: IOException)
 
 and invoke it as `connectionLost(exception)`.
 
-## Null pointer exceptions (NPE) in trace events
+### Null pointer exceptions (NPE) in trace events
 
 Trace events should always avoid throwing unexpected NPE's. This might happen if your trace event
 has a signature like
@@ -202,7 +238,7 @@ Especially in cases where the arguments for an event come from Java libraries, w
 clear if the type is `@Nonnull` (or `@NonNull`) or `@Nullable`, care should be take to make the
 event interfaces NPE-safe.
 
-## Trace event consumers
+### Trace event consumers
 
 There are 2 types of trace events consumers:
 
@@ -229,7 +265,7 @@ There are 2 types of trace events consumers:
 Note that trace event consumer may receive mutable objects in an event, which may have been
 modified after the actual event was thrown. For more info, see the FAQ below.
 
-## Using tracers to standard `Log` messages
+### Using tracers to standard `Log` messages
 
 The `Tracer` class defines the standard `Log` functions `v()`, `d()`, `i()`, `w()` and `e()`. 
 These can be used like this:
@@ -247,7 +283,7 @@ to send logs to another system for analysis.
 **Note:** Using the `Log.x` functions on tracers defeats the advantages of using type-safe
 arguments. Always consider using trace event functions, when possible.
 
-## Advanced examples
+### Advanced examples
 
 Advanced examples of using this trace event mechanism are:
 
@@ -261,7 +297,7 @@ Advanced examples of using this trace event mechanism are:
 * Collecting or sending system usage data for analytics. Developers can define all sorts of semantic
   events, and the system may collect them easily in a database, for later processing.
 
-## FAQ
+### FAQ
 
 * **Should I use `Trace` or (Android) `Log`?**
 
@@ -282,10 +318,25 @@ Advanced examples of using this trace event mechanism are:
     cloning objects to make them immutable is relatively expensive and may generate significant
     overhead.
 
-## More information
+### More information on trace events
 
 For more information, for example on how to define and register trace event consumers, please refer
 to the documentation in the `Tracer` class.
+
+## License
+
+Copyright (C) 2020-2020, TomTom (http://tomtom.com).
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   [http://www.apache.org/licenses/LICENSE-2.0]
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 ## Building and testing the library
 
@@ -319,23 +370,25 @@ Author: Rijn Buve
 
 Contributors: Timon Kanters, Jeroen Erik Jensen
 
-## License
-
-Copyright (c) 2020 - 2020 TomTom N.V. All rights reserved.
-
-This software is the proprietary copyright of TomTom N.V. and its subsidiaries and may be
-used for internal evaluation purposes or commercial use strictly subject to separate
-licensee agreement between you and TomTom. If you are the licensee, you are only permitted
-to use this Software in accordance with the terms of your license agreement. If you are
-not the licensee then you are not authorised to use this software in any manner and should
-immediately return it to TomTom N.V.
-
 ## Release notes
 
+### 1.0.4
+
+* Fixed license and copyright messages to Apache License 2.0.
+
+* Bug fixes to simple loggers `Tracer.d(message, exception)`.
+
+* Fixed formatting of event parameters for arrays and lists.
+
+* Fixed unit test helper method.
+
 ### 1.0.3
+
 * `TAG` is non-nullable for loggers. 
+
 * Renamed directory structure from `src/main/kotlin` to `/src/main/java` for IntelliJ to
 understand package names
+
 * Added TravisCI support for Github, including status badges in README.
  
 ### 1.0.0-1.0.2
