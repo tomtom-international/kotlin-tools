@@ -372,7 +372,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
-### 1.0.4
+### 1.0.3
 
 * Fixed license and copyright messages to Apache License 2.0.
 
@@ -381,8 +381,6 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 * Fixed formatting of event parameters for arrays and lists.
 
 * Fixed unit test helper method.
-
-### 1.0.3
 
 * `TAG` is non-nullable for loggers. 
 
