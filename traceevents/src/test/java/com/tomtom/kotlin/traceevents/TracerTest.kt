@@ -1,12 +1,16 @@
 /*
- * Copyright (c) 2020 - 2020 TomTom N.V. All rights reserved.
+ * Copyright (C) 2020-2020, TomTom (http://tomtom.com).
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is the proprietary copyright of TomTom N.V. and its subsidiaries and may be
- * used for internal evaluation purposes or commercial use strictly subject to separate
- * licensee agreement between you and TomTom. If you are the licensee, you are only permitted
- * to use this Software in accordance with the terms of your license agreement. If you are
- * not the licensee then you are not authorised to use this software in any manner and should
- * immediately return it to TomTom N.V.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.tomtom.kotlin.traceevents
@@ -38,11 +42,6 @@ class TracerTest {
         fun eventList(list: List<Int?>)
 
         fun eventArray(array: Array<Int?>)
-
-        /**
-         * Overload a reserved name for Log functions.
-         */
-        fun d()
     }
 
     class SpecificConsumer : MyEvents, TraceEventConsumer {
@@ -63,14 +62,25 @@ class TracerTest {
 
         override fun eventArray(array: Array<Int?>) =
             Log.log(Log.Level.DEBUG, "TAG", "eventArray()")
-
-        override fun d() =
-            Log.log(Log.Level.DEBUG, "TAG", "d()")
     }
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
             Log.log(Log.Level.DEBUG, "TAG", "${traceEvent.functionName}")
+    }
+
+    interface WrongListener : TraceEventListener {
+        fun v()
+        fun d(msg: Int)
+        fun i(msg: String, e: Int)
+        fun w(msg: String, e: Throwable, rest: Int)
+    }
+
+    class WrongConsumer : WrongListener, TraceEventConsumer {
+        override fun v() = Log.log(Log.Level.VERBOSE, "TAG", "v()")
+        override fun d(msg: Int) = Log.log(Log.Level.DEBUG, "TAG", "d()")
+        override fun i(msg: String, e: Int) = Log.log(Log.Level.INFO, "TAG", "i()")
+        override fun w(msg: String, e: Throwable, rest: Int) = Log.log(Log.Level.WARN, "TAG", "w()")
     }
 
     private val TAG = TracerTest::class.simpleName
@@ -265,18 +275,29 @@ class TracerTest {
     }
 
     @Test
-    fun `incorrect log function arguments`() {
+    fun `wrong arguments for v,d,i,w`() {
         // GIVEN
-        val consumer = spyk(SpecificConsumer())
+        val sut = Tracer.Factory.create<TracerTest.WrongListener>(this::class)
+        val consumer = spyk(WrongConsumer())
         Tracer.addTraceEventConsumer(consumer)
+        val e = Exception()
 
         // WHEN
-        sut.d()
+        sut.v()
+        sut.d(1)
+        sut.i("test", 2)
+        sut.w("test", e, 3)
 
         // THEN
         verifySequence {
             consumer.incorrectLogSignatureFound()
-            consumer.d()
+            consumer.v()
+            consumer.incorrectLogSignatureFound()
+            consumer.d(eq(1))
+            consumer.incorrectLogSignatureFound()
+            consumer.i(eq("test"), eq(2))
+            consumer.incorrectLogSignatureFound()
+            consumer.w(eq("test"), eq(e), 3)
         }
     }
 
