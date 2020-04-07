@@ -326,14 +326,38 @@ class Tracer private constructor(
         private var nrLostTraceEventsTotal = 0L
         private var timeLastLostTraceEvent = LocalDateTime.now().minusSeconds(LIMIT_WARN_SECS)
 
+        private val registeredToStrings = mutableMapOf<KClass<*>, Any.() -> String>()
+
         enum class LoggingMode { SYNC, ASYNC }
 
-        init {
-
-            // Always switch on synchronous logging by default.
-            setTraceEventLoggingMode(LoggingMode.SYNC)
-            enableTraceEventLogging(true)
+        /**
+         * Register a handler for the [toString] method of a class.
+         */
+        inline fun <reified T : Any> registerToString(noinline toStringFun: T.() -> String) {
+            addToRegisteredFunctions(T::class, toStringFun)
         }
+
+        @Suppress("UNCHECKED_CAST")
+        fun <T> addToRegisteredFunctions(clazz: KClass<*>, toStringFun: T.() -> String) {
+            registeredToStrings[clazz] = toStringFun as Any.() -> String
+        }
+
+        /**
+         * Reset all [toString] handlers.
+         */
+        fun resetToDefaults() {
+            registeredToStrings.clear()
+            registerToString<Array<Int>> { "[${joinToString()}]" }
+        }
+
+        internal fun toString(item: Any?) = if (item == null) "null" else
+            registeredToStrings[item::class]?.invoke(item)
+                ?: if (item.javaClass.getMethod("toString").declaringClass == Any::class.java) {
+                    "${item.javaClass.simpleName}(...)"
+                } else {
+                    item.toString()
+                }
+
 
         /**
          * This internal method cancels the event processor to assist in the testability of
@@ -480,14 +504,17 @@ class Tracer private constructor(
 
         internal fun createLogMessage(traceEvent: TraceEvent): String {
             return "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
-                "${traceEvent.functionName}(${traceEvent.args.map {
-                    it?.let {
-                        when (it.javaClass) {
-                            Array<Int?>::class.java -> "[${(it as Array<*>).joinToString()}]"
-                            else -> it.toString()
-                        }
-                    } ?: "null"
-                }.joinToString()}), from ${traceEvent.ownerClass}"
+                "${traceEvent.functionName}(${traceEvent.args.joinToString {
+                    Tracer.toString(it)
+                }}), from ${traceEvent.ownerClass}"
+        }
+
+        init {
+
+            // Always switch on synchronous logging by default.
+            setTraceEventLoggingMode(LoggingMode.SYNC)
+            enableTraceEventLogging(true)
+            resetToDefaults()
         }
     }
 }
