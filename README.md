@@ -121,12 +121,13 @@ instance of the interface `Log.Logger` like this:
 
 ```
 import android.util.Log
+import TraceLog.Logger
 
 object MyAndroidLogger : Logger {
-    override fun log(level: Log.Level, tag: String?, message: String, e: Throwable?) =
+    override fun log(logLevel: LogLevel, tag: String?, message: String, e: Throwable?) =
         when (level) {
-            Log.Level.DEBUG -> Log.d(tag, message, e)
-            Log.Level.INFO -> Log.d(tag, message, e)
+            LogLevel.DEBUG -> Log.d(tag, message, e)
+            LogLevel.INFO -> Log.d(tag, message, e)
             ...
         }
 }
@@ -147,17 +148,17 @@ use the logging tools of the test framework, or simply the Android log, to show 
 
 ### Logging trace events at specific log levels
 
-By default, trace events are logged at `Log.DEBUG` level to the default logger, that can be
+By default, trace events are logged at `LogLevel.DEBUG` level to the default logger, that can be
 redirected to, for example Android `Log`. If you prefer to have certain events logged at 
 a different log level, you can specify the log level with
-an annotation from `Log.Level`, like this:
+an annotation from `TraceLogLevel`, like this:
 
 ```
 interface MyTraceEvents : TraceEventListener {
 
    fun userLoggedIn()           // This events gets logged at the default DEBUG level.
    
-   @LogLevel(Log.Level.WARN)
+   @TraceLogLevel(LogLevel.WARN)
    fun cannotAccessDatabase()   // This events gets logged at WARN level.
 }
 ```

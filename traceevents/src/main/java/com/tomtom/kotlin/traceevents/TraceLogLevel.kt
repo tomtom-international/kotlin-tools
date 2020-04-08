@@ -14,11 +14,13 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
+
 /**
  * This annotation can be used to annotate methods in [TraceEventListener] to specify
  * the log level at which the default logging trace event consumer will log the event
- * to [Log]. Supported log levels are VERBOSE, DEBUG (default), INFO, WARN and ERROR.
+ * to [TraceLog]. Supported log levels are VERBOSE, DEBUG (default), INFO, WARN and ERROR.
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class LogLevel(val logLevel: Log.Level)
+annotation class TraceLogLevel(val logLevel: LogLevel)

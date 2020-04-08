@@ -14,6 +14,8 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
+import com.tomtom.kotlin.traceevents.TraceLog.Logger
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -21,23 +23,23 @@ import kotlin.test.assertTrue
 
 class LogTest {
 
-    class LoggerCalled : Log.Logger {
+    class LoggerCalled : Logger {
         var called = false
-        override fun log(level: Log.Level, tag: String, message: String, e: Throwable?) {
-            println("LOG: $level, $tag, $message, $e")
+        override fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable?) {
+            println("LOG: $logLevel, $tag, $message, $e")
             called = true
         }
     }
 
-    class LoggerCheckString : Log.Logger {
-        var lastLevel: Log.Level? = null
+    class LoggerCheckString : Logger {
+        var lastLogLevel: LogLevel? = null
         var lastTag: String? = null
         var lastMessage: String? = null
         var lastE: Throwable? = null
 
-        override fun log(level: Log.Level, tag: String, message: String, e: Throwable?) {
-            println("LOG: $level, $tag, $message, $e")
-            lastLevel = level
+        override fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable?) {
+            println("LOG: $logLevel, $tag, $message, $e")
+            lastLogLevel = logLevel
             lastTag = tag
             lastMessage = message
             lastE = e
@@ -45,7 +47,7 @@ class LogTest {
     }
 
     interface AllArgsEvent : TraceEventListener {
-        @LogLevel(Log.Level.ERROR)
+        @TraceLogLevel(LogLevel.ERROR)
         fun someEvent(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
     }
 
@@ -57,13 +59,13 @@ class LogTest {
         sut.d("text 1")
         assertFalse(logger.called)
 
-        Log.setLogger(logger)
+        TraceLog.setLogger(logger)
 
         sut.d("text 2")
         assertTrue(logger.called)
 
         logger.called = false
-        Log.setLogger()
+        TraceLog.setLogger()
         sut.d("text 3")
         assertFalse(logger.called)
     }
@@ -71,43 +73,43 @@ class LogTest {
     @Test
     fun `check simple logger parameters`() {
         val logger = LoggerCheckString()
-        Log.setLogger(logger)
+        TraceLog.setLogger(logger)
 
         sut.v("verbose")
-        assertEquals(Log.Level.VERBOSE, logger.lastLevel)
+        assertEquals(LogLevel.VERBOSE, logger.lastLogLevel)
         assertEquals("verbose", logger.lastMessage)
 
         sut.d("debug")
-        assertEquals(Log.Level.DEBUG, logger.lastLevel)
+        assertEquals(LogLevel.DEBUG, logger.lastLogLevel)
         assertEquals("debug", logger.lastMessage)
 
         sut.i("info")
-        assertEquals(Log.Level.INFO, logger.lastLevel)
+        assertEquals(LogLevel.INFO, logger.lastLogLevel)
         assertEquals("info", logger.lastMessage)
 
         sut.w("warn")
-        assertEquals(Log.Level.WARN, logger.lastLevel)
+        assertEquals(LogLevel.WARN, logger.lastLogLevel)
         assertEquals("warn", logger.lastMessage)
 
         sut.e("error")
-        assertEquals(Log.Level.ERROR, logger.lastLevel)
+        assertEquals(LogLevel.ERROR, logger.lastLogLevel)
         assertEquals("error", logger.lastMessage)
 
         sut.d("text1")
-        assertEquals(Log.Level.DEBUG, logger.lastLevel)
+        assertEquals(LogLevel.DEBUG, logger.lastLogLevel)
         assertEquals("LogTest", logger.lastTag)
         assertEquals("text1", logger.lastMessage)
         assertEquals(null, logger.lastE)
 
         sut.d("text2", null)
-        assertEquals(Log.Level.DEBUG, logger.lastLevel)
+        assertEquals(LogLevel.DEBUG, logger.lastLogLevel)
         assertEquals("LogTest", logger.lastTag)
         assertEquals("text2", logger.lastMessage)
         assertEquals(null, logger.lastE)
 
         val e = IllegalStateException()
         sut.d("text3", e)
-        assertEquals(Log.Level.DEBUG, logger.lastLevel)
+        assertEquals(LogLevel.DEBUG, logger.lastLogLevel)
         assertEquals("LogTest", logger.lastTag)
         assertEquals("text3", logger.lastMessage)
         assertEquals(e, logger.lastE)
@@ -116,10 +118,10 @@ class LogTest {
     @Test
     fun `check trace event logger parameters`() {
         val logger = LoggerCheckString()
-        Log.setLogger(logger)
+        TraceLog.setLogger(logger)
 
         sut.someEvent(null, null, null, null)
-        assertEquals(Log.Level.ERROR, logger.lastLevel)
+        assertEquals(LogLevel.ERROR, logger.lastLogLevel)
         assertEquals("LogTest", logger.lastTag)
         assertEquals(null, logger.lastE)
         assertEquals(

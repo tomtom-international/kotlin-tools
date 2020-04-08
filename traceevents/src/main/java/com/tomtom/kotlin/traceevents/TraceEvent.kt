@@ -14,13 +14,14 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import java.time.LocalDateTime
 
 /**
  * Data class to store a single trace event.
  *
  * @param dateTime Event time.
- * @param logLevel Log level (from [LogLevel] annotation).
+ * @param logLevel Log level (from [TraceLogLevel] annotation).
  * @param ownerClass Class logging the event.
  * @param interfaceName Interface name, derived from [TraceEventListener].
  * @param functionName Function name in interface, which represents the trace event name.
@@ -28,7 +29,7 @@ import java.time.LocalDateTime
  */
 data class TraceEvent(
     val dateTime: LocalDateTime,
-    val logLevel: Log.Level,
+    val logLevel: LogLevel,
     val ownerClass: String,
     val interfaceName: String,
     val functionName: String,

@@ -14,24 +14,24 @@
  */
 package com.tomtom.kotlin.traceevents
 
-import com.tomtom.kotlin.traceevents.Log.Companion.DefaultLoggerToStdout.log
-import com.tomtom.kotlin.traceevents.Log.Companion.setLogger
-import com.tomtom.kotlin.traceevents.Log.Logger
+import com.tomtom.kotlin.traceevents.TraceLog.Companion.DefaultLoggerToStdout.log
+import com.tomtom.kotlin.traceevents.TraceLog.Companion.setLogger
+import com.tomtom.kotlin.traceevents.TraceLog.Logger
 import java.time.LocalDateTime
 
 /**
  * This defines an interface [Logger], which may be implemented and injected using
  * [setLogger] to modify the behavior of the simple text message loggers.
  */
-interface Log {
+interface TraceLog {
 
-    enum class Level { VERBOSE, DEBUG, INFO, WARN, ERROR }
+    enum class LogLevel { VERBOSE, DEBUG, INFO, WARN, ERROR }
 
     /**
      * Implement this interface for your own logger and set [log] accordingly.
      */
     interface Logger {
-        fun log(level: Level, tag: String, message: String, e: Throwable? = null)
+        fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable? = null)
     }
 
     companion object {
@@ -46,16 +46,16 @@ interface Log {
         /**
          * Function to log a string message with a log level.
          */
-        internal fun log(level: Level, tag: String, message: String, e: Throwable? = null) =
-            theLogger.log(level, tag, message, e)
+        internal fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable? = null) =
+            theLogger.log(logLevel, tag, message, e)
 
         /**
          * Default implementation for [log].
          */
         internal object DefaultLoggerToStdout : Logger {
-            override fun log(level: Level, tag: String, message: String, e: Throwable?) {
+            override fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable?) {
                 val exceptionMsg = e?.message?.let { ", $it" } ?: ""
-                println("${LocalDateTime.now()}: [$level] $tag: $message$exceptionMsg")
+                println("${LocalDateTime.now()}: [$logLevel] $tag: $message$exceptionMsg")
             }
         }
 

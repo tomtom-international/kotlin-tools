@@ -14,6 +14,7 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -83,15 +84,15 @@ internal class TraceEventConsumerCollection {
                     } catch (e: Exception) {
 
                         // Catch all exceptions, to avoid killing the event processor.
-                        Log.log(
-                            Log.Level.ERROR, TAG, "Cannot invoke consumer, " +
+                        TraceLog.log(
+                            LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
                                 "method=${method.name}, " +
                                 "args=(${traceEvent.args.joinToString()})", e
                         )
                     }
                 } else {
-                    Log.log(
-                        Log.Level.ERROR, TAG, "Method not found, " +
+                    TraceLog.log(
+                        LogLevel.ERROR, TAG, "Method not found, " +
                             "traceEventConsumer=${traceEventConsumer::class}" +
                             "traceEventListener=$traceEventListener" +
                             "traceEvent.functionName=${traceEvent.functionName}" +
@@ -101,8 +102,8 @@ internal class TraceEventConsumerCollection {
             } else {
 
                 // Error: the trace event was not from a [TraceEvents]-derived class.
-                Log.log(
-                    Log.Level.ERROR,
+                TraceLog.log(
+                    LogLevel.ERROR,
                     TAG,
                     "Event is not a subclass of ${TraceEventListener::class}, " +
                         "traceEventListener=${traceEvent.interfaceName}"
@@ -111,18 +112,18 @@ internal class TraceEventConsumerCollection {
 
             // Catch (unexpected) exceptions, just to avoid killing the event processor.
         } catch (e: ClassNotFoundException) {
-            Log.log(
-                Log.Level.ERROR, TAG, "Class not found, " +
+            TraceLog.log(
+                LogLevel.ERROR, TAG, "Class not found, " +
                     "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: LinkageError) {
-            Log.log(
-                Log.Level.ERROR, TAG, "Linkage error, " +
+            TraceLog.log(
+                LogLevel.ERROR, TAG, "Linkage error, " +
                     "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: ExceptionInInitializerError) {
-            Log.log(
-                Log.Level.ERROR, TAG, "Initialization error, " +
+            TraceLog.log(
+                LogLevel.ERROR, TAG, "Initialization error, " +
                     "traceEventListener=${traceEvent.interfaceName}", e
             )
         }
