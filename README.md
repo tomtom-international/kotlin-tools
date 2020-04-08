@@ -281,6 +281,13 @@ By default, tracers are set up to send these log messages synchronously to the d
 It is possible to register trace event consumers to process these log messages as well, for example,
 to send logs to another system for analysis.
 
+If you wish to define a tracer to *only* log standard messages using `d()` etc., you don't need
+to create (or use) an `TraceEventListener` interface. You can just use this:
+
+```
+val tracer = Tracer.Factory.createLoggerOnly(this)
+```
+
 **Note:** Using the `Log.x` functions on tracers defeats the advantages of using type-safe
 arguments. Always consider using trace event functions, when possible.
 
@@ -387,6 +394,10 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
+
+### 1.0.7
+
+* Added `Tracer.Factory.createLoggerOnly(this)`.
 
 ### 1.0.6
 

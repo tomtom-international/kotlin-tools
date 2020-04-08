@@ -146,6 +146,13 @@ class Tracer private constructor(
             inline fun <reified T : TraceEventListener> create(companionObject: Any) =
                 createForListener<T>(companionObject::class, T::class)
 
+            /**
+             * Same as [create], but does not specify any event handlers. Only log functions
+             * 'v', 'd', 'i', 'w' and 'e' are allowed.
+             */
+            fun createLoggerOnly(companionObject: Any) =
+                createForListener<TraceEventListener>(companionObject::class, TraceEventListener::class)
+
             @Suppress("UNCHECKED_CAST")
             fun <T : TraceEventListener> createForListener(
                 companionClass: KClass<*>,
