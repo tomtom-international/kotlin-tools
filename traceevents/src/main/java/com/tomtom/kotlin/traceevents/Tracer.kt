@@ -151,16 +151,27 @@ class Tracer private constructor(
              * 'v', 'd', 'i', 'w' and 'e' are allowed.
              */
             fun createLoggerOnly(companionObject: Any) =
-                createForListener<TraceEventListener>(companionObject::class, TraceEventListener::class)
+                createForListenerAndLogger<TraceEventListener>(
+                    companionObject::class, TraceEventListener::class, true
+                )
 
-            @Suppress("UNCHECKED_CAST")
             fun <T : TraceEventListener> createForListener(
                 companionClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>
+            ): T = createForListenerAndLogger<T>(companionClass, traceEventListener)
+
+            @Suppress("UNCHECKED_CAST")
+            private fun <T : TraceEventListener> createForListenerAndLogger(
+                companionClass: KClass<*>,
+                traceEventListener: KClass<out TraceEventListener>,
+                isLoggerOnly: Boolean = false
             ): T {
                 require(companionClass.isCompanion) {
                     "Tracers may only be created from companion objects, with `this` to prevent " +
                         "duplicate instances, companionClass=$companionClass"
+                }
+                require(isLoggerOnly || traceEventListener != TraceEventListener::class) {
+                    "Derive an interface from TraceEventListener, or use createLoggerOnly()"
                 }
 
                 val ownerClass = companionClass.javaObjectType.enclosingClass?.kotlin!!
@@ -245,7 +256,11 @@ class Tracer private constructor(
                 // Don't repeat the event if it was logged already by the logger. If the event
                 // was a simple log event, don't even mention the overflow (not useful).
                 if (!predefinedLogFunctionNames.contains(event.functionName)) {
-                    TraceLog.log(LogLevel.DEBUG, tagOwnerClass, "Event lost, event=(see previous line)")
+                    TraceLog.log(
+                        LogLevel.DEBUG,
+                        tagOwnerClass,
+                        "Event lost, event=(see previous line)"
+                    )
                 }
             } else {
 
