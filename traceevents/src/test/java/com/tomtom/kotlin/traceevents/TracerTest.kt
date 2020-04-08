@@ -14,6 +14,7 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import io.mockk.coVerifySequence
 import io.mockk.spyk
 import io.mockk.verify
@@ -32,7 +33,7 @@ class TracerTest {
         fun eventNoArgs()
         fun eventString(message: String)
 
-        @LogLevel(Log.Level.ERROR)
+        @TraceLogLevel(LogLevel.ERROR)
         fun eventIntsString(number1: Int, number2: Int, message: String)
         fun eventNullable(value: Int?)
         fun eventList(list: List<Int?>)
@@ -50,7 +51,7 @@ class TracerTest {
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-            Log.log(Log.Level.DEBUG, "TAG", "${traceEvent.functionName}")
+            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.functionName}")
     }
 
     interface WrongListener : TraceEventListener {
@@ -61,10 +62,10 @@ class TracerTest {
     }
 
     class WrongConsumer : WrongListener, TraceEventConsumer {
-        override fun v() = Log.log(Log.Level.VERBOSE, "TAG", "v()")
-        override fun d(msg: Int) = Log.log(Log.Level.DEBUG, "TAG", "d()")
-        override fun i(msg: String, e: Int) = Log.log(Log.Level.INFO, "TAG", "i()")
-        override fun w(msg: String, e: Throwable, rest: Int) = Log.log(Log.Level.WARN, "TAG", "w()")
+        override fun v() = TraceLog.log(LogLevel.VERBOSE, "TAG", "v()")
+        override fun d(msg: Int) = TraceLog.log(LogLevel.DEBUG, "TAG", "d()")
+        override fun i(msg: String, e: Int) = TraceLog.log(LogLevel.INFO, "TAG", "i()")
+        override fun w(msg: String, e: Throwable, rest: Int) = TraceLog.log(LogLevel.WARN, "TAG", "w()")
     }
 
     companion object {
@@ -125,9 +126,9 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq(Log.Level.DEBUG, "eventNoArgs"))
-            consumer.consumeTraceEvent(traceEq(Log.Level.DEBUG, "eventString", "xyz"))
-            consumer.consumeTraceEvent(traceEq(Log.Level.ERROR, "eventIntsString", 10, 20, "abc"))
+            consumer.consumeTraceEvent(traceEq(LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq(LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq(LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
         }
     }
 
@@ -392,15 +393,15 @@ class TracerTest {
 
     @Test
     fun `do not register toString for Boolean`() {
-        assertEquals("true", Tracer.toString(true))
-        assertEquals("false", Tracer.toString(false))
+        assertEquals("true", Tracer.toStringFromRegistered(true))
+        assertEquals("false", Tracer.toStringFromRegistered(false))
     }
 
     @Test
     fun `register toString for Boolean`() {
         Tracer.registerToString<Boolean> { if (this) "T" else "F" }
-        assertEquals("T", Tracer.toString(true))
-        assertEquals("F", Tracer.toString(false))
+        assertEquals("T", Tracer.toStringFromRegistered(true))
+        assertEquals("F", Tracer.toStringFromRegistered(false))
     }
 
     class SomeClass {
@@ -410,7 +411,7 @@ class TracerTest {
     @Test
     fun `register toString for SomeClass`() {
         Tracer.registerToString<SomeClass> { "x=$x" }
-        assertEquals("x=10", Tracer.toString(SomeClass()))
+        assertEquals("x=10", Tracer.toStringFromRegistered(SomeClass()))
     }
 
     @Test

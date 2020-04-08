@@ -14,6 +14,7 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +47,7 @@ import kotlin.reflect.full.isSubclassOf
  * These consumers receive every event thrown in the system. They receive the event information
  * as part of their [GenericTraceEventConsumer.consumeTraceEvent] implementation.
  *
- * Generic consumers typically forward events to another system, such as the Android [Log], store
+ * Generic consumers typically forward events to another system, such as the Android [TraceLog], store
  * them in a database, or perhaps even send them across application (or machine) boundaries.
  *
  * 2. Specific trace event consumers, that implement a specific [TraceEventListener] interface.
@@ -87,7 +88,7 @@ import kotlin.reflect.full.isSubclassOf
  * be throttled to make sure sending many threads in succession does not overload the system.
  * If the event queue overflows, events are lost, rather than blocking the system. (Note that
  * if the event queue overflows, something weird is going on like sending 1000s of messages per
- * second - which you probably shouldn't do; note that this situation is logged to Android [Log]).
+ * second - which you probably shouldn't do; note that this situation is logged to Android [TraceLog]).
  *
  * The events processor is enabled at start-up, but may be suspended at any time using
  * [Tracer.enableTraceEventLogging]. When the event processor is suspended, trace events in the
@@ -184,7 +185,7 @@ class Tracer private constructor(
          */
         proxy as TraceEventListener
         val logLevel =
-            method.getDeclaredAnnotation(LogLevel::class.java)?.logLevel ?: Log.Level.DEBUG
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -220,7 +221,7 @@ class Tracer private constructor(
             } else {
 
                 // Only format the message for non-standard Log events. Use the annotated log level.
-                Log.log(logLevel, tagOwnerClass, "event=${createLogMessage(event)}")
+                TraceLog.log(logLevel, tagOwnerClass, "event=${createLogMessage(event)}")
             }
         }
         offerTraceEvent(event, now)
@@ -237,13 +238,13 @@ class Tracer private constructor(
                 // Don't repeat the event if it was logged already by the logger. If the event
                 // was a simple log event, don't even mention the overflow (not useful).
                 if (!predefinedLogFunctionNames.contains(event.functionName)) {
-                    Log.log(Log.Level.DEBUG, tagOwnerClass, "Event lost, event=(see previous line)")
+                    TraceLog.log(LogLevel.DEBUG, tagOwnerClass, "Event lost, event=(see previous line)")
                 }
             } else {
 
                 // Only format the message for lost events that weren't logged already.
-                Log.log(
-                    Log.Level.WARN,
+                TraceLog.log(
+                    LogLevel.WARN,
                     tagOwnerClass,
                     "Event lost, event=${createLogMessage(event)}"
                 )
@@ -256,8 +257,8 @@ class Tracer private constructor(
         if (nrLostTraceEventsSinceLastMsg > 0 &&
             timeLastLostTraceEvent.plusSeconds(LIMIT_WARN_SECS).isBefore(now)
         ) {
-            Log.log(
-                Log.Level.WARN,
+            TraceLog.log(
+                LogLevel.WARN,
                 tagOwnerClass,
                 "Trace event channel is full, " +
                     "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
@@ -339,7 +340,7 @@ class Tracer private constructor(
         private var nrLostTraceEventsTotal = 0L
         private var timeLastLostTraceEvent = LocalDateTime.now().minusSeconds(LIMIT_WARN_SECS)
 
-        private val registeredToStrings = mutableMapOf<KClass<*>, Any.() -> String>()
+        private val registeredToStrings = mutableMapOf<String, Any.() -> String>()
 
         enum class LoggingMode { SYNC, ASYNC }
 
@@ -352,7 +353,7 @@ class Tracer private constructor(
 
         @Suppress("UNCHECKED_CAST")
         fun <T> addToRegisteredFunctions(clazz: KClass<*>, toStringFun: T.() -> String) {
-            registeredToStrings[clazz] = toStringFun as Any.() -> String
+            registeredToStrings[clazz.toString()] = toStringFun as Any.() -> String
         }
 
         /**
@@ -363,15 +364,6 @@ class Tracer private constructor(
             registerToString<Array<*>> { "[${joinToString()}]" }
         }
 
-        internal fun toString(item: Any?) = if (item == null) "null" else
-            registeredToStrings[item::class]?.invoke(item)
-                ?: if (item.javaClass.getMethod("toString").declaringClass == Any::class.java) {
-                    "${item.javaClass.simpleName}(...)"
-                } else {
-                    item.toString()
-                }
-
-
         /**
          * This internal method cancels the event processor to assist in the testability of
          * this module. It cancels the event processor, which will be restarted when a
@@ -381,7 +373,7 @@ class Tracer private constructor(
             if (::eventProcessorJob.isInitialized) {
                 eventProcessorJob.cancelAndJoin()
             }
-            Log.log(Log.Level.DEBUG, TAG, "Cancelled trace event processor")
+            TraceLog.log(LogLevel.DEBUG, TAG, "Cancelled trace event processor")
         }
 
         fun addTraceEventConsumer(traceEventConsumer: TraceEventConsumer) {
@@ -427,10 +419,18 @@ class Tracer private constructor(
             enabled = wasEnabled
         }
 
+        /**
+         * Enable or disable trace event logging altogether.
+         */
         fun enableTraceEventLogging(enable: Boolean) {
             enabled = enable
         }
 
+        /**
+         * Set trace logging to sync (events are logged to logger in same thread as event caller)
+         * or async (events are queued and logged in a separate thread).
+         * Default is async, so event processing doesn't get in the way of the caller thread.
+         */
         fun setTraceEventLoggingMode(loggingMode: LoggingMode) {
             if (loggingMode == LoggingMode.ASYNC) {
                 // Disabled sync logging and enable async logging.
@@ -448,7 +448,7 @@ class Tracer private constructor(
          * Event queue handling runs in same scope as [flushTraceEvents].
          */
         private suspend fun processTraceEvents() {
-            Log.log(Log.Level.DEBUG, TAG, "Started trace event processor")
+            TraceLog.log(LogLevel.DEBUG, TAG, "Started trace event processor")
             for (traceEvent in traceEventChannel) {
 
                 /**
@@ -479,8 +479,8 @@ class Tracer private constructor(
                     args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
                 args.size > 2
             ) {
-                Log.log(
-                    Log.Level.ERROR,
+                TraceLog.log(
+                    LogLevel.ERROR,
                     TAG,
                     "Incorrect log call, expected arguments (String, Throwable), " +
                         "args=${args?.joinToString {
@@ -496,13 +496,13 @@ class Tracer private constructor(
                 if (args.size == 2 && args[1] != null) args[1] as Throwable else null
             }
             val level = when (functionName) {
-                FUN_VERBOSE -> Log.Level.VERBOSE
-                FUN_DEBUG -> Log.Level.DEBUG
-                FUN_INFO -> Log.Level.INFO
-                FUN_WARN -> Log.Level.WARN
-                else -> Log.Level.ERROR
+                FUN_VERBOSE -> LogLevel.VERBOSE
+                FUN_DEBUG -> LogLevel.DEBUG
+                FUN_INFO -> LogLevel.INFO
+                FUN_WARN -> LogLevel.WARN
+                else -> LogLevel.ERROR
             }
-            Log.log(level, tag, message, e)
+            TraceLog.log(level, tag, message, e)
             return true
         }
 
@@ -518,9 +518,17 @@ class Tracer private constructor(
         internal fun createLogMessage(traceEvent: TraceEvent): String {
             return "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
                 "${traceEvent.functionName}(${traceEvent.args.joinToString {
-                    Tracer.toString(it)
+                    toStringFromRegistered(it)
                 }}), from ${traceEvent.ownerClass}"
         }
+
+        internal fun toStringFromRegistered(item: Any?) = if (item == null) "null" else
+            registeredToStrings[item::class.toString()]?.invoke(item)
+                ?: if (item.javaClass.getMethod("toString").declaringClass == Any::class.java) {
+                    "${item.javaClass.simpleName}(...)"
+                } else {
+                    item.toString()
+                }
 
         init {
 

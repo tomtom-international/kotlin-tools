@@ -14,6 +14,7 @@
  */
 package com.tomtom.kotlin.traceevents
 
+import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import io.mockk.MockKMatcherScope
 import kotlin.reflect.jvm.jvmName
 
@@ -21,7 +22,7 @@ import kotlin.reflect.jvm.jvmName
  * Utility function to check if a trace events matches the given parameters.
  */
 internal fun MockKMatcherScope.traceEq(
-    logLevel: Log.Level,
+    logLevel: LogLevel,
     functionName: String,
     vararg args: Any
 ) =
