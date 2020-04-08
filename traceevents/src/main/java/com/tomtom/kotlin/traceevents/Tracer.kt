@@ -339,7 +339,7 @@ class Tracer private constructor(
         private var nrLostTraceEventsTotal = 0L
         private var timeLastLostTraceEvent = LocalDateTime.now().minusSeconds(LIMIT_WARN_SECS)
 
-        private val registeredToStrings = mutableMapOf<KClass<*>, Any.() -> String>()
+        private val registeredToStrings = mutableMapOf<String, Any.() -> String>()
 
         enum class LoggingMode { SYNC, ASYNC }
 
@@ -352,7 +352,7 @@ class Tracer private constructor(
 
         @Suppress("UNCHECKED_CAST")
         fun <T> addToRegisteredFunctions(clazz: KClass<*>, toStringFun: T.() -> String) {
-            registeredToStrings[clazz] = toStringFun as Any.() -> String
+            registeredToStrings[clazz.toString()] = toStringFun as Any.() -> String
         }
 
         /**
@@ -362,15 +362,6 @@ class Tracer private constructor(
             registeredToStrings.clear()
             registerToString<Array<*>> { "[${joinToString()}]" }
         }
-
-        internal fun toString(item: Any?) = if (item == null) "null" else
-            registeredToStrings[item::class]?.invoke(item)
-                ?: if (item.javaClass.getMethod("toString").declaringClass == Any::class.java) {
-                    "${item.javaClass.simpleName}(...)"
-                } else {
-                    item.toString()
-                }
-
 
         /**
          * This internal method cancels the event processor to assist in the testability of
@@ -518,9 +509,17 @@ class Tracer private constructor(
         internal fun createLogMessage(traceEvent: TraceEvent): String {
             return "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
                 "${traceEvent.functionName}(${traceEvent.args.joinToString {
-                    Tracer.toString(it)
+                    toStringFromRegistered(it)
                 }}), from ${traceEvent.ownerClass}"
         }
+
+        internal fun toStringFromRegistered(item: Any?) = if (item == null) "null" else
+            registeredToStrings[item::class.toString()]?.invoke(item)
+                ?: if (item.javaClass.getMethod("toString").declaringClass == Any::class.java) {
+                    "${item.javaClass.simpleName}(...)"
+                } else {
+                    item.toString()
+                }
 
         init {
 

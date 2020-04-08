@@ -287,7 +287,11 @@ arguments. Always consider using trace event functions, when possible.
 
 By default, trace event arguments are formatted using their default `toString` function.
 If you wish to override them, use `Tracer.registerToString<T>{ <toString implementation> }` to 
-override the `toString` method.
+override the `toString` method. For example:
+
+```
+Tracer.registerToString<Coordinate>{ "($lat, $lon" }
+```
 
 By default, the `toString` for `Array`s is replaced with one that provides a list of
 elements, rather than an object reference.

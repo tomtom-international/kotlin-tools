@@ -392,15 +392,15 @@ class TracerTest {
 
     @Test
     fun `do not register toString for Boolean`() {
-        assertEquals("true", Tracer.toString(true))
-        assertEquals("false", Tracer.toString(false))
+        assertEquals("true", Tracer.toStringFromRegistered(true))
+        assertEquals("false", Tracer.toStringFromRegistered(false))
     }
 
     @Test
     fun `register toString for Boolean`() {
         Tracer.registerToString<Boolean> { if (this) "T" else "F" }
-        assertEquals("T", Tracer.toString(true))
-        assertEquals("F", Tracer.toString(false))
+        assertEquals("T", Tracer.toStringFromRegistered(true))
+        assertEquals("F", Tracer.toStringFromRegistered(false))
     }
 
     class SomeClass {
@@ -410,7 +410,7 @@ class TracerTest {
     @Test
     fun `register toString for SomeClass`() {
         Tracer.registerToString<SomeClass> { "x=$x" }
-        assertEquals("x=10", Tracer.toString(SomeClass()))
+        assertEquals("x=10", Tracer.toStringFromRegistered(SomeClass()))
     }
 
     @Test
