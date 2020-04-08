@@ -69,8 +69,8 @@ class TracerTest {
     }
 
     companion object {
-        private val TAG = TracerTest::class.simpleName
-        private val sut = Tracer.Factory.create<TracerTest.MyEvents>(this)
+        val TAG = TracerTest::class.simpleName
+        val sut = Tracer.Factory.create<TracerTest.MyEvents>(this)
         val sutWrong = Tracer.Factory.create<TracerTest.WrongListener>(this)
         val sutWithoutToString = Tracer.Factory.create<TracerTest.ListenerWithoutToString>(this)
     }

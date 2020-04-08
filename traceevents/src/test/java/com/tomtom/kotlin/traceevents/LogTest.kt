@@ -159,7 +159,17 @@ class LogTest {
         "[TIME]"
     )
 
+    @Test
+    fun `logger only`() {
+        val logger = LoggerCheckString()
+        TraceLog.setLogger(logger)
+
+        loggerOnly.d("test")
+        assertEquals("test", logger.lastMessage)
+    }
+
     companion object {
-        private val sut = Tracer.Factory.create<AllArgsEvent>(this)
+        val sut = Tracer.Factory.create<AllArgsEvent>(this)
+        val loggerOnly = Tracer.Factory.createLoggerOnly(this)
     }
 }
