@@ -388,6 +388,14 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.6
+
+* Rename `Log` to `TraceLog` and `LogLevel` to `TraceLogLevel`.
+
+* Fixed string representation of arrays.
+
+* Added unit tests for message formatting.
+ 
 ### 1.0.5
 
 * Added `Tracer.RegisterToString` to register string handlers for class types.
