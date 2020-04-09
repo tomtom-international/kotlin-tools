@@ -18,6 +18,7 @@ import com.tomtom.kotlin.traceevents.TraceLog.Companion.DefaultLoggerToStdout.lo
 import com.tomtom.kotlin.traceevents.TraceLog.Companion.setLogger
 import com.tomtom.kotlin.traceevents.TraceLog.Logger
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * This defines an interface [Logger], which may be implemented and injected using
@@ -54,10 +55,16 @@ interface TraceLog {
          */
         internal object DefaultLoggerToStdout : Logger {
             override fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable?) {
-                val exceptionMsg = e?.message?.let { ", $it" } ?: ""
-                println("${LocalDateTime.now()}: [$logLevel] $tag: $message$exceptionMsg")
+                println("${createStdoutLogLine(logLevel, tag, message, e)}")
             }
         }
+
+        internal fun createStdoutLogLine(
+            logLevel: LogLevel, tag: String, message: String, e: Throwable?
+        ) =
+            "[${LocalDateTime.now()
+                .format(DateTimeFormatter.ISO_DATE_TIME)}]: [$logLevel] $tag: $message" +
+                if (e == null) "" else (", " + Tracer.formatThrowable(e, true))
 
         internal var theLogger: Logger = DefaultLoggerToStdout
     }

@@ -21,7 +21,7 @@ import kotlin.reflect.jvm.jvmName
 /**
  * Utility function to check if a trace events matches the given parameters.
  */
-internal fun MockKMatcherScope.traceEq(
+fun MockKMatcherScope.traceEq(
     logLevel: LogLevel,
     functionName: String,
     vararg args: Any
@@ -34,3 +34,13 @@ internal fun MockKMatcherScope.traceEq(
             traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
             traceEvent.args.contentDeepEquals(args)
     }
+
+fun replaceTime(msg: String?, replaceWith: String) = msg?.replace(
+    "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]+\\]".toRegex(),
+    replaceWith
+) ?: ""
+
+fun replaceNumber(msg: String?, replaceWith: String) = msg?.replace(
+    "\\b[0-9]+\\b".toRegex(RegexOption.MULTILINE),
+    replaceWith
+) ?: ""
