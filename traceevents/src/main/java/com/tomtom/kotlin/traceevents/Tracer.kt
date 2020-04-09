@@ -593,7 +593,7 @@ class Tracer private constructor(
             }
         }
 
-        internal fun registeredToString(item: Any?) =
+        internal fun convertToStringUsingRegistry(item: Any?) =
             if (item == null) {
                 "null"
             } else {
@@ -625,7 +625,7 @@ class Tracer private constructor(
             }
             sb.append(
                 "${traceEvent.functionName}(${traceEvent.args.joinToString {
-                    registeredToString(it)
+                    convertToStringUsingRegistry(it)
                 }})"
             )
             if (includeOwnerClass) {
