@@ -643,19 +643,16 @@ class Tracer private constructor(
         /**
          * Format a [Throwable]
          */
-        internal fun formatThrowable(e: Throwable, logStackTrace: Boolean): String {
-            val sb = StringBuilder()
+        internal fun formatThrowable(e: Throwable, logStackTrace: Boolean) =
             if (logStackTrace) {
                 val stringWriter = StringWriter()
                 val printWriter = PrintWriter(stringWriter)
                 e.printStackTrace(printWriter)
                 printWriter.flush()
-                sb.append(stringWriter.toString())
+                stringWriter.toString()
             } else {
-                sb.append(e.message)
+                e.message
             }
-            return sb.toString()
-        }
 
         init {
 
