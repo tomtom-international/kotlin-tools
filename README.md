@@ -419,6 +419,16 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.8
+
+* Added `logStackTrace` to annotation `@TraceLogLevel`.
+
+* Added `includeOwnerClass` to annotation `@TraceLogLevel`.
+
+* Removed time stamp from `SYNC` logging (already added by most loggers).
+
+* Added unit tests to check message formats.
+
 ### 1.0.7
 
 * Added `Tracer.Factory.createLoggerOnly(this)`.

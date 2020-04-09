@@ -259,8 +259,9 @@ class Tracer private constructor(
                     logLevelAnnotation, tagOwnerClass,
                     "event=${createLogMessage(
                         event,
-                        logStackTraceAnnotation,
-                        includeOwnerClassAnnotation
+                        includeTime = false,
+                        logStackTrace = logStackTraceAnnotation,
+                        includeOwnerClass = includeOwnerClassAnnotation
                     )}"
                 )
             }
@@ -283,7 +284,7 @@ class Tracer private constructor(
 
                     // Don't repeat the event if it was logged already by the logger. If the event
                     // was a simple log event, don't even mention the overflow (not useful).
-                    if (!simpleLogFunctionNames.contains(event.functionName)) {
+                    if (simpleLogFunctionNameToLogLevel(event.functionName) == null) {
                         TraceLog.log(
                             LogLevel.DEBUG,
                             tagOwnerClass,
@@ -297,7 +298,12 @@ class Tracer private constructor(
                     TraceLog.log(
                         LogLevel.WARN,
                         tagOwnerClass,
-                        "Event lost, event=${createLogMessage(event, true, true)}"
+                        "Event lost, event=${createLogMessage(
+                            event,
+                            includeTime = true,
+                            logStackTrace = true,
+                            includeOwnerClass = true
+                        )}"
                     )
             }
             ++nrLostTraceEventsSinceLastMsg
@@ -354,9 +360,6 @@ class Tracer private constructor(
         private const val FUN_INFO = "i"
         private const val FUN_WARN = "w"
         private const val FUN_ERROR = "e"
-
-        internal val simpleLogFunctionNames =
-            setOf(FUN_VERBOSE, FUN_DEBUG, FUN_INFO, FUN_WARN, FUN_ERROR)
 
         /**
          * Set to true to start processing, false to discard events.
@@ -612,15 +615,18 @@ class Tracer private constructor(
          */
         internal fun createLogMessage(
             traceEvent: TraceEvent,
+            includeTime: Boolean,
             logStackTrace: Boolean,
             includeOwnerClass: Boolean
         ): String {
             val sb = StringBuilder()
+            if (includeTime) {
+                sb.append("[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] ")
+            }
             sb.append(
-                "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
-                    "${traceEvent.functionName}(${traceEvent.args.joinToString {
-                        registeredToString(it)
-                    }})"
+                "${traceEvent.functionName}(${traceEvent.args.joinToString {
+                    registeredToString(it)
+                }})"
             )
             if (includeOwnerClass) {
                 sb.append(", from ${traceEvent.ownerClass}")
