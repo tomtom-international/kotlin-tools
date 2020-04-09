@@ -631,7 +631,7 @@ class Tracer private constructor(
             if (includeOwnerClass) {
                 sb.append(", from ${traceEvent.ownerClass}")
             }
-            if (logStackTrace) {
+            if (logStackTrace && !traceEvent.args.isEmpty()) {
                 val lastArg = traceEvent.args.last()
                 if (lastArg != null && lastArg is Throwable) {
                     sb.append("\n")
