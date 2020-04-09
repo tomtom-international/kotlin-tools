@@ -353,7 +353,7 @@ class Tracer private constructor(
         val TAG = Tracer::class.simpleName!!
 
         /**
-         * Names of ssimple, predefined log functions (from standard loggers).
+         * Names of simple, predefined log functions (from standard loggers).
          */
         private const val FUN_VERBOSE = "v"
         private const val FUN_DEBUG = "d"
