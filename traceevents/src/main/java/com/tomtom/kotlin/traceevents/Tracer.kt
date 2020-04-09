@@ -392,7 +392,7 @@ class Tracer private constructor(
         internal lateinit var eventProcessorJob: Job
 
         /**
-         * Channel definition for the channel that queues traces.
+         * Capacity definition for the channel that queues traces.
          */
         private const val CHANNEL_CAPACITY = 10000
         internal val traceEventChannel = Channel<TraceEvent>(CHANNEL_CAPACITY)
