@@ -141,6 +141,26 @@ Or, to reset it to the default implementation:
 setLogger() 
 ```
 
+### Using the `@TraceLogLevel` annotation
+
+Trace events in a `TraceEventListener` can be annotated with the `@TraceLogLevel` annotation.
+This annotations allows you to specify a log level that will be used to output the trace event
+to a standard logger using a specific log level, such as `INFO`, `DEBUG`, `ERROR`, etc.
+
+It also offers the option to specify logging a full stack trace of a logged exception, if the
+exception is provided as the last argument of an event.
+
+Example:
+
+```
+interface AllArgsEvent : TraceEventListener {
+
+    @TraceLogLevel(LogLevel.ERROR)
+    fun someEvent(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
+}
+ 
+``` 
+
 ### Logging in tests
 
 Trace events are used for production code. Test cases should not use trace events. Test cases should
