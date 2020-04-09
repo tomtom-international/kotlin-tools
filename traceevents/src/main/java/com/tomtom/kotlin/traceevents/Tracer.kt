@@ -453,7 +453,7 @@ class Tracer private constructor(
 
         /**
          * Remove a trace event consumer. The event processor should not be stopped if there are
-         * no consumer left, because it holds the event queue, and you may lose events then.
+         * no consumers left, because it holds the event queue and you may lose events then.
          */
         fun removeTraceEventConsumer(traceEventConsumer: TraceEventConsumer) {
             traceEventConsumers.remove(traceEventConsumer)
