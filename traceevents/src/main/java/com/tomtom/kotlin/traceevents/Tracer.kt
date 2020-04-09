@@ -632,10 +632,9 @@ class Tracer private constructor(
                 sb.append(", from ${traceEvent.ownerClass}")
             }
             if (logStackTrace && !traceEvent.args.isEmpty()) {
-                val lastArg = traceEvent.args.last()
-                if (lastArg != null && lastArg is Throwable) {
+                (traceEvent.args.last() as? Throwable)?.let {
                     sb.append("\n")
-                    sb.append(formatThrowable(lastArg, logStackTrace))
+                    sb.append(formatThrowable(it, logStackTrace))
                 }
             }
             return sb.toString()
