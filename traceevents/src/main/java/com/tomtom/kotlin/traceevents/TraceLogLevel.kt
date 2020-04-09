@@ -29,4 +29,8 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class TraceLogLevel(val logLevel: LogLevel, val logStackTrace: Boolean = true)
+annotation class TraceLogLevel(
+    val logLevel: LogLevel,
+    val logStackTrace: Boolean = true,
+    val includeOwnerClass: Boolean = false
+)

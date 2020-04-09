@@ -144,21 +144,25 @@ setLogger()
 ### Using the `@TraceLogLevel` annotation
 
 Trace events in a `TraceEventListener` can be annotated with the `@TraceLogLevel` annotation.
-This annotations allows you to specify a log level that will be used to output the trace event
-to a standard logger using a specific log level, such as `INFO`, `DEBUG`, `ERROR`, etc.
+This annotation allows you to specify a log level, using parameter `logLevel` that will 
+be used to output the trace event to a standard logger using a specific log level, 
+such as `INFO`, `DEBUG`, `ERROR`, etc.
 
-It also offers the option to specify logging a full stack trace of a logged exception, if the
-exception is provided as the last argument of an event.
+It also offers the option to specify logging a full stack trace of a logged exception, using
+the optional parameter `logStackTrace`. This applies to the last argument of an event (if it 
+is a `Throwable` object).
+
+Finally, it offers the option, using `includeOwnerClass` to add the class owning the event
+interface to the log message, or omit that.
 
 Example:
 
 ```
-interface AllArgsEvent : TraceEventListener {
+interface MyEvents : TraceEventListener {
 
-    @TraceLogLevel(LogLevel.ERROR)
-    fun someEvent(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
+    @TraceLogLevel(LogLevel.ERROR, logStackTrace = true, includeOwnerClass = true)
+    fun foundAnException(e: Exception)
 }
- 
 ``` 
 
 ### Logging in tests

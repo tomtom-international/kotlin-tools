@@ -217,6 +217,8 @@ class Tracer private constructor(
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
         val logStackTraceAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: false
+        val includeOwnerClassAnnotation =
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.includeOwnerClass ?: false
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -255,7 +257,11 @@ class Tracer private constructor(
                 // Only format the message for non-standard Log events. Use the annotated log level.
                 TraceLog.log(
                     logLevelAnnotation, tagOwnerClass,
-                    "event=${createLogMessage(event, logStackTraceAnnotation)}"
+                    "event=${createLogMessage(
+                        event,
+                        logStackTraceAnnotation,
+                        includeOwnerClassAnnotation
+                    )}"
                 )
             }
         }
@@ -291,7 +297,7 @@ class Tracer private constructor(
                     TraceLog.log(
                         LogLevel.WARN,
                         tagOwnerClass,
-                        "Event lost, event=${createLogMessage(event, true)}"
+                        "Event lost, event=${createLogMessage(event, true, true)}"
                     )
             }
             ++nrLostTraceEventsSinceLastMsg
@@ -604,14 +610,21 @@ class Tracer private constructor(
         /**
          * Create a trace event message that can be logged.
          */
-        internal fun createLogMessage(traceEvent: TraceEvent, logStackTrace: Boolean): String {
+        internal fun createLogMessage(
+            traceEvent: TraceEvent,
+            logStackTrace: Boolean,
+            includeOwnerClass: Boolean
+        ): String {
             val sb = StringBuilder()
             sb.append(
                 "[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] " +
                     "${traceEvent.functionName}(${traceEvent.args.joinToString {
                         registeredToString(it)
-                    }}), from ${traceEvent.ownerClass}"
+                    }})"
             )
+            if (includeOwnerClass) {
+                sb.append(", from ${traceEvent.ownerClass}")
+            }
             if (logStackTrace) {
                 val lastArg = traceEvent.args.last()
                 if (lastArg != null && lastArg is Throwable) {
