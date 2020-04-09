@@ -434,7 +434,7 @@ class Tracer private constructor(
         /**
          * Add a trace event consumer for trace processing. This also starts the event processor
          * if it wasn't started already. (No need for the processor to run if there are no
-         * consumers).
+         * consumers.)
          */
         fun addTraceEventConsumer(traceEventConsumer: TraceEventConsumer) {
             traceEventConsumers.add(traceEventConsumer)
