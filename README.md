@@ -150,10 +150,10 @@ such as `INFO`, `DEBUG`, `ERROR`, etc.
 
 It also offers the option to specify logging a full stack trace of a logged exception, using
 the optional parameter `logStackTrace`. This applies to the last argument of an event (if it 
-is a `Throwable` object).
+is a `Throwable` object). By default, the stack trace is included.
 
 Finally, it offers the option, using `includeOwnerClass` to add the class owning the event
-interface to the log message, or omit that.
+interface to the log message, or omit that. By default, the owner class is not included.
 
 Example:
 

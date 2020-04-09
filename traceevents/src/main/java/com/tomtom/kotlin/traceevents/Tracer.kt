@@ -216,7 +216,7 @@ class Tracer private constructor(
         val logLevelAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
         val logStackTraceAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: false
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: true
         val includeOwnerClassAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.includeOwnerClass ?: false
 
