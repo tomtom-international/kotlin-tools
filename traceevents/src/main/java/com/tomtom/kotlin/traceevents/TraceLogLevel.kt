@@ -23,7 +23,7 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
  * will log the event to [TraceLog]. Supported log levels are specified in [LogLevel].
  * Default value is [LogLevel.DEBUG].
  *
- * @param logStackTrace Specifies if whether a stack trace should be included if the last parameter
+ * @param logStackTrace Specifies whether a stack trace should be included if the last parameter
  * of the event is derived from [Throwable]. If false, only the exception message is shown.
  * Default value is true.
  */
