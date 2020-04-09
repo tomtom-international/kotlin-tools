@@ -141,6 +141,30 @@ Or, to reset it to the default implementation:
 setLogger() 
 ```
 
+### Using the `@TraceLogLevel` annotation
+
+Trace events in a `TraceEventListener` can be annotated with the `@TraceLogLevel` annotation.
+This annotation allows you to specify a log level, using parameter `logLevel` that will 
+be used to output the trace event to a standard logger using a specific log level, 
+such as `INFO`, `DEBUG`, `ERROR`, etc.
+
+It also offers the option to specify logging a full stack trace of a logged exception, using
+the optional parameter `logStackTrace`. This applies to the last argument of an event (if it 
+is a `Throwable` object). By default, the stack trace is included.
+
+Finally, it offers the option, using `includeOwnerClass` to add the class owning the event
+interface to the log message, or omit that. By default, the owner class is not included.
+
+Example:
+
+```
+interface MyEvents : TraceEventListener {
+
+    @TraceLogLevel(LogLevel.ERROR, logStackTrace = true, includeOwnerClass = true)
+    fun foundAnException(e: Exception)
+}
+``` 
+
 ### Logging in tests
 
 Trace events are used for production code. Test cases should not use trace events. Test cases should
@@ -394,6 +418,16 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
+
+### 1.0.8
+
+* Added `logStackTrace` to annotation `@TraceLogLevel`.
+
+* Added `includeOwnerClass` to annotation `@TraceLogLevel`.
+
+* Removed time stamp from `SYNC` logging (already added by most loggers).
+
+* Added unit tests to check message formats.
 
 ### 1.0.7
 

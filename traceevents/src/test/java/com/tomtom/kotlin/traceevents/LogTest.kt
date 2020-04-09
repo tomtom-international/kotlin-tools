@@ -26,7 +26,7 @@ class LogTest {
     class LoggerCalled : Logger {
         var called = false
         override fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable?) {
-            println("LOG: $logLevel, $tag, $message, $e")
+            println("TEST1-LOG: $logLevel, $tag, $message, $e")
             called = true
         }
     }
@@ -38,7 +38,7 @@ class LogTest {
         var lastE: Throwable? = null
 
         override fun log(logLevel: LogLevel, tag: String, message: String, e: Throwable?) {
-            println("LOG: $logLevel, $tag, $message, $e")
+            println("TEST2-LOG: $logLevel, $tag, $message, $e")
             lastLogLevel = logLevel
             lastTag = tag
             lastMessage = message
@@ -46,9 +46,16 @@ class LogTest {
         }
     }
 
-    interface AllArgsEvent : TraceEventListener {
+    interface TestEvents : TraceEventListener {
+
         @TraceLogLevel(LogLevel.ERROR)
-        fun someEvent(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
+        fun allArgs(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
+
+        @TraceLogLevel(LogLevel.DEBUG, logStackTrace = true, includeOwnerClass = true)
+        fun withStackTrace(e: Throwable?)
+
+        @TraceLogLevel(LogLevel.DEBUG, logStackTrace = false, includeOwnerClass = false)
+        fun withoutStackTrace(e: Throwable?)
     }
 
     @Test
@@ -120,56 +127,122 @@ class LogTest {
         val logger = LoggerCheckString()
         TraceLog.setLogger(logger)
 
-        sut.someEvent(null, null, null, null)
+        sut.allArgs(null, null, null, null)
         assertEquals(LogLevel.ERROR, logger.lastLogLevel)
         assertEquals("LogTest", logger.lastTag)
         assertEquals(null, logger.lastE)
         assertEquals(
-            "event=[TIME] someEvent(null, null, null, null), from com.tomtom.kotlin.traceevents.LogTest",
-            stripTime(logger.lastMessage)
+            "event=allArgs(null, null, null, null)",
+            logger.lastMessage
         )
 
-        sut.someEvent(1, "text1", arrayOfNulls(0), listOf<Int?>())
+        sut.allArgs(1, "text1", arrayOfNulls(0), listOf<Int?>())
         assertEquals(
-            "event=[TIME] someEvent(1, text1, [], []), from com.tomtom.kotlin.traceevents.LogTest",
-            stripTime(logger.lastMessage)
+            "event=allArgs(1, text1, [], [])",
+            logger.lastMessage
         )
 
-        sut.someEvent(2, "text2", arrayOf(null), listOf<Int?>(null))
+        sut.allArgs(2, "text2", arrayOf(null), listOf<Int?>(null))
         assertEquals(
-            "event=[TIME] someEvent(2, text2, [null], [null]), from com.tomtom.kotlin.traceevents.LogTest",
-            stripTime(logger.lastMessage)
+            "event=allArgs(2, text2, [null], [null])",
+            logger.lastMessage
         )
 
-        sut.someEvent(3, "text3", arrayOf(1), listOf<Int?>(2))
+        sut.allArgs(3, "text3", arrayOf(1), listOf<Int?>(2))
         assertEquals(
-            "event=[TIME] someEvent(3, text3, [1], [2]), from com.tomtom.kotlin.traceevents.LogTest",
-            stripTime(logger.lastMessage)
+            "event=allArgs(3, text3, [1], [2])",
+            logger.lastMessage
         )
 
-        sut.someEvent(4, "text4", arrayOf(1, 2), listOf<Int?>(3, 4))
+        sut.allArgs(4, "text4", arrayOf(1, 2), listOf<Int?>(3, 4))
         assertEquals(
-            "event=[TIME] someEvent(4, text4, [1, 2], [3, 4]), from com.tomtom.kotlin.traceevents.LogTest",
-            stripTime(logger.lastMessage)
+            "event=allArgs(4, text4, [1, 2], [3, 4])",
+            logger.lastMessage
         )
     }
 
-    fun stripTime(msg: String?) = msg?.replace(
-        "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]+\\]".toRegex(),
-        "[TIME]"
-    )
+    @Test
+    fun `log message to stdout`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            loggerOnly.d("test1")
+        }
+        assertEquals("$TIME: [DEBUG] LogTest: test1\n", actual)
+    }
 
     @Test
-    fun `logger only`() {
-        val logger = LoggerCheckString()
-        TraceLog.setLogger(logger)
+    fun `log message with exception to stdout`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            loggerOnly.d("test1", IllegalStateException("error1", NullPointerException()))
+        }
 
-        loggerOnly.d("test")
-        assertEquals("test", logger.lastMessage)
+        // Cut off just enough to NOT include line numbers of source code as they may change.
+        val prefix =
+            "$TIME: [DEBUG] LogTest: test1, java.lang.IllegalStateException: error1\n" +
+                "\tat com.tomtom.kotlin.traceevents.LogTest\$log message with exception to stdout\$actual\$1.invoke(LogTest.kt:"
+        val suffix =
+            ")\n" +
+                "Caused by: java.lang.NullPointerException\n" +
+                "\t... $NUMBER more\n" +
+                "\n"
+
+        assertTrue(actual.startsWith(prefix))
+        assertTrue(replaceNumber(actual, NUMBER).endsWith(suffix))
+    }
+
+    @Test
+    fun `log event with null exception to stdout without stacktrace`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            sut.withoutStackTrace(null)
+        }
+        val expected = "$TIME: [DEBUG] LogTest: event=withoutStackTrace(null)\n"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `log event with exception to stdout without stacktrace`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            sut.withoutStackTrace(IllegalStateException())
+        }
+        val expected =
+            "$TIME: [DEBUG] LogTest: event=withoutStackTrace(java.lang.IllegalStateException)\n"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `log event with null exception to stdout with stacktrace`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            sut.withStackTrace(null)
+        }
+        val expected =
+            "$TIME: [DEBUG] LogTest: event=withStackTrace(null), from com.tomtom.kotlin.traceevents.LogTest\n"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `log event with exception to stdout with stacktrace`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            sut.withStackTrace(IllegalStateException("error1", NullPointerException()))
+        }
+
+        // Cut off just enough to NOT include line numbers of source code as they may change.
+        val prefix =
+            "$TIME: [DEBUG] LogTest: event=withStackTrace(java.lang.IllegalStateException: error1), from com.tomtom.kotlin.traceevents.LogTest\n" +
+                "java.lang.IllegalStateException: error1\n" +
+                "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
+        val suffix =
+            ")\n" +
+                "Caused by: java.lang.NullPointerException\n" +
+                "\t... $NUMBER more\n" +
+                "\n"
+
+        assertTrue(actual.startsWith(prefix))
+        assertTrue(replaceNumber(actual, NUMBER).endsWith(suffix))
     }
 
     companion object {
-        val sut = Tracer.Factory.create<AllArgsEvent>(this)
+        const val TIME = "[TIME]"
+        const val NUMBER = "[NUMBER]"
+        val sut = Tracer.Factory.create<TestEvents>(this)
         val loggerOnly = Tracer.Factory.createLoggerOnly(this)
     }
 }
