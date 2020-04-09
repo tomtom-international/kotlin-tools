@@ -16,6 +16,8 @@ package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import io.mockk.MockKMatcherScope
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import kotlin.reflect.jvm.jvmName
 
 /**
@@ -34,6 +36,22 @@ fun MockKMatcherScope.traceEq(
             traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
             traceEvent.args.contentDeepEquals(args)
     }
+
+fun captureStdout(block: () -> Unit) =
+    ByteArrayOutputStream().use { outputStream ->
+        PrintStream(outputStream).use { printStream ->
+            val previousOut = System.out
+            System.setOut(printStream);
+            block()
+            System.setOut(previousOut)
+        }
+        outputStream.toString()
+    }
+
+fun captureStdoutReplaceTime(
+    timeReplacement: String,
+    block: () -> Unit
+) = replaceTime(captureStdout { block() }, timeReplacement)
 
 fun replaceTime(msg: String?, replaceWith: String) = msg?.replace(
     "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]+\\]".toRegex(),
