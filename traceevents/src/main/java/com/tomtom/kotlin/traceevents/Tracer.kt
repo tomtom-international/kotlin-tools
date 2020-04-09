@@ -271,7 +271,7 @@ class Tracer private constructor(
     }
 
     /**
-     * Offer event to processing queue. If trace logging is set to [LoggingMode.SYNC], this
+     * Offer [event] to the processing queue. If trace logging is set to [LoggingMode.SYNC], this
      * function also outputs the trace using a logger, in this thread.
      */
     private fun offerTraceEvent(
