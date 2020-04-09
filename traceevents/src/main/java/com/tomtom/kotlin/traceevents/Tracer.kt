@@ -367,7 +367,7 @@ class Tracer private constructor(
         internal var enabled = true
 
         /**
-         *  Specifies if logging trace events should be done on the caller's thread or not.
+         * Specifies whether logging trace events should be done on the caller's thread or not.
          */
         enum class LoggingMode { SYNC, ASYNC }
 
