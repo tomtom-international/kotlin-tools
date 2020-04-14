@@ -217,8 +217,10 @@ class Tracer private constructor(
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
         val logStackTraceAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: true
+        val logCaller =
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logCaller ?: false
         val includeOwnerClassAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.includeOwnerClass ?: false
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logOwnerClass ?: false
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -260,6 +262,7 @@ class Tracer private constructor(
                     "event=${createLogMessage(
                         event,
                         includeTime = false,
+                        logCaller = logCaller,
                         logStackTrace = logStackTraceAnnotation,
                         includeOwnerClass = includeOwnerClassAnnotation
                     )}"
@@ -301,6 +304,7 @@ class Tracer private constructor(
                         "Event lost, event=${createLogMessage(
                             event,
                             includeTime = true,
+                            logCaller = true,
                             logStackTrace = true,
                             includeOwnerClass = true
                         )}"
@@ -616,6 +620,7 @@ class Tracer private constructor(
         internal fun createLogMessage(
             traceEvent: TraceEvent,
             includeTime: Boolean,
+            logCaller: Boolean,
             logStackTrace: Boolean,
             includeOwnerClass: Boolean
         ): String {
@@ -628,8 +633,11 @@ class Tracer private constructor(
                     convertToStringUsingRegistry(it)
                 }})"
             )
+            if (logCaller) {
+                sb.append(", caller=${getCaller()}")
+            }
             if (includeOwnerClass) {
-                sb.append(", from ${traceEvent.ownerClass}")
+                sb.append(", class=${traceEvent.ownerClass}")
             }
             if (logStackTrace && !traceEvent.args.isEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {
@@ -653,6 +661,26 @@ class Tracer private constructor(
             } else {
                 e.message
             }
+
+        private fun getCaller(): String {
+            val stackTrace = Thread.currentThread().getStackTrace()
+
+            // Find "com.sun.proxy.$Proxy" function on stack that called this function.
+            var i = 0
+            while (i < stackTrace.size && !stackTrace[i].className.startsWith("com.sun.proxy.\$Proxy")) i++
+
+            // The function 1 level deeper is the actual caller function.
+            return if (i < stackTrace.size - 1) {
+
+                // Skip the com.sun.proxy line and get the info from the next item.
+                val item = stackTrace[i + 1]
+                "${item.fileName}::${item.methodName}(${item.lineNumber})"
+            } else {
+
+                // This shouldn't happen, but we certainly shouldn't throw here.
+                "(can't find function on stack)"
+            }
+        }
 
         init {
 
