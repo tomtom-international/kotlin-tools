@@ -703,21 +703,6 @@ class Tracer private constructor(
                 // This shouldn't happen, but we certainly shouldn't throw here.
                 "(error: can't find `invoke` function on stack)"
             }
-
-//            var i = 0
-//            while (i < stack.size && !stack[i].className.startsWith("com.sun.proxy.\$Proxy")) i++
-//
-//            // The function 1 level deeper is the actual caller function.
-//            return if (i < stack.size - 1) {
-//
-//                // Skip the com.sun.proxy line and get the info from the next item.
-//                val item = stack[i + 1]
-//                "${item.fileName}:${item.methodName}(${item.lineNumber})"
-//            } else {
-//
-//                // This shouldn't happen, but we certainly shouldn't throw here.
-//                "(can't find function on stack)"
-//            }
         }
 
         init {
