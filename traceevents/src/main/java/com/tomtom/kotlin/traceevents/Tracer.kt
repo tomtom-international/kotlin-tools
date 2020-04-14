@@ -701,7 +701,7 @@ class Tracer private constructor(
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.
-                "(can't find function on stack)"
+                "(error: can't find `invoke` function on stack)"
             }
 
 //            var i = 0
