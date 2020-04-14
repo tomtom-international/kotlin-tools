@@ -431,6 +431,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.10
+
+* TBD
+
 ### 1.0.9
 
 * Added `logCaller` to `@TraceLoglevel` add the caller filename and line number to the logger.
