@@ -77,7 +77,7 @@
     <properties>
 
         <!-- Java and build properties. -->
-        <jdk.version>1.8</jdk.version>
+        <jdk.version>1.9</jdk.version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
         <maven.javadoc.skip>true</maven.javadoc.skip>
