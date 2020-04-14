@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
+
 /**
  * GENERAL DOCUMENTATION ON TRACE EVENTS
  * -------------------------------------
@@ -217,8 +218,10 @@ class Tracer private constructor(
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
         val logStackTraceAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: true
+        val logCaller =
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logCaller ?: false
         val includeOwnerClassAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.includeOwnerClass ?: false
+            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logOwnerClass ?: false
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -260,6 +263,7 @@ class Tracer private constructor(
                     "event=${createLogMessage(
                         event,
                         includeTime = false,
+                        logCaller = logCaller,
                         logStackTrace = logStackTraceAnnotation,
                         includeOwnerClass = includeOwnerClassAnnotation
                     )}"
@@ -301,6 +305,7 @@ class Tracer private constructor(
                         "Event lost, event=${createLogMessage(
                             event,
                             includeTime = true,
+                            logCaller = true,
                             logStackTrace = true,
                             includeOwnerClass = true
                         )}"
@@ -351,6 +356,7 @@ class Tracer private constructor(
 
     companion object {
         val TAG = Tracer::class.simpleName!!
+        const val STACK_TRACE_DEPTH = 5L
 
         /**
          * Names of simple, predefined log functions (from standard loggers).
@@ -616,6 +622,7 @@ class Tracer private constructor(
         internal fun createLogMessage(
             traceEvent: TraceEvent,
             includeTime: Boolean,
+            logCaller: Boolean,
             logStackTrace: Boolean,
             includeOwnerClass: Boolean
         ): String {
@@ -628,8 +635,11 @@ class Tracer private constructor(
                     convertToStringUsingRegistry(it)
                 }})"
             )
+            if (logCaller) {
+                sb.append(", caller=${getCaller()}")
+            }
             if (includeOwnerClass) {
-                sb.append(", from ${traceEvent.ownerClass}")
+                sb.append(", ownerClass=${traceEvent.ownerClass}")
             }
             if (logStackTrace && !traceEvent.args.isEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {
@@ -653,6 +663,47 @@ class Tracer private constructor(
             } else {
                 e.message
             }
+
+        private fun getCaller(): String {
+
+            /**
+             * For Java 9, we suggest the following optimization:
+             *
+             * Use the [StackWalker] instead of [Thread.getStackTrace], because it's much, much
+             * faster to not get all frames.
+             *
+             * Get the stack up to a maximum of [STACK_TRACE_DEPTH] levels deep. Our caller must be
+             * in those first calls. If it's not, the unit tests fails and informs the developer
+             * the reconsider the value of [STACK_TRACE_DEPTH].
+             *
+             * <pre>
+             *     val stack = StackWalker.getInstance().walk {
+             *         frames -> frames.limit(STACK_TRACE_DEPTH).collect(Collectors.toList())
+             * </pre>
+             *
+             * For now, use the slower Java 8 version:
+             */
+            val stack = Throwable().stackTrace
+
+            // Find our own 'invoke' function call on the stack that called this function.
+            var i = 0
+            while (i < stack.size &&
+                stack[i].className != "com.tomtom.kotlin.traceevents.Tracer" &&
+                stack[i].methodName != "invoke"
+            ) i++
+
+            // The function call 2 levels deeper is the actual caller function.
+            return if (i < stack.size - 2) {
+
+                // Skip the com.sun.proxy function call and get the info from the next item.
+                val item = stack[i + 2]
+                "${item.fileName}:${item.methodName}(${item.lineNumber})"
+            } else {
+
+                // This shouldn't happen, but we certainly shouldn't throw here.
+                "(error: can't find `invoke` function on stack)"
+            }
+        }
 
         init {
 

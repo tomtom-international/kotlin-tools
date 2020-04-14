@@ -144,15 +144,27 @@ setLogger()
 ### Using the `@TraceLogLevel` annotation
 
 Trace events in a `TraceEventListener` can be annotated with the `@TraceLogLevel` annotation.
-This annotation allows you to specify a log level, using parameter `logLevel` that will 
+
+#### `@TraceLoglevel(logLevel=...)`
+
+`@TraceLoglevel` allows you to specify a log level, using parameter `logLevel` that will 
 be used to output the trace event to a standard logger using a specific log level, 
 such as `INFO`, `DEBUG`, `ERROR`, etc.
 
-It also offers the option to specify logging a full stack trace of a logged exception, using
+#### `@TraceLoglevel(logStackTrace=true|false)`
+
+`@TraceLoglevel` also offers the option to specify logging a full stack trace of a logged exception, using
 the optional parameter `logStackTrace`. This applies to the last argument of an event (if it 
 is a `Throwable` object). By default, the stack trace is included.
 
-Finally, it offers the option, using `includeOwnerClass` to add the class owning the event
+#### `@TraceLoglevel(logCaller=true|false)`
+
+`@TraceLoglevel` also offers the option to specify logging the filename and line number of
+the caller of an event. By default, the caller is not provided.
+
+#### `@TraceLoglevel(logOwnerClass=true|false)`
+
+`@TraceLoglevel` offers the option, using `logOwnerClass` to add the class owning the event
 interface to the log message, or omit that. By default, the owner class is not included.
 
 Example:
@@ -418,6 +430,10 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
+
+### 1.0.9
+
+* Added `logCaller` to `@TraceLoglevel` add the caller filename and line number to the logger.
 
 ### 1.0.8
 
