@@ -668,16 +668,23 @@ class Tracer private constructor(
         private fun getCaller(): String {
 
             /**
+             * For Java 9, we suggest the following optimization:
+             *
              * Use the [StackWalker] instead of [Thread.getStackTrace], because it's much, much
              * faster to not get all frames.
              *
              * Get the stack up to a maximum of [STACK_TRACE_DEPTH] levels deep. Our caller must be
              * in those first calls. If it's not, the unit tests fails and informs the developer
              * the reconsider the value of [STACK_TRACE_DEPTH].
+             *
+             * <pre>
+             *     val stack = StackWalker.getInstance().walk {
+             *         frames -> frames.limit(STACK_TRACE_DEPTH).collect(Collectors.toList())
+             * </pre>
+             *
+             * For now, use the slower Java 8 version:
              */
-            val stack = StackWalker.getInstance().walk { frames ->
-                frames.limit(STACK_TRACE_DEPTH).collect(Collectors.toList())
-            }
+            val stack = Throwable().stackTrace
 
             // Find "com.sun.proxy.$Proxy" function on stack that called this function.
             var i = 0
