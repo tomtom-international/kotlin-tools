@@ -29,8 +29,10 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.stream.Collectors
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
+
 
 /**
  * GENERAL DOCUMENTATION ON TRACE EVENTS
@@ -355,6 +357,7 @@ class Tracer private constructor(
 
     companion object {
         val TAG = Tracer::class.simpleName!!
+        const val STACK_TRACE_DEPTH = 5L
 
         /**
          * Names of simple, predefined log functions (from standard loggers).
@@ -637,7 +640,7 @@ class Tracer private constructor(
                 sb.append(", caller=${getCaller()}")
             }
             if (includeOwnerClass) {
-                sb.append(", class=${traceEvent.ownerClass}")
+                sb.append(", ownerClass=${traceEvent.ownerClass}")
             }
             if (logStackTrace && !traceEvent.args.isEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {
@@ -663,18 +666,29 @@ class Tracer private constructor(
             }
 
         private fun getCaller(): String {
-            val stackTrace = Thread.currentThread().getStackTrace()
+
+            /**
+             * Use the [StackWalker] instead of [Thread.getStackTrace], because it's much, much
+             * faster to not get all frames.
+             *
+             * Get the stack up to a maximum of [STACK_TRACE_DEPTH] levels deep. Our caller must be
+             * in those first calls. If it's not, the unit tests fails and informs the developer
+             * the reconsider the value of [STACK_TRACE_DEPTH].
+             */
+            val stack = StackWalker.getInstance().walk { frames ->
+                frames.limit(STACK_TRACE_DEPTH).collect(Collectors.toList())
+            }
 
             // Find "com.sun.proxy.$Proxy" function on stack that called this function.
             var i = 0
-            while (i < stackTrace.size && !stackTrace[i].className.startsWith("com.sun.proxy.\$Proxy")) i++
+            while (i < stack.size && !stack[i].className.startsWith("com.sun.proxy.\$Proxy")) i++
 
             // The function 1 level deeper is the actual caller function.
-            return if (i < stackTrace.size - 1) {
+            return if (i < stack.size - 1) {
 
                 // Skip the com.sun.proxy line and get the info from the next item.
-                val item = stackTrace[i + 1]
-                "${item.fileName}::${item.methodName}(${item.lineNumber})"
+                val item = stack[i + 1]
+                "${item.fileName}:${item.methodName}(${item.lineNumber})"
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.

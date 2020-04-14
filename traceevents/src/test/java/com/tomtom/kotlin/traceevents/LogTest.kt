@@ -18,6 +18,7 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import com.tomtom.kotlin.traceevents.TraceLog.Logger
 import org.junit.Before
 import org.junit.Test
+import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -223,7 +224,7 @@ class LogTest {
             sut.withStackTrace(null)
         }
         val expected =
-            "$TIME: [DEBUG] LogTest: event=withStackTrace(null), class=com.tomtom.kotlin.traceevents.LogTest\n"
+            "$TIME: [DEBUG] LogTest: event=withStackTrace(null), ownerClass=com.tomtom.kotlin.traceevents.LogTest\n"
         assertEquals(expected, actual)
     }
 
@@ -235,7 +236,7 @@ class LogTest {
 
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
-            "$TIME: [DEBUG] LogTest: event=withStackTrace(java.lang.IllegalStateException: error1), class=com.tomtom.kotlin.traceevents.LogTest\n" +
+            "$TIME: [DEBUG] LogTest: event=withStackTrace(java.lang.IllegalStateException: error1), ownerClass=com.tomtom.kotlin.traceevents.LogTest\n" +
                 "java.lang.IllegalStateException: error1\n" +
                 "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
         val suffix =
@@ -254,10 +255,12 @@ class LogTest {
             sut.withCaller("test")
         }
 
+        println(actual)
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val expected =
-            "$TIME: [DEBUG] LogTest: event=withCaller(test), caller=LogTest.kt::invoke($NUMBER)\n"
-        assertEquals(expected, replaceNumber(actual, NUMBER))
+            "$TIME: [DEBUG] LogTest: event=withCaller(test), caller=LogTest.kt:invoke($NUMBER)\n"
+        assertEquals(expected, replaceNumber(actual, NUMBER),
+            "Perhaps you should increase STACK_TRACE_DEPTH?")
     }
 
     companion object {
