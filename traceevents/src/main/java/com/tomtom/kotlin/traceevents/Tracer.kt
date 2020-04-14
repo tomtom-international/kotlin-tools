@@ -29,7 +29,6 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.stream.Collectors
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -686,21 +685,39 @@ class Tracer private constructor(
              */
             val stack = Throwable().stackTrace
 
-            // Find "com.sun.proxy.$Proxy" function on stack that called this function.
+            // Find our own 'invoke' function call on the stack that called this function.
             var i = 0
-            while (i < stack.size && !stack[i].className.startsWith("com.sun.proxy.\$Proxy")) i++
+            while (i < stack.size &&
+                stack[i].className != "com.tomtom.kotlin.traceevents.Tracer" &&
+                stack[i].methodName != "invoke"
+            ) i++
 
-            // The function 1 level deeper is the actual caller function.
-            return if (i < stack.size - 1) {
+            // The function call 2 levels deeper is the actual caller function.
+            return if (i < stack.size - 2) {
 
-                // Skip the com.sun.proxy line and get the info from the next item.
-                val item = stack[i + 1]
+                // Skip the com.sun.proxy function call and get the info from the next item.
+                val item = stack[i + 2]
                 "${item.fileName}:${item.methodName}(${item.lineNumber})"
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.
                 "(can't find function on stack)"
             }
+
+//            var i = 0
+//            while (i < stack.size && !stack[i].className.startsWith("com.sun.proxy.\$Proxy")) i++
+//
+//            // The function 1 level deeper is the actual caller function.
+//            return if (i < stack.size - 1) {
+//
+//                // Skip the com.sun.proxy line and get the info from the next item.
+//                val item = stack[i + 1]
+//                "${item.fileName}:${item.methodName}(${item.lineNumber})"
+//            } else {
+//
+//                // This shouldn't happen, but we certainly shouldn't throw here.
+//                "(can't find function on stack)"
+//            }
         }
 
         init {
