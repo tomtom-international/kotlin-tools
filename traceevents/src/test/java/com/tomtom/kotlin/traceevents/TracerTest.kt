@@ -51,7 +51,7 @@ class TracerTest {
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.functionName}")
+            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.eventName}")
     }
 
     interface WrongListener : TraceEventListener {

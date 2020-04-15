@@ -52,21 +52,21 @@ class LogTest {
         @TraceLogLevel(LogLevel.ERROR)
         fun allArgs(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
 
-        @TraceOptions(logCalledFromClass = true)
+        @TraceOptions(includeCalledFromClass = true)
         fun withCalledFromClass(message: String)
 
         @TraceLogLevel(LogLevel.VERBOSE)
-        @TraceOptions(logCalledFromFile = true)
+        @TraceOptions(includeCalledFromFile = true)
         fun withCalledFromFile(message: String)
 
-        @TraceOptions(logEventInterface = true)
+        @TraceOptions(includeEventInterface = true)
         fun withEventInterface(message: String)
 
-        @TraceOptions(logExceptionStackTrace = true, logCalledFromClass = true)
+        @TraceOptions(includeExceptionStackTrace = true, includeCalledFromClass = true)
         fun withExceptionStackTrace(e: Throwable?)
 
         @TraceLogLevel(LogLevel.ERROR)
-        @TraceOptions(logExceptionStackTrace = false)
+        @TraceOptions(includeExceptionStackTrace = false)
         fun withoutExceptionStackTrace(e: Throwable?)
     }
 

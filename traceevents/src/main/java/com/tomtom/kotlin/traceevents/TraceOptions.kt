@@ -17,20 +17,20 @@ package com.tomtom.kotlin.traceevents
 /**
  * This annotation can be used to annotate methods in [TraceEventListener].
  *
- * @param logExceptionStackTrace Specifies whether a stack trace should be included if the last
+ * @param includeExceptionStackTrace Specifies whether a stack trace should be included if the last
  * parameter of the event is derived from [Throwable]. If false, only the exception message is
  * shown.
  * Default value is true.
  *
- * @param logCalledFromClass Specifies whether owner class of the event definition should be logged
+ * @param includeCalledFromClass Specifies whether owner class of the event definition should be logged
  * or not.
  * Default is false.
 
- * @param logCalledFromFile Specifies whether the filename and line number of the caller
+ * @param includeCalledFromFile Specifies whether the filename and line number of the caller
  * should be logged or not.
  * Default is false.
  *
- * @param logEventInterface Specifies whether the interface name of the [TraceEventListener]
+ * @param includeEventInterface Specifies whether the interface name of the [TraceEventListener]
  * interface should be logged or not.
  * Default is false.
  *
@@ -38,8 +38,8 @@ package com.tomtom.kotlin.traceevents
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
 annotation class TraceOptions(
-    val logExceptionStackTrace: Boolean = true,
-    val logCalledFromClass: Boolean = false,
-    val logCalledFromFile: Boolean = false,
-    val logEventInterface: Boolean = false
+    val includeExceptionStackTrace: Boolean = true,
+    val includeCalledFromClass: Boolean = false,
+    val includeCalledFromFile: Boolean = false,
+    val includeEventInterface: Boolean = false
 )

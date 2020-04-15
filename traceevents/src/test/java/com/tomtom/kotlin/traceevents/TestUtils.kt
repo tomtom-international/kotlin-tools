@@ -30,9 +30,9 @@ fun MockKMatcherScope.traceEq(
 ) =
     match<TraceEvent> { traceEvent ->
         traceEvent.logLevel == logLevel &&
-            traceEvent.ownerClass == TracerTest::class.jvmName &&
+            traceEvent.calledFromClass == TracerTest::class.jvmName &&
             traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
-            traceEvent.functionName == functionName &&
+            traceEvent.eventName == functionName &&
             traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
             traceEvent.args.contentDeepEquals(args)
     }

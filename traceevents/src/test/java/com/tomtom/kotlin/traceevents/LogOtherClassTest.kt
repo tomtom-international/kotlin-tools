@@ -18,6 +18,7 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import com.tomtom.kotlin.traceevents.TraceLog.Logger
 import org.junit.Before
 import org.junit.Test
+import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

@@ -75,7 +75,7 @@ internal class TraceEventConsumerCollection {
                 val method = findAndCacheFunction(
                     traceEventConsumer::class,
                     traceEventListener,
-                    traceEvent.functionName,
+                    traceEvent.eventName,
                     traceEvent.args.size
                 )
                 if (method != null) {
@@ -95,7 +95,7 @@ internal class TraceEventConsumerCollection {
                         LogLevel.ERROR, TAG, "Method not found, " +
                             "traceEventConsumer=${traceEventConsumer::class}" +
                             "traceEventListener=$traceEventListener" +
-                            "traceEvent.functionName=${traceEvent.functionName}" +
+                            "traceEvent.functionName=${traceEvent.eventName}" +
                             "traceEvent.args.size=${traceEvent.args.size}"
                     )
                 }
