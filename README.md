@@ -151,28 +151,35 @@ Trace events in a `TraceEventListener` can be annotated with the `@TraceLogLevel
 be used to output the trace event to a standard logger using a specific log level, 
 such as `INFO`, `DEBUG`, `ERROR`, etc.
 
-#### `@TraceLoglevel(logStackTrace=true|false)`
+### Using the `@TraceOptions` annotation
 
-`@TraceLoglevel` also offers the option to specify logging a full stack trace of a logged exception, using
-the optional parameter `logStackTrace`. This applies to the last argument of an event (if it 
-is a `Throwable` object). By default, the stack trace is included.
+#### `@TraceOptions(includeExceptionStackTrace=true|false)`
 
-#### `@TraceLoglevel(logCaller=true|false)`
+`@TraceOptions` offers the option to specify logging a full stack trace of a logged exception, using
+the optional parameter `includeExceptionStackTrace`. This applies to the last argument of an event (if it 
+is a `Throwable` object). By default, a stack trace is included.
 
-`@TraceLoglevel` also offers the option to specify logging the filename and line number of
-the caller of an event. By default, the caller is not provided.
+#### `@TraceOptions(includeCalledFromFile=true|false)`
 
-#### `@TraceLoglevel(logOwnerClass=true|false)`
+`@TraceOptions` also offers the option to specify logging the filename and line number of
+the caller of an event. By default, the caller source code location is not provided.
 
-`@TraceLoglevel` offers the option, using `logOwnerClass` to add the class owning the event
-interface to the log message, or omit that. By default, the owner class is not included.
+#### `@TraceOptions(includeCalledFromClass=true|false)`
+
+`@TraceOptions` offers the option to add the class that uses the event tracer
+to the log message, or omit that. By default, the caller class is not included.
+
+#### `@TraceOptions(includeEventInterface=true|false)`
+
+`@TraceOptions` offers the option to add the interface that defines the event to the log message, 
+or omit that. By default, the event interface is not included.
 
 Example:
 
 ```
 interface MyEvents : TraceEventListener {
 
-    @TraceLogLevel(LogLevel.ERROR, logStackTrace = true, includeOwnerClass = true)
+    @TraceLogLevel(LogLevel.ERROR, includeExceptionStackTrace = true, includeOwnerClass = true)
     fun foundAnException(e: Exception)
 }
 ``` 
@@ -431,13 +438,21 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.10
+
+* Cleaned up annotation `@TraceLogLevel` to only include trace level.
+ 
+* Added `@TraceOptions(includeExceptionStackTrace, includeCalledFromClass, includeCalledFromFile, includeEventInterface)`
+
+* Added `throwableHolder` to `TraceEvent` so event handlers can inspect the stack as well.
+
 ### 1.0.9
 
-* Added `logCaller` to `@TraceLoglevel` add the caller filename and line number to the logger.
+* Added `includeCalledFromFile` to `@TraceLoglevel` add the caller filename and line number to the logger.
 
 ### 1.0.8
 
-* Added `logStackTrace` to annotation `@TraceLogLevel`.
+* Added `includeExceptionStackTrace` to annotation `@TraceLogLevel`.
 
 * Added `includeOwnerClass` to annotation `@TraceLogLevel`.
 

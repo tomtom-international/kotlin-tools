@@ -216,12 +216,14 @@ class Tracer private constructor(
         proxy as TraceEventListener
         val logLevelAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
-        val logStackTraceAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: true
-        val logCaller =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logCaller ?: false
-        val includeOwnerClassAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logOwnerClass ?: false
+        val includeExceptionStackTraceAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace ?: true
+        val includeCalledFromClassAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeCalledFromClass ?: false
+        val includeCalledFromFileAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeCalledFromFile ?: false
+        val includeEventInterfaceAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface ?: false
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -235,12 +237,13 @@ class Tracer private constructor(
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
         val event = TraceEvent(
-            now,
-            logLevelAnnotation,
-            ownerClassName,
-            method.declaringClass.name,
-            method.name,
-            args ?: arrayOf<Any?>()
+            dateTime = now,
+            logLevel = logLevelAnnotation,
+            calledFromClass = ownerClassName,
+            interfaceName = method.declaringClass.name,
+            stackTraceHolder = Throwable(),
+            eventName = method.name,
+            args = args ?: arrayOf<Any?>()
         )
 
         /**
@@ -248,7 +251,7 @@ class Tracer private constructor(
          * sure the order of events and other log messages remains logical.
          */
         if (loggingMode == LoggingMode.SYNC) {
-            val logLevel = simpleLogFunctionNameToLogLevel(event.functionName)
+            val logLevel = simpleLogFunctionNameToLogLevel(event.eventName)
             if (logLevel != null) {
                 if (!useSimpleLogFunction(logLevel, tagOwnerClass, args)) {
 
@@ -263,9 +266,10 @@ class Tracer private constructor(
                     "event=${createLogMessage(
                         event,
                         includeTime = false,
-                        logCaller = logCaller,
-                        logStackTrace = logStackTraceAnnotation,
-                        includeOwnerClass = includeOwnerClassAnnotation
+                        includeExceptionStackTrace = includeExceptionStackTraceAnnotation,
+                        includeCalledFromClass = includeCalledFromClassAnnotation,
+                        includeCalledFromFile = includeCalledFromFileAnnotation,
+                        includeEventInterface = includeEventInterfaceAnnotation
                     )}"
                 )
             }
@@ -288,7 +292,7 @@ class Tracer private constructor(
 
                     // Don't repeat the event if it was logged already by the logger. If the event
                     // was a simple log event, don't even mention the overflow (not useful).
-                    if (simpleLogFunctionNameToLogLevel(event.functionName) == null) {
+                    if (simpleLogFunctionNameToLogLevel(event.eventName) == null) {
                         TraceLog.log(
                             LogLevel.DEBUG,
                             tagOwnerClass,
@@ -305,9 +309,10 @@ class Tracer private constructor(
                         "Event lost, event=${createLogMessage(
                             event,
                             includeTime = true,
-                            logCaller = true,
-                            logStackTrace = true,
-                            includeOwnerClass = true
+                            includeExceptionStackTrace = true,
+                            includeCalledFromClass = true,
+                            includeCalledFromFile = true,
+                            includeEventInterface = true
                         )}"
                     )
             }
@@ -339,8 +344,8 @@ class Tracer private constructor(
     internal class LoggingTraceEventConsumer : GenericTraceEventConsumer {
 
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
-            val tagOwnerClass = getTagFromOwnerClassName(traceEvent.ownerClass)
-            val logLevel = simpleLogFunctionNameToLogLevel(traceEvent.functionName)
+            val tagOwnerClass = getTagFromOwnerClassName(traceEvent.calledFromClass)
+            val logLevel = simpleLogFunctionNameToLogLevel(traceEvent.eventName)
             if (logLevel != null) {
 
                 // Don't reformat the message if this is a standard log message.
@@ -622,29 +627,45 @@ class Tracer private constructor(
         internal fun createLogMessage(
             traceEvent: TraceEvent,
             includeTime: Boolean,
-            logCaller: Boolean,
-            logStackTrace: Boolean,
-            includeOwnerClass: Boolean
+            includeExceptionStackTrace: Boolean,
+            includeCalledFromClass: Boolean,
+            includeCalledFromFile: Boolean,
+            includeEventInterface: Boolean
         ): String {
             val sb = StringBuilder()
+
+            // Timestamp.
             if (includeTime) {
                 sb.append("[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] ")
             }
+
+            // Event.
             sb.append(
-                "${traceEvent.functionName}(${traceEvent.args.joinToString {
+                "${traceEvent.eventName}(${traceEvent.args.joinToString {
                     convertToStringUsingRegistry(it)
                 }})"
             )
-            if (logCaller) {
-                sb.append(", caller=${getCaller()}")
+
+            // Called-from file location.
+            if (includeCalledFromFile) {
+                sb.append(", file=${getSourceCodeLocation(traceEvent.stackTraceHolder)}")
             }
-            if (includeOwnerClass) {
-                sb.append(", ownerClass=${traceEvent.ownerClass}")
+
+            // Called-from class name.
+            if (includeCalledFromClass) {
+                sb.append(", class=${traceEvent.calledFromClass}")
             }
-            if (logStackTrace && !traceEvent.args.isEmpty()) {
+
+            // Event interface name.
+            if (includeEventInterface) {
+                sb.append(", interface=${traceEvent.interfaceName}")
+            }
+
+            // Stack trace for last parameter, if it's an exception.
+            if (includeExceptionStackTrace && !traceEvent.args.isEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {
                     sb.append("\n")
-                    sb.append(formatThrowable(it, logStackTrace))
+                    sb.append(formatThrowable(it, includeExceptionStackTrace))
                 }
             }
             return sb.toString()
@@ -664,7 +685,7 @@ class Tracer private constructor(
                 e.message
             }
 
-        private fun getCaller(): String {
+        private fun getSourceCodeLocation(stackTraceHolder: Throwable): String {
 
             /**
              * For Java 9, we suggest the following optimization:
@@ -683,7 +704,7 @@ class Tracer private constructor(
              *
              * For now, use the slower Java 8 version:
              */
-            val stack = Throwable().stackTrace
+            val stack = stackTraceHolder.stackTrace
 
             // Find our own 'invoke' function call on the stack that called this function.
             var i = 0
@@ -695,9 +716,14 @@ class Tracer private constructor(
             // The function call 2 levels deeper is the actual caller function.
             return if (i < stack.size - 2) {
 
-                // Skip the com.sun.proxy function call and get the info from the next item.
+                /**
+                 * Skip the com.sun.proxy function call and get the info from the next item.
+                 * Note that the filename and line number may not be present, e.g. for
+                 * generated code.
+                 */
                 val item = stack[i + 2]
-                "${item.fileName}:${item.methodName}(${item.lineNumber})"
+                "${item.fileName ?: "(unknown)"}:${item.methodName}(" +
+                    "${if (item.lineNumber >= 0) item.lineNumber.toString() else "unknown"})"
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.

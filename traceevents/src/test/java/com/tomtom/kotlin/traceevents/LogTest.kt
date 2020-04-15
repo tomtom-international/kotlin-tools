@@ -18,7 +18,6 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import com.tomtom.kotlin.traceevents.TraceLog.Logger
 import org.junit.Before
 import org.junit.Test
-import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -53,14 +52,22 @@ class LogTest {
         @TraceLogLevel(LogLevel.ERROR)
         fun allArgs(aInt: Int?, aString: String?, aArray: Array<Int?>?, aList: List<Int?>?)
 
-        @TraceLogLevel(LogLevel.DEBUG, logCaller = true)
-        fun withCaller(message: String)
+        @TraceOptions(includeCalledFromClass = true)
+        fun withCalledFromClass(message: String)
 
-        @TraceLogLevel(LogLevel.DEBUG, logStackTrace = true, logOwnerClass = true)
-        fun withStackTrace(e: Throwable?)
+        @TraceLogLevel(LogLevel.VERBOSE)
+        @TraceOptions(includeCalledFromFile = true)
+        fun withCalledFromFile(message: String)
 
-        @TraceLogLevel(LogLevel.DEBUG, logStackTrace = false, logOwnerClass = false)
-        fun withoutStackTrace(e: Throwable?)
+        @TraceOptions(includeEventInterface = true)
+        fun withEventInterface(message: String)
+
+        @TraceOptions(includeExceptionStackTrace = true, includeCalledFromClass = true)
+        fun withExceptionStackTrace(e: Throwable?)
+
+        @TraceLogLevel(LogLevel.ERROR)
+        @TraceOptions(includeExceptionStackTrace = false)
+        fun withoutExceptionStackTrace(e: Throwable?)
     }
 
     @Before
@@ -176,7 +183,7 @@ class LogTest {
         val actual = captureStdoutReplaceTime(TIME) {
             loggerOnly.d("test1")
         }
-        assertEquals("$TIME: [DEBUG] LogTest: test1\n", actual)
+        assertEquals("$TIME DEBUG LogTest: test1\n", actual)
     }
 
     @Test
@@ -187,7 +194,7 @@ class LogTest {
 
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
-            "$TIME: [DEBUG] LogTest: test1, java.lang.IllegalStateException: error1\n" +
+            "$TIME DEBUG LogTest: test1, java.lang.IllegalStateException: error1\n" +
                 "\tat com.tomtom.kotlin.traceevents.LogTest\$log message with exception to stdout\$actual\$1.invoke(LogTest.kt:"
         val suffix =
             ")\n" +
@@ -202,41 +209,41 @@ class LogTest {
     @Test
     fun `log event with null exception to stdout without stacktrace`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withoutStackTrace(null)
+            sut.withoutExceptionStackTrace(null)
         }
-        val expected = "$TIME: [DEBUG] LogTest: event=withoutStackTrace(null)\n"
+        val expected = "$TIME ERROR LogTest: event=withoutExceptionStackTrace(null)\n"
         assertEquals(expected, actual)
     }
 
     @Test
     fun `log event with exception to stdout without stacktrace`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withoutStackTrace(IllegalStateException())
+            sut.withoutExceptionStackTrace(IllegalStateException())
         }
         val expected =
-            "$TIME: [DEBUG] LogTest: event=withoutStackTrace(java.lang.IllegalStateException)\n"
+            "$TIME ERROR LogTest: event=withoutExceptionStackTrace(java.lang.IllegalStateException)\n"
         assertEquals(expected, actual)
     }
 
     @Test
     fun `log event with null exception to stdout with stacktrace`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withStackTrace(null)
+            sut.withExceptionStackTrace(null)
         }
         val expected =
-            "$TIME: [DEBUG] LogTest: event=withStackTrace(null), ownerClass=com.tomtom.kotlin.traceevents.LogTest\n"
+            "$TIME DEBUG LogTest: event=withExceptionStackTrace(null), class=com.tomtom.kotlin.traceevents.LogTest\n"
         assertEquals(expected, actual)
     }
 
     @Test
     fun `log event with exception to stdout with stacktrace`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withStackTrace(IllegalStateException("error1", NullPointerException()))
+            sut.withExceptionStackTrace(IllegalStateException("error1", NullPointerException()))
         }
 
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
-            "$TIME: [DEBUG] LogTest: event=withStackTrace(java.lang.IllegalStateException: error1), ownerClass=com.tomtom.kotlin.traceevents.LogTest\n" +
+            "$TIME DEBUG LogTest: event=withExceptionStackTrace(java.lang.IllegalStateException: error1), class=com.tomtom.kotlin.traceevents.LogTest\n" +
                 "java.lang.IllegalStateException: error1\n" +
                 "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
         val suffix =
@@ -250,17 +257,43 @@ class LogTest {
     }
 
     @Test
-    fun `log event with caller`() {
+    fun `log event with called-from class`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withCaller("test")
+            sut.withCalledFromClass("test")
         }
 
         println(actual)
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val expected =
-            "$TIME: [DEBUG] LogTest: event=withCaller(test), caller=LogTest.kt:invoke($NUMBER)\n"
+            "$TIME DEBUG LogTest: event=withCalledFromClass(test), class=com.tomtom.kotlin.traceevents.LogTest\n"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `log event with called-from file`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            sut.withCalledFromFile("test")
+        }
+
+        println(actual)
+        // Cut off just enough to NOT include line numbers of source code as they may change.
+        val expected =
+            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), file=LogTest.kt:invoke($NUMBER)\n"
         assertEquals(expected, replaceNumber(actual, NUMBER),
             "Perhaps you should increase STACK_TRACE_DEPTH?")
+    }
+
+    @Test
+    fun `log event with event interface`() {
+        val actual = captureStdoutReplaceTime(TIME) {
+            sut.withEventInterface("test")
+        }
+
+        println(actual)
+        // Cut off just enough to NOT include line numbers of source code as they may change.
+        val expected =
+            "$TIME DEBUG LogTest: event=withEventInterface(test), interface=com.tomtom.kotlin.traceevents.LogTest\$TestEvents\n"
+        assertEquals(expected, actual)
     }
 
     companion object {

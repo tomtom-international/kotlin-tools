@@ -62,7 +62,7 @@ interface TraceLog {
         internal fun createStdoutLogLine(
             logLevel: LogLevel, tag: String, message: String, e: Throwable?
         ) =
-            "[${LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)}]: [$logLevel] " +
+            "[${LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)}] $logLevel " +
                 "$tag: $message${e?.let { ", ${Tracer.formatThrowable(it, true)}" } ?: ""}"
 
         internal var theLogger: Logger = DefaultLoggerToStdout

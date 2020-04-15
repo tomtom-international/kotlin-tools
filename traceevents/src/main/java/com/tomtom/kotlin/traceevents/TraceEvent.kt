@@ -22,17 +22,19 @@ import java.time.LocalDateTime
  *
  * @param dateTime Event time.
  * @param logLevel Log level (from [TraceLogLevel] annotation).
- * @param ownerClass Class logging the event.
+ * @param calledFromClass Class logging the event.
  * @param interfaceName Interface name, derived from [TraceEventListener].
- * @param functionName Function name in interface, which represents the trace event name.
+ * @param stackTraceHolder Throwable from which a stack trace can be produced.
+ * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
  */
 data class TraceEvent(
     val dateTime: LocalDateTime,
     val logLevel: LogLevel,
-    val ownerClass: String,
+    val calledFromClass: String,
     val interfaceName: String,
-    val functionName: String,
+    val stackTraceHolder: Throwable,
+    val eventName: String,
     val args: Array<Any?>
 ) {
     /**
@@ -47,9 +49,10 @@ data class TraceEvent(
 
         if (dateTime != other.dateTime) return false
         if (logLevel != other.logLevel) return false
-        if (ownerClass != other.ownerClass) return false
+        if (calledFromClass != other.calledFromClass) return false
         if (interfaceName != other.interfaceName) return false
-        if (functionName != other.functionName) return false
+        if (stackTraceHolder != other.stackTraceHolder) return false
+        if (eventName != other.eventName) return false
         if (!args.contentDeepEquals(other.args)) return false
 
         return true
@@ -58,9 +61,10 @@ data class TraceEvent(
     override fun hashCode(): Int {
         var result = dateTime.hashCode()
         result = 31 * result + logLevel.hashCode()
-        result = 31 * result + ownerClass.hashCode()
+        result = 31 * result + calledFromClass.hashCode()
         result = 31 * result + interfaceName.hashCode()
-        result = 31 * result + functionName.hashCode()
+        result = 31 * result + stackTraceHolder.hashCode()
+        result = 31 * result + eventName.hashCode()
         result = 31 * result + args.contentDeepHashCode()
         return result
     }
