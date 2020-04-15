@@ -136,8 +136,9 @@ class Tracer private constructor(
         companion object {
 
             /**
-             * Get an event logger for a specific class. Should be created once per class rather
-             * than instance. I.e., it should be created from within a class's `companion object`.
+             * Get an event logger for a specific class. Should normally be created once per class
+             * rather than per instance. I.e., it should normally be created from within a class's
+             * `companion object`.
              *
              * @param T The interface type containing the events that may be traced.
              *
@@ -178,10 +179,6 @@ class Tracer private constructor(
                 traceEventListener: KClass<out TraceEventListener>,
                 isLoggerOnly: Boolean = false
             ): T {
-                require(companionClass.isCompanion) {
-                    "Tracers may only be created from companion objects, with `this` to prevent " +
-                        "duplicate instances, companionClass=$companionClass"
-                }
                 require(isLoggerOnly || traceEventListener != TraceEventListener::class) {
                     "Derive an interface from TraceEventListener, or use createLoggerOnly()"
                 }
