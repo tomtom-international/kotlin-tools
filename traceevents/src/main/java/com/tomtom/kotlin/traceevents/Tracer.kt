@@ -216,12 +216,14 @@ class Tracer private constructor(
         proxy as TraceEventListener
         val logLevelAnnotation =
             method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
-        val logStackTraceAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logStackTrace ?: true
-        val logCaller =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logCaller ?: false
-        val includeOwnerClassAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logOwnerClass ?: false
+        val logExceptionStackTraceAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.logExceptionStackTrace ?: true
+        val logCalledFromClassAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.logCalledFromClass ?: false
+        val logCalledFromFileAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.logCalledFromFile ?: false
+        val logEventInterfaceAnnotation =
+            method.getDeclaredAnnotation(TraceOptions::class.java)?.logEventInterface ?: false
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -235,12 +237,12 @@ class Tracer private constructor(
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
         val event = TraceEvent(
-            now,
-            logLevelAnnotation,
-            ownerClassName,
-            method.declaringClass.name,
-            method.name,
-            args ?: arrayOf<Any?>()
+            dateTime = now,
+            logLevel = logLevelAnnotation,
+            ownerClass = ownerClassName,
+            interfaceName = method.declaringClass.name,
+            functionName = method.name,
+            args = args ?: arrayOf<Any?>()
         )
 
         /**
@@ -263,9 +265,10 @@ class Tracer private constructor(
                     "event=${createLogMessage(
                         event,
                         includeTime = false,
-                        logCaller = logCaller,
-                        logStackTrace = logStackTraceAnnotation,
-                        includeOwnerClass = includeOwnerClassAnnotation
+                        logExceptionStackTrace = logExceptionStackTraceAnnotation,
+                        logCalledFromClass = logCalledFromClassAnnotation,
+                        logCalledFromFile = logCalledFromFileAnnotation,
+                        logEventInterface = logEventInterfaceAnnotation
                     )}"
                 )
             }
@@ -305,9 +308,10 @@ class Tracer private constructor(
                         "Event lost, event=${createLogMessage(
                             event,
                             includeTime = true,
-                            logCaller = true,
-                            logStackTrace = true,
-                            includeOwnerClass = true
+                            logExceptionStackTrace = true,
+                            logCalledFromClass = true,
+                            logCalledFromFile = true,
+                            logEventInterface = true
                         )}"
                     )
             }
@@ -622,29 +626,45 @@ class Tracer private constructor(
         internal fun createLogMessage(
             traceEvent: TraceEvent,
             includeTime: Boolean,
-            logCaller: Boolean,
-            logStackTrace: Boolean,
-            includeOwnerClass: Boolean
+            logExceptionStackTrace: Boolean,
+            logCalledFromClass: Boolean,
+            logCalledFromFile: Boolean,
+            logEventInterface: Boolean
         ): String {
             val sb = StringBuilder()
+
+            // Timestamp.
             if (includeTime) {
                 sb.append("[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] ")
             }
+
+            // Event.
             sb.append(
                 "${traceEvent.functionName}(${traceEvent.args.joinToString {
                     convertToStringUsingRegistry(it)
                 }})"
             )
-            if (logCaller) {
-                sb.append(", caller=${getCaller()}")
+
+            // Called-from file location.
+            if (logCalledFromFile) {
+                sb.append(", file=${getSourceCodeLocation()}")
             }
-            if (includeOwnerClass) {
-                sb.append(", ownerClass=${traceEvent.ownerClass}")
+
+            // Called-from class name.
+            if (logCalledFromClass) {
+                sb.append(", class=${traceEvent.ownerClass}")
             }
-            if (logStackTrace && !traceEvent.args.isEmpty()) {
+
+            // Event interface name.
+            if (logEventInterface) {
+                sb.append(", interface=${traceEvent.interfaceName}")
+            }
+
+            // Stack trace for last parameter, if it's an exception.
+            if (logExceptionStackTrace && !traceEvent.args.isEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {
                     sb.append("\n")
-                    sb.append(formatThrowable(it, logStackTrace))
+                    sb.append(formatThrowable(it, logExceptionStackTrace))
                 }
             }
             return sb.toString()
@@ -664,7 +684,7 @@ class Tracer private constructor(
                 e.message
             }
 
-        private fun getCaller(): String {
+        private fun getSourceCodeLocation(): String {
 
             /**
              * For Java 9, we suggest the following optimization:
@@ -695,9 +715,14 @@ class Tracer private constructor(
             // The function call 2 levels deeper is the actual caller function.
             return if (i < stack.size - 2) {
 
-                // Skip the com.sun.proxy function call and get the info from the next item.
+                /**
+                 * Skip the com.sun.proxy function call and get the info from the next item.
+                 * Note that the filename and line number may not be present, e.g. for
+                 * generated code.
+                 */
                 val item = stack[i + 2]
-                "${item.fileName}:${item.methodName}(${item.lineNumber})"
+                "${item.fileName ?: "(unknown)"}:${item.methodName}(" +
+                    "${if (item.lineNumber >= 0) item.lineNumber.toString() else "unknown"})"
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.
