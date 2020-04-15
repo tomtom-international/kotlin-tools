@@ -438,6 +438,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.11
+
+* Removed restriction that tracers can only be created in a `companion object`. 
+
 ### 1.0.10
 
 * Cleaned up annotation `@TraceLogLevel` to only include trace level.
