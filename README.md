@@ -86,7 +86,7 @@ The code for that looks like this:
      |  }
      |
      |  companion object {
-(3)  |      private val tracer = Tracer.Factory.create<MyTraceEvents>(this)
+(3)  |      private val tracer = Tracer.Factory.create<MyTraceEvents>()
      |  }
 ```
 
@@ -101,7 +101,9 @@ explains line (3).
 It creates a proxy object `tracer` (also shown in line (2) above), which implements all trace events
 for you. The implementation of the trace event methods sends the serialized functional name and its
 parameters to an event queue. The events on this queue are subsequently consumed by trace events
-consumers, asynchronously.
+consumers, asynchronously. You can add a 'tagging' object to `create`. The class name of the
+object (typically `this`) may be added to log if `@TraceOptions(includeTraggingClass = true)` is
+used.
 
 By default, a logging trace event consumer is enabled, which sends the events to a `Log` method
 that send the message to `stdout` or can be redirected to, for example, Android `Log`.
@@ -159,14 +161,14 @@ such as `INFO`, `DEBUG`, `ERROR`, etc.
 the optional parameter `includeExceptionStackTrace`. This applies to the last argument of an event (if it 
 is a `Throwable` object). By default, a stack trace is included.
 
-#### `@TraceOptions(includeCalledFromFile=true|false)`
+#### `@TraceOptions(includeFileLocation=true|false)`
 
 `@TraceOptions` also offers the option to specify logging the filename and line number of
 the caller of an event. By default, the caller source code location is not provided.
 
-#### `@TraceOptions(includeCalledFromClass=true|false)`
+#### `@TraceOptions(includeTaggingClass=true|false)`
 
-`@TraceOptions` offers the option to add the class that uses the event tracer
+`@TraceOptions` offers the option to add the class passed to `create()` 
 to the log message, or omit that. By default, the caller class is not included.
 
 #### `@TraceOptions(includeEventInterface=true|false)`
@@ -328,7 +330,7 @@ If you wish to define a tracer to *only* log standard messages using `d()` etc.,
 to create (or use) an `TraceEventListener` interface. You can just use this:
 
 ```
-val tracer = Tracer.Factory.createLoggerOnly(this)
+val tracer = Tracer.Factory.createLoggerOnly()
 ```
 
 **Note:** Using the `Log.x` functions on tracers defeats the advantages of using type-safe
@@ -438,6 +440,12 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.12
+
+* Renamed annotations: `@TraceOptions(includeExceptionStackTrace, includeTaggingClass, includeFileLocation, includeEventInterface)`
+
+* Added ability to add tagging class to tracers.
+
 ### 1.0.11
 
 * Removed restriction that tracers can only be created in a `companion object`. 
@@ -452,7 +460,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ### 1.0.9
 
-* Added `includeCalledFromFile` to `@TraceLoglevel` add the caller filename and line number to the logger.
+* Added `includeFileLocation` to `@TraceLoglevel` add the caller filename and line number to the logger.
 
 ### 1.0.8
 

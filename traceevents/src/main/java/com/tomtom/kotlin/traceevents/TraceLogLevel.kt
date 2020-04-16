@@ -24,5 +24,5 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
  * Default value is [LogLevel.DEBUG].
  */
 @Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 annotation class TraceLogLevel(val logLevel: LogLevel)

@@ -22,7 +22,8 @@ import java.time.LocalDateTime
  *
  * @param dateTime Event time.
  * @param logLevel Log level (from [TraceLogLevel] annotation).
- * @param calledFromClass Class logging the event.
+ * @param tracerClassName Class logging the event.
+ * @param taggingClassName Tagging class passed to event, for convenience of debugging.
  * @param interfaceName Interface name, derived from [TraceEventListener].
  * @param stackTraceHolder Throwable from which a stack trace can be produced.
  * @param eventName Function name in interface, which represents the trace event name.
@@ -31,7 +32,8 @@ import java.time.LocalDateTime
 data class TraceEvent(
     val dateTime: LocalDateTime,
     val logLevel: LogLevel,
-    val calledFromClass: String,
+    val tracerClassName: String,
+    val taggingClassName: String,
     val interfaceName: String,
     val stackTraceHolder: Throwable,
     val eventName: String,
@@ -49,7 +51,8 @@ data class TraceEvent(
 
         if (dateTime != other.dateTime) return false
         if (logLevel != other.logLevel) return false
-        if (calledFromClass != other.calledFromClass) return false
+        if (tracerClassName != other.tracerClassName) return false
+        if (taggingClassName != other.taggingClassName) return false
         if (interfaceName != other.interfaceName) return false
         if (stackTraceHolder != other.stackTraceHolder) return false
         if (eventName != other.eventName) return false
@@ -61,7 +64,8 @@ data class TraceEvent(
     override fun hashCode(): Int {
         var result = dateTime.hashCode()
         result = 31 * result + logLevel.hashCode()
-        result = 31 * result + calledFromClass.hashCode()
+        result = 31 * result + tracerClassName.hashCode()
+        result = 31 * result + taggingClassName.hashCode()
         result = 31 * result + interfaceName.hashCode()
         result = 31 * result + stackTraceHolder.hashCode()
         result = 31 * result + eventName.hashCode()

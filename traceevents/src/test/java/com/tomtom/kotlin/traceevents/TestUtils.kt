@@ -30,13 +30,16 @@ fun MockKMatcherScope.traceEq(
 ) =
     match<TraceEvent> { traceEvent ->
         traceEvent.logLevel == logLevel &&
-            traceEvent.calledFromClass == TracerTest::class.jvmName &&
+            traceEvent.taggingClassName == TracerTest::class.jvmName &&
             traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
             traceEvent.eventName == functionName &&
             traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
             traceEvent.args.contentDeepEquals(args)
     }
 
+/**
+ * Function to capture stdout output to a string.
+ */
 fun captureStdout(block: () -> Unit) =
     ByteArrayOutputStream().use { outputStream ->
         PrintStream(outputStream).use { printStream ->
@@ -45,20 +48,37 @@ fun captureStdout(block: () -> Unit) =
             block()
             System.setOut(previousOut)
         }
-        outputStream.toString()
+        val output = outputStream.toString()
+        println(output)
+        output
     }
 
+/**
+ * Function to capture output and replace times.
+ */
 fun captureStdoutReplaceTime(
     timeReplacement: String,
     block: () -> Unit
 ) = replaceTime(captureStdout { block() }, timeReplacement)
 
+/**
+ * Function to replace a time pattern.
+ */
 fun replaceTime(msg: String?, replaceWith: String) = msg?.replace(
     "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]+\\]".toRegex(),
     replaceWith
 ) ?: ""
 
+/**
+ * Function to replace a number pattern.
+ */
 fun replaceNumber(msg: String?, replaceWith: String) = msg?.replace(
     "\\b[0-9]+\\b".toRegex(RegexOption.MULTILINE),
     replaceWith
 ) ?: ""
+
+/**
+ * Replacements for times and numbers.
+ */
+const val TIME = "[TIME]"
+const val NUMBER = "[NUMBER]"
