@@ -102,7 +102,7 @@ It creates a proxy object `tracer` (also shown in line (2) above), which impleme
 for you. The implementation of the trace event methods sends the serialized functional name and its
 parameters to an event queue. The events on this queue are subsequently consumed by trace events
 consumers, asynchronously. You can add a 'tagging' object to `create`. The class name of the
-object (typically `this`) may be added to log if `@TraceOptions(includeTraggingClass = true)` is
+object (typically `this`) may be added to log if `@TraceOptions(includeTaggingClass = true)` is
 used.
 
 By default, a logging trace event consumer is enabled, which sends the events to a `Log` method
@@ -510,4 +510,3 @@ understand package names
 ### 1.0.0-1.0.2
 
 * Initial release
-
