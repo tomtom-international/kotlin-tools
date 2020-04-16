@@ -31,6 +31,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.jvm.jvmName
 
 
 /**
@@ -127,10 +128,10 @@ import kotlin.reflect.full.isSubclassOf
  * ```
  */
 class Tracer private constructor(
-    private val ownerClassName: String
+    private val tracerClassName: String,
+    private val taggingClassName: String
 ) : InvocationHandler {
-
-    private val tagOwnerClass = getTagFromOwnerClassName(ownerClassName)
+    val logTag = stripPackageFromClassName(tracerClassName)
 
     class Factory {
         companion object {
@@ -142,52 +143,86 @@ class Tracer private constructor(
              *
              * @param T The interface type containing the events that may be traced.
              *
-             * @param companionObject Companion object of the class using the event logger,
-             *     specified as `this` from the companion object.
+             * @param taggingObject Owner object of the class using the event logger,
+             *     specified as `this` from the companion object or an instance.
              * @return [TraceEventListener]-derived object, normally called the "tracer", to be used
              *     as `tracer.someEvent()`.
              */
-            inline fun <reified T : TraceEventListener> create(companionObject: Any) =
-                createForListener<T>(companionObject::class, T::class)
-
-            /**
-             * Called by reified inline function (must be public).
-             */
-            fun <T : TraceEventListener> createForListener(
-                companionClass: KClass<*>,
-                traceEventListener: KClass<out TraceEventListener>
-            ): T = createForListenerAndLogger<T>(companionClass, traceEventListener)
+            inline fun <reified T : TraceEventListener> create(taggingObject: Any) =
+                `createForListener (internal)`<T>(
+                    tracerClassName = `getTraceClassName (internal)`(Throwable()),
+                    taggingClass = taggingObject::class,
+                    traceEventListener = T::class
+                )
 
             /**
              * Same as [create], but does not specify any event handlers. Only log functions
              * 'v', 'd', 'i', 'w' and 'e' are allowed.
+             *
+             * Must be inline to make sure the [Throwable] is created at the correct source code
+             * location.
              */
-            fun createLoggerOnly(companionObject: Any) =
-                createForListenerAndLogger<TraceEventListener>(
-                    companionObject::class, TraceEventListener::class, true
+            @Suppress("NOTHING_TO_INLINE")
+            inline fun createLoggerOnly(taggingObject: Any) =
+                `createForListenerAndLogger (internal)`<TraceEventListener>(
+                    tracerClassName = `getTraceClassName (internal)`(Throwable()),
+                    taggingClass = taggingObject::class,
+                    traceEventListener = TraceEventListener::class,
+                    isLoggerOnly = true
                 )
 
             /**
-             * Private method to create tracer for listener.
+             * Helper function to get the creator class name.
+             * Called by inline function (must be public).
+             */
+            fun `getTraceClassName (internal)`(throwable: Throwable) =
+                throwable.stackTrace[0].className.replace("\$Companion", "")
+
+            /**
+             * Helper function to create event listener.
+             * Called by inline function (must be public).
+             */
+            fun <T : TraceEventListener> `createForListener (internal)`(
+                tracerClassName: String,
+                taggingClass: KClass<*>,
+                traceEventListener: KClass<out TraceEventListener>
+            ): T = `createForListenerAndLogger (internal)`<T>(
+                tracerClassName = tracerClassName,
+                taggingClass = taggingClass,
+                traceEventListener = traceEventListener
+            )
+
+            /**
+             * Method to create tracer for listener.
+             * Called by inline function (must be public).
              *
              * @param isLoggerOnly Specifies the tracer was explicitly created with the
              * [createLoggerOnly] function.
              */
             @Suppress("UNCHECKED_CAST")
-            private fun <T : TraceEventListener> createForListenerAndLogger(
-                companionClass: KClass<*>,
+            fun <T : TraceEventListener> `createForListenerAndLogger (internal)`(
+                tracerClassName: String,
+                taggingClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>,
                 isLoggerOnly: Boolean = false
             ): T {
                 require(isLoggerOnly || traceEventListener != TraceEventListener::class) {
                     "Derive an interface from TraceEventListener, or use createLoggerOnly()"
                 }
-
-                val ownerClass = companionClass.javaObjectType.enclosingClass?.kotlin!!
+                val taggingClassTopLevel =
+                    if (taggingClass.isCompanion) {
+                        // Don't use the companion object class, but the top-level class.
+                        taggingClass.javaObjectType.enclosingClass?.kotlin!!
+                    } else {
+                        taggingClass.javaObjectType.kotlin
+                    }
                 return Proxy.newProxyInstance(
-                    ownerClass.java.classLoader,
+                    traceEventListener.java.classLoader,
                     arrayOf<Class<*>?>(traceEventListener.java),
-                    Tracer(ownerClass.java.name)
+                    Tracer(
+                        tracerClassName = tracerClassName,
+                        taggingClassName = taggingClassTopLevel.jvmName
+                    )
                 ) as T
             }
         }
@@ -211,16 +246,11 @@ class Tracer private constructor(
          * object for a subclass of that interface.
          */
         proxy as TraceEventListener
-        val logLevelAnnotation =
-            method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel ?: LogLevel.DEBUG
-        val includeExceptionStackTraceAnnotation =
-            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace ?: true
-        val includeCalledFromClassAnnotation =
-            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeCalledFromClass ?: false
-        val includeCalledFromFileAnnotation =
-            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeCalledFromFile ?: false
-        val includeEventInterfaceAnnotation =
-            method.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface ?: false
+        val logLevelAnnotation = logLevelFromAnnotation(method)
+        val includeExceptionStackTraceAnnotation = includeExceptionStackTraceFromAnnotation(method)
+        val includeTaggingClassAnnotation = includeTaggingClassAnnotation(method)
+        val includeFileLocationAnnotation = includeFileLocationAnnotation(method)
+        val includeEventInterfaceAnnotation = includeEventInterfaceAnnotation(method)
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -236,7 +266,8 @@ class Tracer private constructor(
         val event = TraceEvent(
             dateTime = now,
             logLevel = logLevelAnnotation,
-            calledFromClass = ownerClassName,
+            tracerClassName = tracerClassName,
+            taggingClassName = taggingClassName,
             interfaceName = method.declaringClass.name,
             stackTraceHolder = Throwable(),
             eventName = method.name,
@@ -250,7 +281,7 @@ class Tracer private constructor(
         if (loggingMode == LoggingMode.SYNC) {
             val logLevel = simpleLogFunctionNameToLogLevel(event.eventName)
             if (logLevel != null) {
-                if (!useSimpleLogFunction(logLevel, tagOwnerClass, args)) {
+                if (!useSimpleLogFunction(logLevel, logTag, args)) {
 
                     // Signal the listener an incorrect signature was found.
                     proxy.incorrectLogSignatureFound()
@@ -259,13 +290,13 @@ class Tracer private constructor(
 
                 // Only format the message for non-standard Log events. Use the annotated log level.
                 TraceLog.log(
-                    logLevelAnnotation, tagOwnerClass,
+                    logLevelAnnotation, logTag,
                     "event=${createLogMessage(
                         event,
                         includeTime = false,
                         includeExceptionStackTrace = includeExceptionStackTraceAnnotation,
-                        includeCalledFromClass = includeCalledFromClassAnnotation,
-                        includeCalledFromFile = includeCalledFromFileAnnotation,
+                        includeTaggingClass = includeTaggingClassAnnotation,
+                        includeFileLocation = includeFileLocationAnnotation,
                         includeEventInterface = includeEventInterfaceAnnotation
                     )}"
                 )
@@ -274,6 +305,32 @@ class Tracer private constructor(
         offerTraceEvent(event, now)
         return null
     }
+
+    // Helpers to get the annotation values. Function level overrides interface level.
+    private fun logLevelFromAnnotation(method: Method) =
+        method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
+            ?: method.declaringClass.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
+            ?: LogLevel.DEBUG
+
+    private fun includeExceptionStackTraceFromAnnotation(method: Method) =
+        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
+            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
+            ?: true
+
+    private fun includeTaggingClassAnnotation(method: Method) =
+        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeTaggingClass
+            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeTaggingClass
+            ?: false
+
+    private fun includeFileLocationAnnotation(method: Method) =
+        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeFileLocation
+            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeFileLocation
+            ?: false
+
+    private fun includeEventInterfaceAnnotation(method: Method) =
+        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface
+            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface
+            ?: false
 
     /**
      * Offer [event] to the processing queue. If trace logging is set to [LoggingMode.SYNC], this
@@ -292,7 +349,7 @@ class Tracer private constructor(
                     if (simpleLogFunctionNameToLogLevel(event.eventName) == null) {
                         TraceLog.log(
                             LogLevel.DEBUG,
-                            tagOwnerClass,
+                            logTag,
                             "Event lost, event=(see previous line)"
                         )
                     }
@@ -302,13 +359,13 @@ class Tracer private constructor(
                     // Only format the message for lost events that weren't logged already.
                     TraceLog.log(
                         LogLevel.WARN,
-                        tagOwnerClass,
+                        logTag,
                         "Event lost, event=${createLogMessage(
                             event,
                             includeTime = true,
                             includeExceptionStackTrace = true,
-                            includeCalledFromClass = true,
-                            includeCalledFromFile = true,
+                            includeTaggingClass = true,
+                            includeFileLocation = true,
                             includeEventInterface = true
                         )}"
                     )
@@ -323,7 +380,7 @@ class Tracer private constructor(
         ) {
             TraceLog.log(
                 LogLevel.WARN,
-                tagOwnerClass,
+                logTag,
                 "Trace event channel is full, " +
                     "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
                     "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
@@ -341,7 +398,7 @@ class Tracer private constructor(
     internal class LoggingTraceEventConsumer : GenericTraceEventConsumer {
 
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
-            val tagOwnerClass = getTagFromOwnerClassName(traceEvent.calledFromClass)
+            val tagOwnerClass = stripPackageFromClassName(traceEvent.taggingClassName)
             val logLevel = simpleLogFunctionNameToLogLevel(traceEvent.eventName)
             if (logLevel != null) {
 
@@ -592,7 +649,7 @@ class Tracer private constructor(
                 else -> null
             }
 
-        internal fun getTagFromOwnerClassName(ownerClassName: String): String {
+        internal fun stripPackageFromClassName(ownerClassName: String): String {
             val indexPeriod = ownerClassName.lastIndexOf('.')
             if (indexPeriod >= 0 && ownerClassName.length > indexPeriod) {
                 return ownerClassName.substring(indexPeriod + 1)
@@ -625,8 +682,8 @@ class Tracer private constructor(
             traceEvent: TraceEvent,
             includeTime: Boolean,
             includeExceptionStackTrace: Boolean,
-            includeCalledFromClass: Boolean,
-            includeCalledFromFile: Boolean,
+            includeTaggingClass: Boolean,
+            includeFileLocation: Boolean,
             includeEventInterface: Boolean
         ): String {
             val sb = StringBuilder()
@@ -644,18 +701,18 @@ class Tracer private constructor(
             )
 
             // Called-from file location.
-            if (includeCalledFromFile) {
-                sb.append(", file=${getSourceCodeLocation(traceEvent.stackTraceHolder)}")
+            if (includeFileLocation) {
+                sb.append(", fileLocation=${getSourceCodeLocation(traceEvent.stackTraceHolder)}")
             }
 
-            // Called-from class name.
-            if (includeCalledFromClass) {
-                sb.append(", class=${traceEvent.calledFromClass}")
+            // Source class name.
+            if (includeTaggingClass) {
+                sb.append(", taggingClass=${stripPackageFromClassName(traceEvent.taggingClassName)}")
             }
 
             // Event interface name.
             if (includeEventInterface) {
-                sb.append(", interface=${traceEvent.interfaceName}")
+                sb.append(", eventInterface=${traceEvent.interfaceName}")
             }
 
             // Stack trace for last parameter, if it's an exception.

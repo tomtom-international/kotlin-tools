@@ -14,14 +14,10 @@
  */
 package com.tomtom.kotlin.traceevents
 
-import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import com.tomtom.kotlin.traceevents.TraceLog.Logger
+import com.tomtom.kotlin.traceevents.LogTest.Companion.tracerFromLogTest
 import org.junit.Before
 import org.junit.Test
-import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class LogOtherClassTest {
 
@@ -31,48 +27,33 @@ class LogOtherClassTest {
     }
 
     @Test
-    fun `log event with called-from other class`() {
+    fun `log event with tagging class, from other class`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withCalledFromClass("test")
+            tracerFromLogTest.withCalledFromClass("test")
         }
-
-        println(actual)
-        // Cut off just enough to NOT include line numbers of source code as they may change.
         val expected =
-            "$TIME DEBUG LogOtherClassTest: event=withCalledFromClass(test), class=com.tomtom.kotlin.traceevents.LogOtherClassTest\n"
+            "$TIME DEBUG LogTest: event=withCalledFromClass(test), taggingClass=LogTest\n"
         assertEquals(expected, actual)
     }
 
     @Test
-    fun `log event with called-from other file`() {
+    fun `log event with file location, from other class`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withCalledFromFile("test")
+            tracerFromLogTest.withCalledFromFile("test")
         }
-
-        println(actual)
-        // Cut off just enough to NOT include line numbers of source code as they may change.
         val expected =
-            "$TIME VERBOSE LogOtherClassTest: event=withCalledFromFile(test), file=LogOtherClassTest.kt:invoke($NUMBER)\n"
+            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogOtherClassTest.kt:invoke($NUMBER)\n"
         assertEquals(expected, replaceNumber(actual, NUMBER),
             "Perhaps you should increase STACK_TRACE_DEPTH?")
     }
 
     @Test
-    fun `log event with event interface from other class`() {
+    fun `log event with event interface, from other class`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            sut.withEventInterface("test")
+            tracerFromLogTest.withEventInterface("test")
         }
-
-        println(actual)
-        // Cut off just enough to NOT include line numbers of source code as they may change.
         val expected =
-            "$TIME DEBUG LogOtherClassTest: event=withEventInterface(test), interface=com.tomtom.kotlin.traceevents.LogTest\$TestEvents\n"
+            "$TIME DEBUG LogTest: event=withEventInterface(test), eventInterface=com.tomtom.kotlin.traceevents.LogTest\$TestEvents\n"
         assertEquals(expected, actual)
-    }
-
-    companion object {
-        const val TIME = "[TIME]"
-        const val NUMBER = "[NUMBER]"
-        val sut = Tracer.Factory.create<LogTest.TestEvents>(this)
     }
 }
