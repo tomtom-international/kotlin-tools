@@ -21,7 +21,7 @@
 
     <groupId>com.tomtom.kotlin</groupId>
     <artifactId>kotlin-tools</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.14-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Kotlin Tools</name>
