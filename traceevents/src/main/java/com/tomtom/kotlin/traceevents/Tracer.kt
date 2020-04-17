@@ -149,8 +149,8 @@ class Tracer private constructor(
              *     as `tracer.someEvent()`.
              */
             inline fun <reified T : TraceEventListener> create(taggingObject: Any) =
-                `createForListener (internal)`<T>(
-                    tracerClassName = `getTraceClassName (internal)`(Throwable()),
+                createForListener_internal<T>(
+                    tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
                     traceEventListener = T::class
                 )
@@ -164,8 +164,8 @@ class Tracer private constructor(
              */
             @Suppress("NOTHING_TO_INLINE")
             inline fun createLoggerOnly(taggingObject: Any) =
-                `createForListenerAndLogger (internal)`<TraceEventListener>(
-                    tracerClassName = `getTraceClassName (internal)`(Throwable()),
+                createForListenerAndLogger_internal<TraceEventListener>(
+                    tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
                     traceEventListener = TraceEventListener::class,
                     isLoggerOnly = true
@@ -175,18 +175,18 @@ class Tracer private constructor(
              * Helper function to get the creator class name.
              * Called by inline function (must be public).
              */
-            fun `getTraceClassName (internal)`(throwable: Throwable) =
+            fun getTraceClassName_internal(throwable: Throwable) =
                 throwable.stackTrace[0].className.replace("\$Companion", "")
 
             /**
              * Helper function to create event listener.
              * Called by inline function (must be public).
              */
-            fun <T : TraceEventListener> `createForListener (internal)`(
+            fun <T : TraceEventListener> createForListener_internal(
                 tracerClassName: String,
                 taggingClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>
-            ): T = `createForListenerAndLogger (internal)`<T>(
+            ): T = createForListenerAndLogger_internal<T>(
                 tracerClassName = tracerClassName,
                 taggingClass = taggingClass,
                 traceEventListener = traceEventListener
@@ -200,7 +200,7 @@ class Tracer private constructor(
              * [createLoggerOnly] function.
              */
             @Suppress("UNCHECKED_CAST")
-            fun <T : TraceEventListener> `createForListenerAndLogger (internal)`(
+            fun <T : TraceEventListener> createForListenerAndLogger_internal(
                 tracerClassName: String,
                 taggingClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>,

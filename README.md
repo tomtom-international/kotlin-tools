@@ -440,6 +440,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.13
+
+* Bug fix, renaming non-DEX formattable function name.
+
 ### 1.0.12
 
 * Renamed annotations: `@TraceOptions(includeExceptionStackTrace, includeTaggingClass, includeFileLocation, includeEventInterface)`
