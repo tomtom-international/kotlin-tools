@@ -444,7 +444,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 * Minor bug fixes.
 
-* Make TraceEvent.stackTraceHolder nullable.
+* Make `TraceEvent.stackTraceHolder` nullable.
 
 ### 1.0.13
 
