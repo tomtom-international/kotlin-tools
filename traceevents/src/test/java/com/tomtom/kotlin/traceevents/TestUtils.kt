@@ -44,7 +44,7 @@ fun captureStdout(block: () -> Unit) =
     ByteArrayOutputStream().use { outputStream ->
         PrintStream(outputStream).use { printStream ->
             val previousOut = System.out
-            System.setOut(printStream);
+            System.setOut(printStream)
             block()
             System.setOut(previousOut)
         }

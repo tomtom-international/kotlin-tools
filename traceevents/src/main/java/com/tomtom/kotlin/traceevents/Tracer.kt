@@ -702,7 +702,12 @@ class Tracer private constructor(
 
             // Called-from file location.
             if (includeFileLocation) {
-                sb.append(", fileLocation=${getSourceCodeLocation(traceEvent.stackTraceHolder)}")
+                val fileLocation = if (traceEvent.stackTraceHolder != null) {
+                    getSourceCodeLocation(traceEvent.stackTraceHolder)
+                } else {
+                    "unavailable"
+                }
+                sb.append(", fileLocation=$fileLocation")
             }
 
             // Source class name.
