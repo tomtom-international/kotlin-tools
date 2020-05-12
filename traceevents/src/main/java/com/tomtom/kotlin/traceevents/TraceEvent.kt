@@ -25,7 +25,7 @@ import java.time.LocalDateTime
  * @param tracerClassName Class logging the event.
  * @param taggingClassName Tagging class passed to event, for convenience of debugging.
  * @param interfaceName Interface name, derived from [TraceEventListener].
- * @param stackTraceHolder Throwable from which a stack trace can be produced.
+ * @param stackTraceHolder Throwable from which a stack trace can be produced. `null` when unavailable.
  * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
  */
@@ -35,7 +35,7 @@ data class TraceEvent(
     val tracerClassName: String,
     val taggingClassName: String,
     val interfaceName: String,
-    val stackTraceHolder: Throwable,
+    val stackTraceHolder: Throwable?,
     val eventName: String,
     val args: Array<Any?>
 ) {
@@ -67,7 +67,7 @@ data class TraceEvent(
         result = 31 * result + tracerClassName.hashCode()
         result = 31 * result + taggingClassName.hashCode()
         result = 31 * result + interfaceName.hashCode()
-        result = 31 * result + stackTraceHolder.hashCode()
+        result = 31 * result + (stackTraceHolder?.hashCode() ?: 0)
         result = 31 * result + eventName.hashCode()
         result = 31 * result + args.contentDeepHashCode()
         return result

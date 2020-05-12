@@ -444,6 +444,8 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 * Minor bug fixes.
 
+* Make TraceEvent.stackTraceHolder nullable.
+
 ### 1.0.13
 
 * Bug fix, renaming non-DEX formattable function name.
