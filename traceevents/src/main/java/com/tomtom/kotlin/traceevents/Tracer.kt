@@ -707,7 +707,7 @@ class Tracer private constructor(
                 } else {
                     "unavailable"
                 }
-                sb.append(", fileLocation=$fileLocation}")
+                sb.append(", fileLocation=$fileLocation")
             }
 
             // Source class name.
