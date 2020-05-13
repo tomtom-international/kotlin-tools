@@ -29,7 +29,7 @@ import kotlin.reflect.jvm.javaMethod
  * This class registers event tracer consumer and finds (and caches) the functions in those
  * consumer to call (by inspection) when events need to be handled.
  */
-internal class TraceEventConsumerCollection {
+class TraceEventConsumerCollection {
 
     fun add(traceEventConsumer: TraceEventConsumer) {
         traceEventsConsumers.add(traceEventConsumer)
