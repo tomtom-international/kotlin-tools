@@ -442,13 +442,13 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ### 1.0.15
 
-* ...
+* Made `TraceEventConsumerCollection` a public class to be able to use it also for consuming streamed events.
 
 ### 1.0.14
 
 * Minor bug fixes.
 
-* Make `TraceEvent.stackTraceHolder` nullable.
+* Made `TraceEvent.stackTraceHolder` nullable.
 
 ### 1.0.13
 
