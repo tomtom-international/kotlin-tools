@@ -440,6 +440,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.16
+
+* Updated dependencies. No functional changes.
+
 ### 1.0.15
 
 * Made `TraceEventConsumerCollection` a public class to be able to use it also for consuming streamed events.
