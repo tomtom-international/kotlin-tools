@@ -69,35 +69,39 @@ class TraceEventConsumerCollection {
         try {
             val traceEventListener = Class.forName(traceEvent.interfaceName).kotlin
             if (traceEventListener.isSubclassOf(TraceEventListener::class)) {
+                // Do not log an error message when the consumer is not a subclass of the trace
+                // event listener type.
+                if (traceEventConsumer::class.isSubclassOf(traceEventListener)) {
 
-                @Suppress("UNCHECKED_CAST")
-                traceEventListener as KClass<out TraceEventListener>
-                val method = findAndCacheFunction(
-                    traceEventConsumer::class,
-                    traceEventListener,
-                    traceEvent.eventName,
-                    traceEvent.args.size
-                )
-                if (method != null) {
-                    try {
-                        method.invoke(traceEventConsumer, *traceEvent.args)
-                    } catch (e: Exception) {
+                    @Suppress("UNCHECKED_CAST")
+                    traceEventListener as KClass<out TraceEventListener>
+                    val method = findAndCacheFunction(
+                        traceEventConsumer::class,
+                        traceEventListener,
+                        traceEvent.eventName,
+                        traceEvent.args.size
+                    )
+                    if (method != null) {
+                        try {
+                            method.invoke(traceEventConsumer, *traceEvent.args)
+                        } catch (e: Exception) {
 
-                        // Catch all exceptions, to avoid killing the event processor.
+                            // Catch all exceptions, to avoid killing the event processor.
+                            TraceLog.log(
+                                LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
+                                        "method=${method.name}, " +
+                                        "args=(${traceEvent.args.joinToString()})", e
+                            )
+                        }
+                    } else {
                         TraceLog.log(
-                            LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
-                                "method=${method.name}, " +
-                                "args=(${traceEvent.args.joinToString()})", e
+                            LogLevel.ERROR, TAG, "Method not found, " +
+                                    "traceEventConsumer=${traceEventConsumer::class}, " +
+                                    "traceEventListener=$traceEventListener, " +
+                                    "traceEvent.functionName=${traceEvent.eventName}, " +
+                                    "traceEvent.args.size=${traceEvent.args.size}"
                         )
                     }
-                } else {
-                    TraceLog.log(
-                        LogLevel.ERROR, TAG, "Method not found, " +
-                            "traceEventConsumer=${traceEventConsumer::class}, " +
-                            "traceEventListener=$traceEventListener, " +
-                            "traceEvent.functionName=${traceEvent.eventName}, " +
-                            "traceEvent.args.size=${traceEvent.args.size}"
-                    )
                 }
             } else {
 

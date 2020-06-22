@@ -440,6 +440,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.0.17
+
+* Minor bug fixes.
+
 ### 1.0.16
 
 * Updated dependencies. No functional changes.
