@@ -93,9 +93,9 @@ class TraceEventConsumerCollection {
                 } else {
                     TraceLog.log(
                         LogLevel.ERROR, TAG, "Method not found, " +
-                            "traceEventConsumer=${traceEventConsumer::class}" +
-                            "traceEventListener=$traceEventListener" +
-                            "traceEvent.functionName=${traceEvent.eventName}" +
+                            "traceEventConsumer=${traceEventConsumer::class}, " +
+                            "traceEventListener=$traceEventListener, " +
+                            "traceEvent.functionName=${traceEvent.eventName}, " +
                             "traceEvent.args.size=${traceEvent.args.size}"
                     )
                 }
