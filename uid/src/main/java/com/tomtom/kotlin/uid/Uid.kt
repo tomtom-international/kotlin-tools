@@ -16,14 +16,16 @@ package com.tomtom.kotlin.uid
 
 import java.util.*
 
+
 /**
- * Generic immutable Unique ID class. Really just an abstraction of UUIDs. Used to unique
- * identify things. No 2 Uid objects shall be equal unless they are the same instance of the
- * Uid class or their underlying UUIDs are equal.
+ * Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to unique
+ * identify things.
  *
- * The class is templated to allow creating typesafe Uid's, like Uid<Message> or Uid<Person>.
+ * The class is a generic type to allow creating typesafe IDs, like Uid<Message> or Uid<Person>.
  * The class represents UUID as Strings internally, to avoid loads of UUID to String conversions
  * all the time. This makes the class considerably faster in use than the regular [UUID] class.
+ *
+ * @param T Type tag for ID, to make IDs type-safe.
  */
 class Uid<T> {
     private val uuid: String
@@ -36,60 +38,53 @@ class Uid<T> {
     }
 
     /**
-     * Instantiates a Uid with a string. Mainly used when de-serializing existing entities.
+     * Instantiates a [Uid] with a string. Mainly used when de-serializing existing entities.
      *
      * The format of 'uuid' is checked to comply with a standard UUID format, which is:
      * - Dashes at positions 8, 13, 18, 23 (base 0).
      * - Characters 0-9 and a-f (lowercase only).
      *
-     * if this form is used, the creation of the Uid is very fast. If an alternative format
+     * if this form is used, the creation of the [Uid] is very fast. If an alternative format
      * us used, as accepted by [fromString], the call is much more expensive.
      *
-     * @param uuid Existing string id.
+     * @param uuidAsString Existing string id.
      * @throws IllegalArgumentException If name does not conform to the string representation
      * as described in [UUID.toString]. Use [isValid] to make sure the string is valid.
      */
-    constructor(uuid: String) {
+    constructor(uuidAsString: String) {
         /**
          * This code has been optimized to NOT just call UUID.fromString(uuid) to convert the
          * UUID-String into a String (and catch an IllegalArgumentException).
          *
          * If the UUID does not comply, the expensive call to UUID.fromString is made after all.
          */
-        val length = uuid.length
-        kotlin.require(
+        val length = uuidAsString.length
+        require(
             UUID_MIN_LENGTH <= length && length <= UUID_MAX_LENGTH
         ) {
             "Length of UUID must be [" + UUID_MIN_LENGTH + ", " +
-                UUID_MAX_LENGTH + "], but is " + uuid.length + ", uuid=" + uuid
+                UUID_MAX_LENGTH + "], but is " + uuidAsString.length + ", uuid=" + uuidAsString
         }
 
         // Check dashes.
-        for (i in UUID_DASH_POS) {
-            if (length < i + 1 || uuid[i] != UUID_DASH) {
-
-                // This will throw an IllegalArgumentException if it went wrong.
-                this.uuid = UUID.fromString(uuid).toString().toLowerCase()
-                return
+        this.uuid = if (dashesAtCorrectPosition(uuidAsString)) {
+            uuidAsString.toLowerCase().also {
+                require(onlyContainsValidUuidCharacters(it)) {
+                    "Incorrect UUID format, uuid=$uuidAsString"
+                }
             }
-        }
-
-        // Make sure the UUID is lowercase.
-        this.uuid = uuid.toLowerCase()
-
-        // UUID seems to be OK.
-        kotlin.require(onlyContainsValidUUIDCharacters(this.uuid)) {
-            "Incorrect UUID format, uuid=$uuid"
+        } else {
+            UUID.fromString(uuidAsString).toString().toLowerCase()
         }
     }
 
     /**
      * Instantiates an id with a [UUID].
      *
-     * @param uuid Existing [UUID].
+     * @param uuidAsUuid Existing [UUID].
      */
-    private constructor(uuid: UUID) {
-        this.uuid = uuid.toString()
+    private constructor(uuidAsUuid: UUID) {
+        this.uuid = uuidAsUuid.toString()
     }
 
     /**
@@ -117,8 +112,8 @@ class Uid<T> {
     }
 
     /**
-     * Method converts given String representation to Uid and compares it with this instance.
-     * A String value of "0-0-0-0-0" would match a UID of "00000-0000-0000-000000000-00" or so.
+     * Method converts given String representation to [Uid] and compares it with this instance.
+     * A String value of "0-0-0-0-0" would match a [Uid] of "00000-0000-0000-000000000-00" or so.
      *
      * @param uid String representation od Uid.
      * @return True in case String representation matches instance. False otherwise.
@@ -148,32 +143,29 @@ class Uid<T> {
     }
 
     companion object {
-        private const val serialVersionUID = 1L
         private const val UUID_DASH = '-'
         private const val UUID_MIN_LENGTH = 9
         private const val UUID_MAX_LENGTH = 36
         private val UUID_DASH_POS = intArrayOf(8, 13, 18, 23)
 
         /**
-         * Return whether an ID is a valid UUID.
+         * Returns an ID if it is a valid UUID, or `null` if it's not.
          *
          * @param id String representation of UUID.
-         * @return True if this is a valid UUID. The construction of a Uid() from this id
-         * is guaranteed succeed in that case.
+         * @return Valid UUID, or null.
          */
-        fun isValid(id: String?): Boolean {
+        fun <T> fromStringIfValid(id: String?): Uid<T>? {
             return if (id == null) {
-                false
+                null
             } else try {
-                Uid<Any>(id)
-                true
+                Uid<T>(id)
             } catch (ignored: IllegalArgumentException) {
-                false
+                null
             }
         }
 
         /**
-         * Instantiates a Uid with given id. Mainly used for deserialization.
+         * Instantiates a [Uid] with given id as a string. Mainly used for deserialization.
          * Opposite of [toString].
          *
          * @param <T> Uid type.
@@ -188,7 +180,7 @@ class Uid<T> {
         }
 
         /**
-         * Instantiates a Uid with given id. Opposite of [toHexString].
+         * Instantiates a [Uid] with given id as hex-formatted string. Opposite of [toHexString].
          *
          * @param <T> Uid type.
          * @param id  Hex string representation of id, must be exactly 32 characters long.
@@ -213,13 +205,25 @@ class Uid<T> {
          * @param uuid Input UUID. Should be lowercase already.
          * @return True if valid characters only.
          */
-        private fun onlyContainsValidUUIDCharacters(uuid: String): Boolean {
+        private fun onlyContainsValidUuidCharacters(uuid: String): Boolean {
             for (ch in uuid.toCharArray()) {
-                if (!('0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || ch == UUID_DASH)) {
+                if (!(ch in '0'..'9' || ch in 'a'..'f' || ch == UUID_DASH)) {
                     return false
                 }
             }
             return true
         }
+
+        /**
+         * Checks if the dashes are at the right positions for a UUID.
+         *
+         * @param s Input string.
+         * @return True if the dashes are correctly placed.
+         *
+         */
+        private fun dashesAtCorrectPosition(s: String) =
+            UUID_DASH_POS
+                .map { i -> s.length > i && s[i] == '-' }
+                .reduce { acc, b -> acc && b }
     }
 }

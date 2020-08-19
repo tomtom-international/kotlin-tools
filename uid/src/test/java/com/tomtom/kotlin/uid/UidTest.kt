@@ -16,21 +16,13 @@ package com.tomtom.kotlin.uid
 
 import com.tomtom.kotlin.uid.Uid
 import nl.jqno.equalsverifier.EqualsVerifier
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UidTest {
-    @Test
-    fun testCreate() {
-        val size = 100
-        val map: MutableMap<String, Boolean> = HashMap(size)
-        for (i in 0 until size) {
-            val id: Uid<*> = Uid<Any>()
-            Assert.assertNull(map.put(id.toString(), true))
-        }
-        Assert.assertTrue(true)
-    }
-
     @Test
     fun testEquals() {
         EqualsVerifier.forClass(Uid::class.java)
@@ -39,13 +31,23 @@ class UidTest {
     }
 
     @Test
+    fun testCreate() {
+        val size = 100
+        val map: MutableMap<String, Boolean> = HashMap(size)
+        for (i in 0 until size) {
+            val id: Uid<*> = Uid<Any>()
+            assertNull(map.put(id.toString(), true))
+        }
+    }
+
+    @Test
     fun testIsValid() {
-        Assert.assertTrue(Uid.isValid("d32b6789-bfbb-4194-87f3-72ce34609902"))
-        Assert.assertTrue(Uid.isValid("0-0-0-0-0"))
-        Assert.assertFalse(Uid.isValid("0-0-0-0-0-0"))
-        Assert.assertFalse(Uid.isValid("d32b6789bfbb419487f372ce34609902"))
-        Assert.assertFalse(Uid.isValid(""))
-        Assert.assertFalse(Uid.isValid(null))
+        assertNotNull(Uid.fromStringIfValid<Any>("d32b6789-bfbb-4194-87f3-72ce34609902"))
+        assertNotNull(Uid.fromStringIfValid<Any>("0-0-0-0-0"))
+        assertNull(Uid.fromStringIfValid<Any>("0-0-0-0-0-0"))
+        assertNull(Uid.fromStringIfValid<Any>("d32b6789bfbb419487f372ce34609902"))
+        assertNull(Uid.fromStringIfValid<Any>(""))
+        assertNull(Uid.fromStringIfValid<Any>(null))
     }
 
     @Test
@@ -53,29 +55,26 @@ class UidTest {
         val a: Uid<Any> = Uid.fromString("d32b6789-bfbb-4194-87f3-72ce34609902")
         val s = "d32b6789-bfbb-4194-87f3-72ce34609902"
         val b: Uid<Any> = Uid.fromString(s)
-        Assert.assertEquals(a, b)
+        assertEquals(a, b)
     }
 
     @Test
     fun testToString() {
-        val x: Uid<Any> = Uid()
-        try {
-        } catch (ignored: Exception) {
-            Assert.fail()
-        }
+        val x: Uid<Any> = Uid("1-2-3-4-5")
+        assertEquals("00000001-0002-0003-0004-000000000005", x.toString())
     }
 
     @Test
     fun testAs() {
         val a: Uid<Long> = Uid()
         val b: Uid<Int> = a as Uid<Int>
-        Assert.assertTrue(a.equals(b))
+        assertTrue(a.equals(b))
     }
 
     @Test
     fun testMatchesFromString() {
         val a: Uid<String> = Uid.fromString("0-0-0-0-0")
-        Assert.assertTrue(a.matchesFromString("0000-0000-000-0-0"))
+        assertTrue(a.matchesFromString("0000-0000-000-0-0"))
     }
 
     @Test
@@ -83,20 +82,26 @@ class UidTest {
         val s = "d32b6789-bfbb-4194-87f3-72ce34609902"
         val a: Uid<Any> = Uid.fromString(s)
         val b: Uid<Any> = Uid.fromHexString(s.replace("-".toRegex(), ""))
-        Assert.assertEquals(a, b)
+        assertEquals(a, b)
     }
 
     @Test
-    fun testToHexString() {
+    fun testToHexString1() {
         val a: Uid<Any> = Uid()
-        Assert.assertEquals(a.toString().replace("-", ""), a.toHexString())
+        assertEquals(a.toString().replace("-", ""), a.toHexString())
+    }
+
+    @Test
+    fun testToHexString2() {
+        val a: Uid<Any> = Uid("1-2-3-4-5")
+        assertEquals("00000001000200030004000000000005", a.toHexString())
     }
 
     @Test
     fun testToAppendedHexString() {
         val s = "00000000-0000-0001-0000-000000000001"
         val a: Uid<Any> = Uid.fromString(s)
-        Assert.assertEquals(s.replace("-".toRegex(), ""), a.toHexString())
+        assertEquals(s.replace("-".toRegex(), ""), a.toHexString())
     }
 
     @Test
@@ -104,6 +109,6 @@ class UidTest {
         val s = "ffffffff-ffff-ffff-ffff-ffffffffffff"
         val a: Uid<Any> = Uid.fromString(s)
         val b: Uid<Any> = Uid.fromHexString(s.replace("-".toRegex(), ""))
-        Assert.assertEquals(a, b)
+        assertEquals(a, b)
     }
 }
