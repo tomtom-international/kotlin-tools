@@ -59,9 +59,7 @@ class Uid<T> {
          * If the UUID does not comply, the expensive call to UUID.fromString is made after all.
          */
         val length = uuidAsString.length
-        require(
-            UUID_MIN_LENGTH <= length && length <= UUID_MAX_LENGTH
-        ) {
+        require(length in UUID_MIN_LENGTH..UUID_MAX_LENGTH) {
             "Length of UUID must be [" + UUID_MIN_LENGTH + ", " +
                 UUID_MAX_LENGTH + "], but is " + uuidAsString.length + ", uuid=" + uuidAsString
         }
