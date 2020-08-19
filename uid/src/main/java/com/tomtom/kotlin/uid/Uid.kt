@@ -95,18 +95,7 @@ class Uid<T> {
         val uuid2 = UUID.fromString(uuid)
         val msb = java.lang.Long.toHexString(uuid2.mostSignificantBits)
         val lsb = java.lang.Long.toHexString(uuid2.leastSignificantBits)
-        val sb = StringBuilder(32)
-        for (i in 1..16 - msb.length) {
-            sb.append('0')
-        }
-        sb.append(msb)
-        for (i in 1..16 - lsb.length) {
-            sb.append('0')
-        }
-        sb.append(lsb)
-        val value = sb.toString()
-        assert(value.length == 32)
-        return value
+        return "${msb.padStart(16, '0')}${lsb.padStart(16, '0')}"
     }
 
     /**
@@ -180,8 +169,10 @@ class Uid<T> {
         </T> */
         fun <T> fromHexString(id: String): Uid<T> {
             require(id.length == 32)
-            val msb = id.substring(0, 16).toLong(16)
-            val lsb = id.substring(16, 32).toLong(16)
+            val msb: Long =
+                id.substring(0, 8).toLong(16) shl 32 or id.substring(8, 16).toLong(16)
+            val lsb: Long =
+                id.substring(16, 24).toLong(16) shl 32 or id.substring(24, 32).toLong(16)
             return Uid<T>(UUID(msb, lsb))
         }
 
@@ -192,14 +183,8 @@ class Uid<T> {
          * @param uuid Input UUID. Should be lowercase already.
          * @return True if valid characters only.
          */
-        private fun onlyContainsValidUuidCharacters(uuid: String): Boolean {
-            for (ch in uuid.toCharArray()) {
-                if (!(ch in '0'..'9' || ch in 'a'..'f' || ch == UUID_DASH)) {
-                    return false
-                }
-            }
-            return true
-        }
+        private fun onlyContainsValidUuidCharacters(uuid: String) =
+            uuid.toCharArray().all { it in '0'..'9' || it in 'a'..'f' || it == UUID_DASH }
 
         /**
          * Checks if the dashes are at the right positions for a UUID.
