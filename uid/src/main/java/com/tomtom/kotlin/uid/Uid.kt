@@ -14,14 +14,14 @@
  */
 package com.tomtom.kotlin.uid
 
-import java.util.*
+import java.util.UUID
 
 
 /**
  * Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to unique
  * identify things.
  *
- * The class is a generic type to allow creating typesafe IDs, like Uid<Message> or Uid<Person>.
+ * The class has a generic type T to allow creating typesafe IDs, like Uid<Message> or Uid<Person>.
  * The class represents UUID as Strings internally, to avoid loads of UUID to String conversions
  * all the time. This makes the class considerably faster in use than the regular [UUID] class.
  *
@@ -44,10 +44,10 @@ class Uid<T> {
      * - Dashes at positions 8, 13, 18, 23 (base 0).
      * - Characters 0-9 and a-f (lowercase only).
      *
-     * if this form is used, the creation of the [Uid] is very fast. If an alternative format
+     * if this format is used, the creation of the [Uid] is very fast. If an alternative format
      * us used, as accepted by [fromString], the call is much more expensive.
      *
-     * @param uuidAsString Existing string id.
+     * @param uuidAsString Existing string ID.
      * @throws IllegalArgumentException If name does not conform to the string representation
      * as described in [UUID.toString]. Use [isValid] to make sure the string is valid.
      */
@@ -67,7 +67,7 @@ class Uid<T> {
         }
 
         // Check dashes.
-        this.uuid = if (dashesAtCorrectPosition(uuidAsString)) {
+        this.uuid = if (areDashesAtCorrectPosition(uuidAsString)) {
             uuidAsString.toLowerCase().also {
                 require(onlyContainsValidUuidCharacters(it)) {
                     "Incorrect UUID format, uuid=$uuidAsString"
@@ -79,7 +79,7 @@ class Uid<T> {
     }
 
     /**
-     * Instantiates an id with a [UUID].
+     * Instantiates an ID with a [UUID].
      *
      * @param uuidAsUuid Existing [UUID].
      */
@@ -91,7 +91,7 @@ class Uid<T> {
      * Returns hex string representation of this Uid. Opposite of [fromHexString].
      * This representation is shorthand, it does not include dashes.
      *
-     * @return Hex string representation of id, exactly 32 characters long.
+     * @return Hex string representation of ID, exactly 32 characters long.
      */
     fun toHexString(): String {
         val uuid2 = UUID.fromString(uuid)
@@ -118,9 +118,7 @@ class Uid<T> {
      * @param uid String representation od Uid.
      * @return True in case String representation matches instance. False otherwise.
      */
-    fun matchesFromString(uid: String): Boolean {
-        return this == fromString<T>(uid)
-    }
+    fun matchesFromString(uid: String) = this == fromString<T>(uid)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -129,18 +127,14 @@ class Uid<T> {
         return true
     }
 
-    override fun hashCode(): Int {
-        return uuid.hashCode()
-    }
+    override fun hashCode() = uuid.hashCode()
 
     /**
      * Returns string representation of this Uid. Opposite of [fromString].
      *
-     * @return String representation of id.
+     * @return String representation of ID.
      */
-    override fun toString(): String {
-        return uuid
-    }
+    override fun toString() = uuid
 
     companion object {
         private const val UUID_DASH = '-'
@@ -154,36 +148,33 @@ class Uid<T> {
          * @param id String representation of UUID.
          * @return Valid UUID, or null.
          */
-        fun <T> fromStringIfValid(id: String?): Uid<T>? {
-            return if (id == null) {
+        fun <T> fromStringIfValid(id: String?) =
+            if (id == null) {
                 null
             } else try {
                 Uid<T>(id)
             } catch (ignored: IllegalArgumentException) {
                 null
             }
-        }
 
         /**
-         * Instantiates a [Uid] with given id as a string. Mainly used for deserialization.
+         * Instantiates a [Uid] with given ID as a string. Mainly used for deserialization.
          * Opposite of [toString].
          *
          * @param <T> Uid type.
-         * @param id  String representation of id.
+         * @param id  String representation of ID.
          * @return Uid.
          * @throws IllegalArgumentException If name does not conform to the string
          * representation as described in [UUID.toString]. Use [isValid] to make sure the
          * string is valid.
         </T> */
-        fun <T> fromString(id: String): Uid<T> {
-            return Uid<T>(id)
-        }
+        fun <T> fromString(id: String) = Uid<T>(id)
 
         /**
-         * Instantiates a [Uid] with given id as hex-formatted string. Opposite of [toHexString].
+         * Instantiates a [Uid] with given ID as hex-formatted string. Opposite of [toHexString].
          *
          * @param <T> Uid type.
-         * @param id  Hex string representation of id, must be exactly 32 characters long.
+         * @param id  Hex string representation of ID, must be exactly 32 characters long.
          * @return Uid.
          * @throws IllegalArgumentException If name does not conform to the string
          * representation as described in [UUID.toString]. Use [isValid] to make sure the
@@ -219,9 +210,8 @@ class Uid<T> {
          *
          * @param s Input string.
          * @return True if the dashes are correctly placed.
-         *
          */
-        private fun dashesAtCorrectPosition(s: String) =
+        private fun areDashesAtCorrectPosition(s: String) =
             UUID_DASH_POS
                 .map { i -> s.length > i && s[i] == '-' }
                 .reduce { acc, b -> acc && b }

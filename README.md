@@ -397,16 +397,16 @@ Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to 
 identify things. No 2 Uid objects shall be equal unless they are the same instance of the
 Uid class or their underlying UUIDs are equal.
 
-The class is a generic type to allow creating typesafe Uid's, like `Uid<Message>` or `Uid<Person>`.
+The class has a generic type T to allow creating typesafe Uid's, like `Uid<Message>`.
 The class represents UUID as Strings internally, to avoid loads of UUID to String conversions
 all the time. This makes the class considerably faster in use than the regular Java UUID class.
 
 Examples:
 ```kotlin
-val messageId = Uid<Message>()    // Creates a new unique message ID.
-val personId = Uid<Person>()      // Creates a new unique person ID.
+var messageId = Uid<Message>()    // Creates a new unique message ID.
+var personId = Uid<Person>()      // Creates a new unique person ID.
 
-if (messageId == personId) {...}  // <-- Not allowed, the IDs are type safe.
+messageId = personId              // <-- Does not compile, the IDs are type safe.
 
 val testId = Uid.fromString("1-2-3-4-5")    // Allows shorthand notation for UUIDs,
                                             // easy for testing, or input.

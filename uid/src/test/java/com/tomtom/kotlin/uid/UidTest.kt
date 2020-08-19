@@ -23,6 +23,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UidTest {
+
+    // Below is some code that does NOT compile to show the type safety features of Uid.
+
+    // fun compileTimeTypeSafetyExamples() {
+    //   var idInt = Uid<Int>()
+    //   var idLong = Uid<Long>()
+    //   idInt == idLong         // This is OK.
+    //   idInt = idLong          // This does not compile
+    // }
+
     @Test
     fun testEquals() {
         EqualsVerifier.forClass(Uid::class.java)
