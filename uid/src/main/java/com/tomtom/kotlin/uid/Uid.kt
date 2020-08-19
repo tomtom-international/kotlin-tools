@@ -47,7 +47,7 @@ class Uid<T> {
      * If this format is used, the creation of the [Uid] is very fast. If an alternative format
      * us used, as accepted by [fromString], the call is much more expensive.
      *
-     * @param uuidAsString Existing string ID.
+     * @param uuidAsString An existing string representation of a UUID.
      * @throws IllegalArgumentException If name does not conform to the string representation
      * as described in [UUID.toString]. Use [isValid] to make sure the string is valid.
      */
