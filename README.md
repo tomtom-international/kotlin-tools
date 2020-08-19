@@ -393,7 +393,7 @@ to the documentation in the `Tracer` class.
 
 ## Module: Uid
 
-Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to unique
+Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to uniquely
 identify things. No 2 Uid objects shall be equal unless they are the same instance of the
 Uid class or their underlying UUIDs are equal.
 

@@ -18,7 +18,7 @@ import java.util.UUID
 
 
 /**
- * Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to unique
+ * Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to uniquely
  * identify things.
  *
  * The class has a generic type T to allow creating typesafe IDs, like Uid<Message> or Uid<Person>.
@@ -44,7 +44,7 @@ class Uid<T> {
      * - Dashes at positions 8, 13, 18, 23 (base 0).
      * - Characters 0-9 and a-f (lowercase only).
      *
-     * if this format is used, the creation of the [Uid] is very fast. If an alternative format
+     * If this format is used, the creation of the [Uid] is very fast. If an alternative format
      * us used, as accepted by [fromString], the call is much more expensive.
      *
      * @param uuidAsString Existing string ID.
