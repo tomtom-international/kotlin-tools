@@ -86,15 +86,15 @@ class Uid<T> {
     }
 
     /**
-     * Returns hex string representation of this Uid. Opposite of [fromHexString].
+     * Returns a hex string representation of this Uid. Opposite of [fromHexString].
      * This representation is shorthand, it does not include dashes.
      *
      * @return Hex string representation of ID, exactly 32 characters long.
      */
     fun toHexString(): String {
-        val uuid2 = UUID.fromString(uuid)
-        val msb = java.lang.Long.toHexString(uuid2.mostSignificantBits)
-        val lsb = java.lang.Long.toHexString(uuid2.leastSignificantBits)
+        val uuidString = UUID.fromString(uuid)
+        val msb = java.lang.Long.toHexString(uuidString.mostSignificantBits)
+        val lsb = java.lang.Long.toHexString(uuidString.leastSignificantBits)
         return "${msb.padStart(16, '0')}${lsb.padStart(16, '0')}"
     }
 
@@ -102,7 +102,7 @@ class Uid<T> {
      * Method converts given String representation to [Uid] and compares it with this instance.
      * A String value of "0-0-0-0-0" would match a [Uid] of "00000-0000-0000-000000000-00" or so.
      *
-     * @param uid String representation od Uid.
+     * @param uid String representation of the Uid.
      * @return True in case String representation matches instance. False otherwise.
      */
     fun matchesFromString(uid: String) = this == fromString<T>(uid)
