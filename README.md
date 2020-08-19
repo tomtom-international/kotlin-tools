@@ -440,7 +440,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
-### 1.0.17
+### 1.1.0
+
+* Added `Uid` class for UUID handling.
+
+### 1.0.17-1.0.18
 
 * Minor bug fixes.
 
