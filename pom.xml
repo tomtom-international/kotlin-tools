@@ -21,7 +21,7 @@
 
     <groupId>com.tomtom.kotlin</groupId>
     <artifactId>kotlin-tools</artifactId>
-    <version>1.0.17</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
 
     <name>Kotlin Tools</name>
@@ -72,6 +72,7 @@
 
     <modules>
         <module>traceevents</module>
+        <module>uid</module>
     </modules>
 
     <properties>

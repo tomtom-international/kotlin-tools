@@ -391,6 +391,36 @@ Advanced examples of using this trace event mechanism are:
 For more information, for example on how to define and register trace event consumers, please refer
 to the documentation in the `Tracer` class.
 
+## Module: Uid
+
+Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to uniquely
+identify things. No 2 Uid objects shall be equal unless they are the same instance of the
+Uid class or their underlying UUIDs are equal.
+
+The class has a generic type T to allow creating typesafe Uid's, like `Uid<Message>`.
+The class represents UUIDs as Strings internally, to avoid loads of UUID to String conversions
+all the time. This makes the class considerably faster in use than the regular Java UUID class.
+
+Examples:
+```kotlin
+var messageId = Uid<Message>()    // Creates a new unique message ID.
+var personId = Uid<Person>()      // Creates a new unique person ID.
+
+messageId = personId              // <-- Does not compile, the IDs are type safe.
+
+val testId = Uid.fromString("1-2-3-4-5")    // Allows shorthand notation for UUIDs,
+                                            // easy for testing, or input.
+
+val s = messageId.toString()      // Serialized to string.
+val id = Uid<Message>(s)          // Deserialized from string. Faster than `fromString`
+                                  // if the format is known to be the serialized format.
+
+val messageId : Uid<Message>()              // If you need, you can translate IDs from one
+val personId : messageId as Uid<Person>     // type to another using 'as'. This is useful if
+                                            // the type information was lost, for example,
+                                            // in serialization.
+```
+
 ## License
 
 Copyright (C) 2020-2020, TomTom (http://tomtom.com).
@@ -440,7 +470,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
-### 1.0.17
+### 1.1.0
+
+* Added `Uid` class for UUID handling.
+
+### 1.0.17-1.0.18
 
 * Minor bug fixes.
 
