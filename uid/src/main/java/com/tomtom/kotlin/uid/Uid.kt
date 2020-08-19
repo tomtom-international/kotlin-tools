@@ -22,7 +22,7 @@ import java.util.UUID
  * identify things.
  *
  * The class has a generic type T to allow creating typesafe IDs, like Uid<Message> or Uid<Person>.
- * The class represents UUID as Strings internally, to avoid loads of UUID to String conversions
+ * The class represents UUIDs as Strings internally, to avoid loads of UUID to String conversions
  * all the time. This makes the class considerably faster in use than the regular [UUID] class.
  *
  * @param T Type tag for ID, to make IDs type-safe.
@@ -95,7 +95,7 @@ class Uid<T> {
         val uuid2 = UUID.fromString(uuid)
         val msb = java.lang.Long.toHexString(uuid2.mostSignificantBits)
         val lsb = java.lang.Long.toHexString(uuid2.leastSignificantBits)
-        val sb = StringBuilder()
+        val sb = StringBuilder(32)
         for (i in 1..16 - msb.length) {
             sb.append('0')
         }
@@ -128,7 +128,7 @@ class Uid<T> {
     override fun hashCode() = uuid.hashCode()
 
     /**
-     * Returns string representation of this Uid. Opposite of [fromString].
+     * Returns the string representation of this Uid. Opposite of [fromString].
      *
      * @return String representation of ID.
      */
@@ -180,10 +180,8 @@ class Uid<T> {
         </T> */
         fun <T> fromHexString(id: String): Uid<T> {
             require(id.length == 32)
-            val msb: Long =
-                id.substring(0, 8).toLong(16) shl 32 or id.substring(8, 16).toLong(16)
-            val lsb: Long =
-                id.substring(16, 24).toLong(16) shl 32 or id.substring(24, 32).toLong(16)
+            val msb = id.substring(0, 16).toLong(16)
+            val lsb = id.substring(16, 32).toLong(16)
             return Uid<T>(UUID(msb, lsb))
         }
 
@@ -210,8 +208,6 @@ class Uid<T> {
          * @return True if the dashes are correctly placed.
          */
         private fun areDashesAtCorrectPosition(s: String) =
-            UUID_DASH_POS
-                .map { i -> s.length > i && s[i] == '-' }
-                .reduce { acc, b -> acc && b }
+            UUID_DASH_POS.all { s.length > it && s[it] == '-' }
     }
 }

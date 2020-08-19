@@ -398,7 +398,7 @@ identify things. No 2 Uid objects shall be equal unless they are the same instan
 Uid class or their underlying UUIDs are equal.
 
 The class has a generic type T to allow creating typesafe Uid's, like `Uid<Message>`.
-The class represents UUID as Strings internally, to avoid loads of UUID to String conversions
+The class represents UUIDs as Strings internally, to avoid loads of UUID to String conversions
 all the time. This makes the class considerably faster in use than the regular Java UUID class.
 
 Examples:
