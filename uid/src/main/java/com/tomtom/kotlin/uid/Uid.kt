@@ -14,6 +14,7 @@
  */
 package com.tomtom.kotlin.uid
 
+import java.io.Serializable
 import java.util.UUID
 
 
@@ -27,7 +28,7 @@ import java.util.UUID
  *
  * @param T Type tag for ID, to make IDs type-safe.
  */
-data class Uid<T> private constructor(private val uuid: String) {
+data class Uid<T> private constructor(private val uuid: String) : Serializable {
 
     /**
      * Returns a hex string representation of this Uid. Opposite of [fromHexString].
@@ -59,6 +60,7 @@ data class Uid<T> private constructor(private val uuid: String) {
     override fun toString() = uuid
 
     companion object {
+        private val serialVersionUID = 1L
         private const val UUID_DASH = '-'
         private const val UUID_MIN_LENGTH = 9
         private const val UUID_MAX_LENGTH = 36
