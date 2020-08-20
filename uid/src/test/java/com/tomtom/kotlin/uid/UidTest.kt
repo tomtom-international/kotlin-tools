@@ -45,7 +45,7 @@ class UidTest {
         val size = 100
         val map: MutableMap<String, Boolean> = HashMap(size)
         for (i in 0 until size) {
-            val id: Uid<*> = Uid<Any>()
+            val id = Uid.new<Any>()
             assertNull(map.put(id.toString(), true))
         }
     }
@@ -62,22 +62,22 @@ class UidTest {
 
     @Test
     fun testFromString() {
-        val a: Uid<Any> = Uid.fromString("d32b6789-bfbb-4194-87f3-72ce34609902")
+        val a = Uid.fromString<Any>("d32b6789-bfbb-4194-87f3-72ce34609902")
         val s = "d32b6789-bfbb-4194-87f3-72ce34609902"
-        val b: Uid<Any> = Uid.fromString(s)
+        val b = Uid.fromString<Any>(s)
         assertEquals(a, b)
     }
 
     @Test
     fun testToString() {
-        val x: Uid<Any> = Uid("1-2-3-4-5")
+        val x = Uid.fromString<Any>("1-2-3-4-5")
         assertEquals("00000001-0002-0003-0004-000000000005", x.toString())
     }
 
     @Test
     fun testAs() {
-        val a: Uid<Long> = Uid()
-        val b: Uid<Int> = a as Uid<Int>
+        val a = Uid.new<Long>()
+        val b = a as Uid<Int>
         assertTrue(a.equals(b))
     }
 
@@ -97,13 +97,13 @@ class UidTest {
 
     @Test
     fun testToHexString1() {
-        val a: Uid<Any> = Uid()
+        val a = Uid.new<Any>()
         assertEquals(a.toString().replace("-", ""), a.toHexString())
     }
 
     @Test
     fun testToHexString2() {
-        val a: Uid<Any> = Uid("1-2-3-4-5")
+        val a = Uid.fromString<Any>("1-2-3-4-5")
         assertEquals("00000001000200030004000000000005", a.toHexString())
     }
 
