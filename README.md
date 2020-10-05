@@ -470,6 +470,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen
 
 ## Release notes
 
+### 1.1.1
+
+* Updated dependencies (except `mockk` as 1.10.2 will fail the test for
+unclear reasons).
+ 
 ### 1.1.0
 
 * Added `Uid` class for UUID handling.
