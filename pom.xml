@@ -96,7 +96,7 @@
 
         <!-- Library versions. -->
         <equalsverifier.version>3.4.3</equalsverifier.version>
-        <junit.version>4.13</junit.version>
+        <junit.version>4.13.1</junit.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <kotlin.version>1.4.10</kotlin.version>
         <kotlin-test.version>1.4.10</kotlin-test.version>
