@@ -421,6 +421,23 @@ val personId : messageId as Uid<Person>     // type to another using 'as'. This 
                                             // in serialization.
 ```
 
+## Module: Function-Memoization
+
+Provides `memoize` extension to kotlin functions that allows optimizing expensive functions by 
+remembering the results corresponding to some set of specific inputs.
+
+
+```kotlin
+val function1: (Int) -> String = { p1: Int -> p1.toString() }.memoize()
+
+function1(10) // First call with 10 - actual function is called and result is cached
+function1(11) // First call with 11 - actual function is called and result is cached
+function1(10) // Second call with 10 - value is returned from cache
+```
+
+`memoize()` - extension creates cached function with unlimited storage capacity.
+`memoize(Int)` - extension creates Least Recently Used (LRU) cached function that will remove least recently used item if number of stored results exceeds provided limit.
+
 ## License
 
 Copyright (C) 2020-2020, TomTom (http://tomtom.com).
@@ -466,9 +483,13 @@ And then choose the pre-defined style `Kotlin Style Guide`. Voila!
 
 Author: Rijn Buve
 
-Contributors: Timon Kanters, Jeroen Erik Jensen
+Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
+
+### 1.2.0
+
+* Added kotlin function memoization extensions.
 
 ### 1.1.1
 
