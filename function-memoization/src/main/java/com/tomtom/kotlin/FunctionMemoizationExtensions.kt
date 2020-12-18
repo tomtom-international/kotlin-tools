@@ -40,7 +40,7 @@ fun <P1, R> ((P1) -> R).memoize(): (P1) -> R =
 /**
  * Creates a LRU style cached function that will return cached result when the same inputs occurs again.
  */
-fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int = 1): (P1, P2) -> R =
+fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
     object : (P1, P2) -> R {
         private val cache = { pair: Pair<P1, P2> ->
             this@memoize(pair.first, pair.second)
@@ -65,7 +65,7 @@ fun <P1, P2, R> ((P1, P2) -> R).memoize(): (P1, P2) -> R =
 /**
  * Creates a LRU style cached function that will return cached result when the same inputs occurs again.
  */
-fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int = 1): (P1, P2, P3) -> R =
+fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) -> R =
     object : (P1, P2, P3) -> R {
         private val cache = { triple: Triple<P1, P2, P3> ->
             this@memoize(triple.first, triple.second, triple.third)
