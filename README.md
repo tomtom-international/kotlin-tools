@@ -426,7 +426,12 @@ val personId : messageId as Uid<Person>     // type to another using 'as'. This 
 Provides `memoize` extension to Kotlin functions that allows optimizing expensive functions by 
 caching the results corresponding to some set of specific inputs.
 
+In order for memoization to work properly:
+- input arguments should be comparable with proper equals/hashcode implementations
+- given the same input, function should always return same output
 
+
+example:
 ```kotlin
 val function1: (Int) -> String = { p1: Int -> p1.toString() }.memoize()
 
