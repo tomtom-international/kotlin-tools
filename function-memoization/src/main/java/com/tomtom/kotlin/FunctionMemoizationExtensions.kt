@@ -125,7 +125,6 @@ private class Function1Cache<P1, R>(
             val value = originalFunction(param1)
             map[param1] = value
             if (cacheSize != null && map.size > cacheSize) {
-                // remove last not accessed value
                 map.remove(map.keys.first())
             }
             value
