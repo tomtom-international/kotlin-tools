@@ -115,12 +115,14 @@ private class Function1Cache<P1, R>(
     // no cache size specified means no limit
     private val cacheSize: Int? = null
 ) : (P1) -> R {
-    private val map = LinkedHashMap<P1, R>(cacheSize ?: 16, 0.75f, true)
-
+    private val map = linkedMapOf<P1, R>()
     override fun invoke(param1: P1): R {
         return if (map.containsKey(param1)) {
             @Suppress("UNCHECKED_CAST")
-            map[param1] as R
+            (map.remove(param1) as R).apply {
+                // re-insert result to place it at the end of map
+                map[param1] = this
+            }
         } else {
             val value = originalFunction(param1)
             map[param1] = value
