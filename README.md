@@ -423,8 +423,8 @@ val personId : messageId as Uid<Person>     // type to another using 'as'. This 
 
 ## Module: Function-Memoization
 
-Provides `memoize` extension to kotlin functions that allows optimizing expensive functions by 
-remembering the results corresponding to some set of specific inputs.
+Provides `memoize` extension to Kotlin functions that allows optimizing expensive functions by 
+caching the results corresponding to some set of specific inputs.
 
 
 ```kotlin
