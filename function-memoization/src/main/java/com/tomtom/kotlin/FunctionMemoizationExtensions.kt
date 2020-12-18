@@ -17,7 +17,7 @@
 package com.tomtom.kotlin
 
 /**
- * Creates a memoized function that will return cached result when the same inputs occurs again.
+ * Creates a memoized function that will return cached result when the same input occurs again.
  */
 fun <R> (() -> R).memoize(): () -> R =
     object : () -> R {
@@ -26,19 +26,19 @@ fun <R> (() -> R).memoize(): () -> R =
     }
 
 /**
- * Creates a LRU style cached function that will return cached result when the same inputs occurs again.
+ * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
 fun <P1, R> ((P1) -> R).memoize(cacheSize: Int): (P1) -> R =
     Function1Cache(this, cacheSize = cacheSize)
 
 /**
- * Creates a memoized function that will return cached result when the same inputs occurs again.
+ * Creates a memoized function that will return cached result when the same input occurs again.
  */
 fun <P1, R> ((P1) -> R).memoize(): (P1) -> R =
     Function1Cache(this)
 
 /**
- * Creates a LRU style cached function that will return cached result when the same inputs occurs again.
+ * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
     object : (P1, P2) -> R {
@@ -50,7 +50,7 @@ fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
     }
 
 /**
- * Creates a memoized function that will return cached result when the same inputs occurs again.
+ * Creates a memoized function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, R> ((P1, P2) -> R).memoize(): (P1, P2) -> R =
     object : (P1, P2) -> R {
@@ -63,7 +63,7 @@ fun <P1, P2, R> ((P1, P2) -> R).memoize(): (P1, P2) -> R =
 
 
 /**
- * Creates a LRU style cached function that will return cached result when the same inputs occurs again.
+ * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) -> R =
     object : (P1, P2, P3) -> R {
@@ -75,7 +75,7 @@ fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) ->
     }
 
 /**
- * Creates a memoized function that will return cached result when the same inputs occurs again.
+ * Creates a memoized function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(): (P1, P2, P3) -> R =
     object : (P1, P2, P3) -> R {
@@ -87,7 +87,7 @@ fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(): (P1, P2, P3) -> R =
     }
 
 /**
- * Creates a LRU style cached function that will return cached result when the same inputs occurs again.
+ * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2, P3, P4) -> R =
     object : (P1, P2, P3, P4) -> R {
@@ -99,7 +99,7 @@ fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2
     }
 
 /**
- * Creates a memoized function that will return cached result when the same inputs occurs again.
+ * Creates a memoized function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(): (P1, P2, P3, P4) -> R =
     object : (P1, P2, P3, P4) -> R {
