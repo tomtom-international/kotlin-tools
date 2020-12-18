@@ -16,7 +16,7 @@
 package com.tomtom.kotlin
 
 /**
- * Creates a memoized function that will return cached result when the same input occurs again.
+ * Creates a memoized function that caches result during first call and returns that value on subsequent calls.
  */
 fun <R> (() -> R).memoize(): () -> R =
     object : () -> R {
@@ -31,12 +31,6 @@ fun <P1, R> ((P1) -> R).memoize(cacheSize: Int): (P1) -> R =
     Function1Cache(this, cacheSize = cacheSize)
 
 /**
- * Creates a memoized function that will return cached result when the same input occurs again.
- */
-fun <P1, R> ((P1) -> R).memoize(): (P1) -> R =
-    Function1Cache(this)
-
-/**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
@@ -49,19 +43,6 @@ fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
     }
 
 /**
- * Creates a memoized function that will return cached result when the same input occurs again.
- */
-fun <P1, P2, R> ((P1, P2) -> R).memoize(): (P1, P2) -> R =
-    object : (P1, P2) -> R {
-        private val cache = { pair: Pair<P1, P2> ->
-            this@memoize(pair.first, pair.second)
-        }.memoize()
-
-        override fun invoke(p1: P1, p2: P2): R = cache.invoke(Pair(p1, p2))
-    }
-
-
-/**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
 fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) -> R =
@@ -69,18 +50,6 @@ fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) ->
         private val cache = { triple: Triple<P1, P2, P3> ->
             this@memoize(triple.first, triple.second, triple.third)
         }.memoize(cacheSize = cacheSize)
-
-        override fun invoke(p1: P1, p2: P2, p3: P3): R = cache.invoke(Triple(p1, p2, p3))
-    }
-
-/**
- * Creates a memoized function that will return cached result when the same input occurs again.
- */
-fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(): (P1, P2, P3) -> R =
-    object : (P1, P2, P3) -> R {
-        private val cache = { triple: Triple<P1, P2, P3> ->
-            this@memoize(triple.first, triple.second, triple.third)
-        }.memoize()
 
         override fun invoke(p1: P1, p2: P2, p3: P3): R = cache.invoke(Triple(p1, p2, p3))
     }
@@ -97,22 +66,10 @@ fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2
         override fun invoke(p1: P1, p2: P2, p3: P3, p4: P4): R = cache.invoke(Quadruple(p1, p2, p3, p4))
     }
 
-/**
- * Creates a memoized function that will return cached result when the same input occurs again.
- */
-fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(): (P1, P2, P3, P4) -> R =
-    object : (P1, P2, P3, P4) -> R {
-        private val cache = { quadruple: Quadruple<P1, P2, P3, P4> ->
-            this@memoize(quadruple.first, quadruple.second, quadruple.third, quadruple.fourth)
-        }.memoize()
-
-        override fun invoke(p1: P1, p2: P2, p3: P3, p4: P4): R = cache.invoke(Quadruple(p1, p2, p3, p4))
-    }
-
 private class Function1Cache<P1, R>(
     private val originalFunction: (P1) -> R,
     // no cache size specified means no limit
-    private val cacheSize: Int? = null
+    private val cacheSize: Int
 ) : (P1) -> R {
     private val map = linkedMapOf<P1, R>()
     override fun invoke(param1: P1): R {
@@ -125,7 +82,7 @@ private class Function1Cache<P1, R>(
         } else {
             val value = originalFunction(param1)
             map[param1] = value
-            if (cacheSize != null && map.size > cacheSize) {
+            if (map.size > cacheSize) {
                 map.remove(map.keys.first())
             }
             value

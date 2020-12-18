@@ -474,7 +474,7 @@ class FunctionMemoizationExtensionsTest {
             callCounter++
             it
         }
-        val memoizedFunction = function.memoize()
+        val memoizedFunction = function.memoize(100)
         // when
         for (iteration in 1..100) {
             for (arg in 1..100) {
@@ -492,7 +492,7 @@ class FunctionMemoizationExtensionsTest {
             callCounter++
             arg1 + arg2
         }
-        val memoizedFunction = function.memoize()
+        val memoizedFunction = function.memoize(100)
         // when
         for (iteration in 1..100) {
             for (arg in 1..100) {
@@ -511,7 +511,7 @@ class FunctionMemoizationExtensionsTest {
             callCounter++
             arg1 + arg2 + arg3
         }
-        val memoizedFunction = function.memoize()
+        val memoizedFunction = function.memoize(100)
         // when
         for (iteration in 1..100) {
             for (arg in 1..100) {
@@ -531,7 +531,7 @@ class FunctionMemoizationExtensionsTest {
             callCounter++
             arg1 + arg2 + arg3 + arg4
         }
-        val memoizedFunction = function.memoize()
+        val memoizedFunction = function.memoize(100)
         // when
         for (iteration in 1..100) {
             for (arg in 1..100) {
