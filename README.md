@@ -421,27 +421,35 @@ val personId : messageId as Uid<Person>     // type to another using 'as'. This 
                                             // in serialization.
 ```
 
-## Module: Function-Memoization
+## Module: Function Memoization
 
 Provides `memoize` extension to Kotlin functions that allows optimizing expensive functions by 
 caching the results corresponding to some set of specific inputs.
 
 In order for memoization to work properly:
-- input arguments should be comparable with proper equals/hashcode implementations
-- given the same input, function should always return same output
+- all input arguments must have proper `equals` and `hashCode` implementations,
+- given the same input, the function must always return same output (i.e. not dependent on external 
+  parameters), and
+- the function should not exhibit any side effects, other than the returned result.
 
+The function extenstion provided are:
+- `memoize()` - Extension creates cached function with an unbound cache. **Important:** This should not be
+  used for production purposes, as the unbound cache may cause an unintended memory leak for large a
+  large variation in function parameters. 
+- `memoize(Int)` - Extension creates Least Recently Used (LRU) cached function that will remove least recently
+  used item if number of stored results exceeds provided limit.
 
-example:
+Note that currently only functions with a maximum of 4 parameters are supported by memoize.
+
+Example:
 ```kotlin
 val function1: (Int) -> String = { p1: Int -> p1.toString() }.memoize()
 
-function1(10) // First call with 10 - actual function is called and result is cached
-function1(11) // First call with 11 - actual function is called and result is cached
-function1(10) // Second call with 10 - value is returned from cache
+function1(10) // First call with 10 - actual function is called and result is cached.
+function1(11) // First call with 11 - actual function is called and result is cached.
+function1(10) // Second call with 10 - value is returned from cache.
 ```
 
-`memoize()` - extension creates cached function with unlimited storage capacity.
-`memoize(Int)` - extension creates Least Recently Used (LRU) cached function that will remove least recently used item if number of stored results exceeds provided limit.
 
 ## License
 
@@ -494,7 +502,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ### 1.2.0
 
-* Added kotlin function memoization extensions.
+* Added Kotlin function memoization extensions.
 
 ### 1.1.1
 

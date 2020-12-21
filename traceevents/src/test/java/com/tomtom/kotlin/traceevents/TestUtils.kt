@@ -65,7 +65,7 @@ fun captureStdoutReplaceTime(
  * Function to replace a time pattern.
  */
 fun replaceTime(msg: String?, replaceWith: String) = msg?.replace(
-    "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]+\\]".toRegex(),
+    "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+){0,1}\\]".toRegex(),
     replaceWith
 ) ?: ""
 

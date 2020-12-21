@@ -27,10 +27,10 @@
         <version>1.2.0</version>
     </parent>
 
-    <artifactId>function-memoization</artifactId>
+    <artifactId>memoization</artifactId>
     <packaging>jar</packaging>
 
-    <name>Function memoization extensions</name>
+    <name>Function Memoization</name>
 
     <!--
         Don't add a description if you want the project not to be picked up by the maven-mailinglist-plugin
@@ -45,10 +45,18 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
+
         <!-- Test scope. -->
+
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

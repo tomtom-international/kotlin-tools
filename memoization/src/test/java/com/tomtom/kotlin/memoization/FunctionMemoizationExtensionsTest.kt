@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.tomtom.kotlin
+package com.tomtom.kotlin.memoization
 
 import org.junit.Test
 import kotlin.test.assertEquals

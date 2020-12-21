@@ -263,6 +263,8 @@ class LogTest {
         }
         val expected =
             "$TIME DEBUG LogTest: event=withCalledFromClass(test), taggingClass=LogTest\n"
+        println("==================== $actual")
+        println("==================== $expected")
         assertEquals(expected, actual)
     }
 

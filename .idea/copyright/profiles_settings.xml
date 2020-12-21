@@ -1,7 +1,7 @@
 <component name="CopyrightManager">
-  <settings default="Tomtom">
+  <settings default="TomTom">
     <module2copyright>
-      <element module="Project Files" copyright="Tomtom" />
+      <element module="Project Files" copyright="TomTom" />
     </module2copyright>
   </settings>
 </component>

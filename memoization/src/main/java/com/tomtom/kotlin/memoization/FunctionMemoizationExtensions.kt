@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.tomtom.kotlin
+package com.tomtom.kotlin.memoization
 
 /**
  * Creates a memoized function that caches result during first call and returns that value on subsequent calls.
@@ -63,28 +63,33 @@ fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2
             this@memoize(quadruple.first, quadruple.second, quadruple.third, quadruple.fourth)
         }.memoize(cacheSize = cacheSize)
 
-        override fun invoke(p1: P1, p2: P2, p3: P3, p4: P4): R = cache.invoke(Quadruple(p1, p2, p3, p4))
+        override fun invoke(p1: P1, p2: P2, p3: P3, p4: P4): R =
+            cache.invoke(Quadruple(p1, p2, p3, p4))
     }
 
 private class Function1Cache<P1, R>(
     private val originalFunction: (P1) -> R,
-    // no cache size specified means no limit
     private val cacheSize: Int
 ) : (P1) -> R {
     private val map = linkedMapOf<P1, R>()
     override fun invoke(param1: P1): R {
+
+        // Return cached result if parameters are the same.
         return if (map.containsKey(param1)) {
+
+            // Remove and re-insert result to place it at the end of the LRU map.
             @Suppress("UNCHECKED_CAST")
             (map.remove(param1) as R).apply {
-                // re-insert result to place it at the end of map
                 map[param1] = this
             }
         } else {
-            val value = originalFunction(param1)
-            map[param1] = value
-            if (map.size > cacheSize) {
+
+            // Make sure map size never exceeds maximum.
+            if (map.size >= cacheSize) {
                 map.remove(map.keys.first())
             }
+            val value = originalFunction(param1)
+            map[param1] = value
             value
         }
     }

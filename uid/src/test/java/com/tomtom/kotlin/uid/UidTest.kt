@@ -74,6 +74,7 @@ class UidTest {
         assertEquals("00000001-0002-0003-0004-000000000005", x.toString())
     }
 
+    @Suppress("UNCHECKED_CAST")
     @Test
     fun testAs() {
         val a = Uid.new<Long>()
