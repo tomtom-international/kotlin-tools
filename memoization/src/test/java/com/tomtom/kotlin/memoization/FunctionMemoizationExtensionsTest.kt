@@ -47,7 +47,7 @@ class FunctionMemoizationExtensionsTest {
             callCounter++
             null
         }
-        val memoizedFunction = function.memoize(cacheSize = 1)
+        val memoizedFunction = function.memoize()
         // when
         val actual1 = memoizedFunction(1)
         val actual2 = memoizedFunction(1)

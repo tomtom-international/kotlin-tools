@@ -433,9 +433,8 @@ In order for memoization to work properly:
 - the function should not exhibit any side effects, other than the returned result.
 
 The function extenstion provided are:
-- `memoize()` - Extension creates cached function with an unbound cache. **Important:** This should not be
-  used for production purposes, as the unbound cache may cause an unintended memory leak for large a
-  large variation in function parameters. 
+- `memoize()` - Extension creates cached function with a limited cache. The cache size is determined
+  by this library and should be able to hold at least 1000 cached results. 
 - `memoize(Int)` - Extension creates Least Recently Used (LRU) cached function that will remove least recently
   used item if number of stored results exceeds provided limit.
 
