@@ -89,17 +89,17 @@ class TraceEventConsumerCollection {
                             // Catch all exceptions, to avoid killing the event processor.
                             TraceLog.log(
                                 LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
-                                        "method=${method.name}, " +
-                                        "args=(${traceEvent.args.joinToString()})", e
+                                    "method=${method.name}, " +
+                                    "args=(${traceEvent.args.joinToString()})", e
                             )
                         }
                     } else {
                         TraceLog.log(
                             LogLevel.ERROR, TAG, "Method not found, " +
-                                    "traceEventConsumer=${traceEventConsumer::class}, " +
-                                    "traceEventListener=$traceEventListener, " +
-                                    "traceEvent.functionName=${traceEvent.eventName}, " +
-                                    "traceEvent.args.size=${traceEvent.args.size}"
+                                "traceEventConsumer=${traceEventConsumer::class}, " +
+                                "traceEventListener=$traceEventListener, " +
+                                "traceEvent.functionName=${traceEvent.eventName}, " +
+                                "traceEvent.args.size=${traceEvent.args.size}"
                         )
                     }
                 }

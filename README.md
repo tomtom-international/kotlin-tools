@@ -9,13 +9,13 @@ Copyright (C) 2020, TomTom International BV
 
 ## Introduction
 
-This class library contains a number of useful tools when coding in Kotlin. The code has been
-made open-source by TomTom so others can use it and contribute to it.
+This class library contains a number of useful tools when coding in Kotlin. The code has been made
+open-source by TomTom so others can use it and contribute to it.
 
 Currently, the library contains:
 
 * `traceevents` - This is a library to log semantic events in an application, where perhaps normally
-logging and log analysis would be used.
+  logging and log analysis would be used.
 
 ### Building and testing the library
 
@@ -33,10 +33,11 @@ mvn clean package
 
 ### Contributing and coding formatting
 
-If you wish to contribute to this project, please feel free to do so and send us pull requests.
-The source code formatting must adhere to the standard Kotlin formatting rules.
+If you wish to contribute to this project, please feel free to do so and send us pull requests. The
+source code formatting must adhere to the standard Kotlin formatting rules.
 
-If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this: 
+If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this:
+
 ```
 Preferences -> Editor -> Code Style -> Kotlin -> (Scheme) Set From...
 ```
@@ -59,16 +60,16 @@ The purpose of logging such events can be multiple, such as:
 * for simulation purposes, where the events are forwarded to and processed by another system;
 * to gather user behavior data, where user events are sent to a statistics module.
 
-By default, a simple event logger is provided which logs all events directly to `println`.
-Although it is enabled by default, you can turn it off, or replace it with your own.
-It's easy to modify this to, for example, use the standard Android`Log` logger.
+By default, a simple event logger is provided which logs all events directly to `println`. Although
+it is enabled by default, you can turn it off, or replace it with your own. It's easy to modify this
+to, for example, use the standard Android`Log` logger.
 
 ### Trace events vs normal Log
 
-What makes this event logger different from a normal `Log` or, for example, Android Log directly,
-is that the events are 'type-safe':
-they are defined as Kotlin functions with (type-safe) parameters, rather than as
-handcrafted (and often refactor-unsafe) strings.
+What makes this event logger different from a normal `Log` or, for example, Android Log directly, is
+that the events are 'type-safe':
+they are defined as Kotlin functions with (type-safe) parameters, rather than as handcrafted (and
+often refactor-unsafe) strings.
 
 This means that rather than calling something like `Log.d(TAG, "User logged in, user=$user")`, you
 would write a type-safe expression like `tracer.userLoggedIn(user)`.
@@ -105,10 +106,10 @@ consumers, asynchronously. You can add a 'tagging' object to `create`. The class
 object (typically `this`) may be added to log if `@TraceOptions(includeTaggingClass = true)` is
 used.
 
-By default, a logging trace event consumer is enabled, which sends the events to a `Log` method
-that send the message to `stdout` or can be redirected to, for example, Android `Log`.
-This consumer is a special case in that it is actually a synchronous consumer, to make sure the
-order of events in the log is consistent with the other log messages from your application.
+By default, a logging trace event consumer is enabled, which sends the events to a `Log` method that
+send the message to `stdout` or can be redirected to, for example, Android `Log`. This consumer is a
+special case in that it is actually a synchronous consumer, to make sure the order of events in the
+log is consistent with the other log messages from your application.
 
 The logger can be enabled or disabled using `Tracer.enableTraceEventLogging`. It can also be
 switched to asynchronous mode. using `Tracer.setTraceEventLoggingMode`.
@@ -118,8 +119,8 @@ always processed in asynchronous mode.
 
 ### Using your own default logger (such as Android Log)
 
-You can replace the default logger, which logs to `println` with your own by creating an
-instance of the interface `Log.Logger` like this:
+You can replace the default logger, which logs to `println` with your own by creating an instance of
+the interface `Log.Logger` like this:
 
 ```
 import android.util.Log
@@ -149,32 +150,32 @@ Trace events in a `TraceEventListener` can be annotated with the `@TraceLogLevel
 
 #### `@TraceLoglevel(logLevel=...)`
 
-`@TraceLoglevel` allows you to specify a log level, using parameter `logLevel` that will 
-be used to output the trace event to a standard logger using a specific log level, 
-such as `INFO`, `DEBUG`, `ERROR`, etc.
+`@TraceLoglevel` allows you to specify a log level, using parameter `logLevel` that will be used to
+output the trace event to a standard logger using a specific log level, such as `INFO`, `DEBUG`
+, `ERROR`, etc.
 
 ### Using the `@TraceOptions` annotation
 
 #### `@TraceOptions(includeExceptionStackTrace=true|false)`
 
 `@TraceOptions` offers the option to specify logging a full stack trace of a logged exception, using
-the optional parameter `includeExceptionStackTrace`. This applies to the last argument of an event (if it 
-is a `Throwable` object). By default, a stack trace is included.
+the optional parameter `includeExceptionStackTrace`. This applies to the last argument of an event (
+if it is a `Throwable` object). By default, a stack trace is included.
 
 #### `@TraceOptions(includeFileLocation=true|false)`
 
-`@TraceOptions` also offers the option to specify logging the filename and line number of
-the caller of an event. By default, the caller source code location is not provided.
+`@TraceOptions` also offers the option to specify logging the filename and line number of the caller
+of an event. By default, the caller source code location is not provided.
 
 #### `@TraceOptions(includeTaggingClass=true|false)`
 
-`@TraceOptions` offers the option to add the class passed to `create()` 
+`@TraceOptions` offers the option to add the class passed to `create()`
 to the log message, or omit that. By default, the caller class is not included.
 
 #### `@TraceOptions(includeEventInterface=true|false)`
 
-`@TraceOptions` offers the option to add the interface that defines the event to the log message, 
-or omit that. By default, the event interface is not included.
+`@TraceOptions` offers the option to add the interface that defines the event to the log message, or
+omit that. By default, the event interface is not included.
 
 Example:
 
@@ -194,9 +195,8 @@ use the logging tools of the test framework, or simply the Android log, to show 
 ### Logging trace events at specific log levels
 
 By default, trace events are logged at `LogLevel.DEBUG` level to the default logger, that can be
-redirected to, for example Android `Log`. If you prefer to have certain events logged at 
-a different log level, you can specify the log level with
-an annotation from `TraceLogLevel`, like this:
+redirected to, for example Android `Log`. If you prefer to have certain events logged at a different
+log level, you can specify the log level with an annotation from `TraceLogLevel`, like this:
 
 ```
 interface MyTraceEvents : TraceEventListener {
@@ -209,17 +209,17 @@ interface MyTraceEvents : TraceEventListener {
 ```
 
 ### Coding conventions for events
- 
+
 This paragraph describes some simple coding conventions to promote consistent declaration and usage
 of events.
 
 #### Declaration of event interfaces
 
-In general, events are coupled to specific classes and as such it is advised to declare them
-inside the class file that uses the events. Place the interface declaration at the end of the class.
+In general, events are coupled to specific classes and as such it is advised to declare them inside
+the class file that uses the events. Place the interface declaration at the end of the class.
 
-*Tip: In IntelliJ or Android Studio you can easily view all trace event interfaces by clicking 
-on any occurrence of `TraceEventListener` and pressing `Ctrl-Alt-B` (or `Option-Cmd-B`)*
+*Tip: In IntelliJ or Android Studio you can easily view all trace event interfaces by clicking on
+any occurrence of `TraceEventListener` and pressing `Ctrl-Alt-B` (or `Option-Cmd-B`)*
 
 #### Naming conventions for trace events
 
@@ -235,6 +235,7 @@ Examples event and state names:
 * Correct (states): `serviceReady()`, `establishingConnection()`
 
 Examples of incorrect names:
+
 * Wrong (imperative): `logUserIn()`, `establishConnection()`
 * Wrong (wrong state name): `serviceInReadyState()`, `startingToEstablishConnection()`,
   `serviceInReadyState()`
@@ -249,12 +250,14 @@ pass the original object, rather than some form of string representation of it, 
 provides more information to trace consumer.
 
 So, rather than defining an error event like
+
 ```
 fun connectionLost(message: String)
 ```
 
 when you know the message comes from an exception, like `connectionLost(exception.message)` you
 better define the event as
+
 ```
 fun connectionLost(reason: IOException)
 ```
@@ -265,14 +268,16 @@ and invoke it as `connectionLost(exception)`.
 
 Trace events should always avoid throwing unexpected NPE's. This might happen if your trace event
 has a signature like
+
 ```
 fun connectionEstablished(channel: Channel)
 ```
 
-and you find that sometimes you need to call the
-event as `connectionEstablished(channel!!)`, rather than as `connectionEstablished(channel)`.
+and you find that sometimes you need to call the event as `connectionEstablished(channel!!)`, rather
+than as `connectionEstablished(channel)`.
 
 If that happens, you should consider changing the event signature to
+
 ```
 fun connectionEstablished(channel: Channel?)
 ```
@@ -291,30 +296,30 @@ There are 2 types of trace events consumers:
 1. Generic trace event consumers, derived both from `GenericTraceEventConsumer` and from a
    `TraceEventListener` interface.
 
-    These consumers receive every event thrown in the system. They receive the event information as
-    part of their `GenericTraceEventConsumer.consumeTraceEvent` implementation.
+   These consumers receive every event thrown in the system. They receive the event information as
+   part of their `GenericTraceEventConsumer.consumeTraceEvent` implementation.
 
-    Generic consumers typically forward events to another system, such as the Android `Log`, store
-    them in a database, or perhaps even send them across application (or machine) boundaries.
+   Generic consumers typically forward events to another system, such as the Android `Log`, store
+   them in a database, or perhaps even send them across application (or machine) boundaries.
 
 2. Specific trace event consumers, that implement a specific `TraceEventListener` interface.
 
-    For example, you could implement the `MyTraceEvents` interface (see above) in a class called
-    `MyTraceEventsConsumer` and register it as a trace events consumer. From then on, whenever a
-    function from the MyTraceEvents interface is called, the corresponding implementation in
-    `MyTraceEventsConsumer` will be called (asynchronously).
+   For example, you could implement the `MyTraceEvents` interface (see above) in a class called
+   `MyTraceEventsConsumer` and register it as a trace events consumer. From then on, whenever a
+   function from the MyTraceEvents interface is called, the corresponding implementation in
+   `MyTraceEventsConsumer` will be called (asynchronously).
 
-    Specific consumers typically provide specific handler code for specific events. They react on
-    specific events, rather than forward them. For example, switching on a red light on an alarm
-    dashboard, when the event `temperatureTooHigh()` is received.
+   Specific consumers typically provide specific handler code for specific events. They react on
+   specific events, rather than forward them. For example, switching on a red light on an alarm
+   dashboard, when the event `temperatureTooHigh()` is received.
 
-Note that trace event consumer may receive mutable objects in an event, which may have been
-modified after the actual event was thrown. For more info, see the FAQ below.
+Note that trace event consumer may receive mutable objects in an event, which may have been modified
+after the actual event was thrown. For more info, see the FAQ below.
 
 ### Using tracers to standard `Log` messages
 
-The `Tracer` class defines the standard `Log` functions `v()`, `d()`, `i()`, `w()` and `e()`. 
-These can be used like this:
+The `Tracer` class defines the standard `Log` functions `v()`, `d()`, `i()`, `w()` and `e()`. These
+can be used like this:
 
 ```
 tracer.d("Found record $record")    // Equivalent of `Log.d(TAG, msg)
@@ -326,8 +331,8 @@ By default, tracers are set up to send these log messages synchronously to the d
 It is possible to register trace event consumers to process these log messages as well, for example,
 to send logs to another system for analysis.
 
-If you wish to define a tracer to *only* log standard messages using `d()` etc., you don't need
-to create (or use) an `TraceEventListener` interface. You can just use this:
+If you wish to define a tracer to *only* log standard messages using `d()` etc., you don't need to
+create (or use) an `TraceEventListener` interface. You can just use this:
 
 ```
 val tracer = Tracer.Factory.createLoggerOnly()
@@ -338,16 +343,16 @@ arguments. Always consider using trace event functions, when possible.
 
 ### Formatting trace arguments
 
-By default, trace event arguments are formatted using their default `toString` function.
-If you wish to override them, use `Tracer.registerToString<T>{ <toString implementation> }` to 
-override the `toString` method. For example:
+By default, trace event arguments are formatted using their default `toString` function. If you wish
+to override them, use `Tracer.registerToString<T>{ <toString implementation> }` to override
+the `toString` method. For example:
 
 ```
 Tracer.registerToString<Coordinate>{ "($lat, $lon" }
 ```
 
-By default, the `toString` for `Array`s is replaced with one that provides a list of
-elements, rather than an object reference.
+By default, the `toString` for `Array`s is replaced with one that provides a list of elements,
+rather than an object reference.
 
 Use `Tracer.resetToDefaults()` to de-register all custom `toString` handlers.
 
@@ -369,22 +374,21 @@ Advanced examples of using this trace event mechanism are:
 
 * **Should I use `Trace` or (Android) `Log`?**
 
-    As a rule of thumb: you should always use `Tracer` instead of Android `Log`. If you only want to
-    regular log messages, you can use the log functions `d()` etc.
+  As a rule of thumb: you should always use `Tracer` instead of Android `Log`. If you only want to
+  regular log messages, you can use the log functions `d()` etc.
 
 * **What is the performance penalty of using `Tracer` over Android `Log`?**
 
-    Using the default (synchronous) logging of log messages via `Tracer`, over using Android `Log`,
-    introduces a performance overhead of less than 20%.
+  Using the default (synchronous) logging of log messages via `Tracer`, over using Android `Log`,
+  introduces a performance overhead of less than 20%.
 
 * **Is it safe to trace mutable objects?**
 
-    Yes and no. The tracer module never modifies objects. But consumers of trace events will receive
-    a mutable object, which may have been modified since the event was thrown. This may not be
-    expected by the event consumer, although often it's not a problem at all. If you have to get
-    around this you need provide a clone of the object in the trace call yourself. Beware that
-    cloning objects to make them immutable is relatively expensive and may generate significant
-    overhead.
+  Yes and no. The tracer module never modifies objects. But consumers of trace events will receive a
+  mutable object, which may have been modified since the event was thrown. This may not be expected
+  by the event consumer, although often it's not a problem at all. If you have to get around this
+  you need provide a clone of the object in the trace call yourself. Beware that cloning objects to
+  make them immutable is relatively expensive and may generate significant overhead.
 
 ### More information on trace events
 
@@ -393,15 +397,16 @@ to the documentation in the `Tracer` class.
 
 ## Module: Uid
 
-Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to uniquely
-identify things. No 2 Uid objects shall be equal unless they are the same instance of the
-Uid class or their underlying UUIDs are equal.
+Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to uniquely identify
+things. No 2 Uid objects shall be equal unless they are the same instance of the Uid class or their
+underlying UUIDs are equal.
 
-The class has a generic type T to allow creating typesafe Uid's, like `Uid<Message>`.
-The class represents UUIDs as Strings internally, to avoid loads of UUID to String conversions
-all the time. This makes the class considerably faster in use than the regular Java UUID class.
+The class has a generic type T to allow creating typesafe Uid's, like `Uid<Message>`. The class
+represents UUIDs as Strings internally, to avoid loads of UUID to String conversions all the time.
+This makes the class considerably faster in use than the regular Java UUID class.
 
 Examples:
+
 ```kotlin
 var messageId = Uid<Message>()    // Creates a new unique message ID.
 var personId = Uid<Person>()      // Creates a new unique person ID.
@@ -409,38 +414,39 @@ var personId = Uid<Person>()      // Creates a new unique person ID.
 messageId = personId              // <-- Does not compile, the IDs are type safe.
 
 val testId = Uid.fromString("1-2-3-4-5")    // Allows shorthand notation for UUIDs,
-                                            // easy for testing, or input.
+// easy for testing, or input.
 
 val s = messageId.toString()      // Serialized to string.
 val id = Uid<Message>(s)          // Deserialized from string. Faster than `fromString`
-                                  // if the format is known to be the serialized format.
+// if the format is known to be the serialized format.
 
-val messageId : Uid<Message>()              // If you need, you can translate IDs from one
-val personId : messageId as Uid<Person>     // type to another using 'as'. This is useful if
-                                            // the type information was lost, for example,
-                                            // in serialization.
+val messageId: Uid<Message>()              // If you need, you can translate IDs from one
+val personId: messageId as Uid<Person>     // type to another using 'as'. This is useful if
+// the type information was lost, for example,
+// in serialization.
 ```
 
 ## Module: Function Memoization
 
-Provides `memoize` extension to Kotlin functions that allows optimizing expensive functions by 
+Provides `memoize` extension to Kotlin functions that allows optimizing expensive functions by
 caching the results corresponding to some set of specific inputs.
 
 In order for memoization to work properly:
+
 - all input arguments must have proper `equals` and `hashCode` implementations,
-- given the same input, the function must always return same output (i.e. not dependent on external 
+- given the same input, the function must always return same output (i.e. not dependent on external
   parameters), and
 - the function should not exhibit any side effects, other than the returned result.
 
-The function extenstion provided are:
-- `memoize()` - Extension creates cached function with a limited cache. The cache size is determined
-  by this library and should be able to hold at least 1000 cached results. 
-- `memoize(Int)` - Extension creates Least Recently Used (LRU) cached function that will remove least recently
-  used item if number of stored results exceeds provided limit.
+To memoize a function, use the extenstion:
+
+- `memoize(Int)` - Extension creates Least Recently Used (LRU) cached function that will remove
+  least recently used item if number of stored results exceeds provided limit.
 
 Note that currently only functions with a maximum of 4 parameters are supported by memoize.
 
 Example:
+
 ```kotlin
 val function1: (Int) -> String = { p1: Int -> p1.toString() }.memoize()
 
@@ -449,21 +455,18 @@ function1(11) // First call with 11 - actual function is called and result is ca
 function1(10) // Second call with 10 - value is returned from cache.
 ```
 
-
 ## License
 
-Copyright (C) 2020-2020, TomTom (http://tomtom.com).
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Copyright (C) 2020-2020, TomTom (http://tomtom.com). Licensed under the Apache License, Version
+2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain
+a copy of the License at
 
-   [http://www.apache.org/licenses/LICENSE-2.0]
+[http://www.apache.org/licenses/LICENSE-2.0]
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing permissions and limitations under the
+License.
 
 ## Building and testing the library
 
@@ -481,10 +484,11 @@ mvn clean package
 
 ## Contributing and coding formatting
 
-If you wish to contribute to this project, please feel free to do so and send us pull requests.
-The source code formatting must adhere to the standard Kotlin formatting rules.
+If you wish to contribute to this project, please feel free to do so and send us pull requests. The
+source code formatting must adhere to the standard Kotlin formatting rules.
 
-If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this: 
+If you use IntelliJ IDEA, you can easily import the default Kotlin formatting rules like this:
+
 ```
 Preferences -> Editor -> Code Style -> Kotlin -> (Scheme) Set From...
 ```
@@ -505,9 +509,8 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ### 1.1.1
 
-* Updated dependencies (except `mockk` as 1.10.2 will fail the test for
-unclear reasons).
- 
+* Updated dependencies (except `mockk` as 1.10.2 will fail the test for unclear reasons).
+
 ### 1.1.0
 
 * Added `Uid` class for UUID handling.
@@ -522,7 +525,8 @@ unclear reasons).
 
 ### 1.0.15
 
-* Made `TraceEventConsumerCollection` a public class to be able to use it also for consuming streamed events.
+* Made `TraceEventConsumerCollection` a public class to be able to use it also for consuming
+  streamed events.
 
 ### 1.0.14
 
@@ -536,25 +540,28 @@ unclear reasons).
 
 ### 1.0.12
 
-* Renamed annotations: `@TraceOptions(includeExceptionStackTrace, includeTaggingClass, includeFileLocation, includeEventInterface)`
+* Renamed
+  annotations: `@TraceOptions(includeExceptionStackTrace, includeTaggingClass, includeFileLocation, includeEventInterface)`
 
 * Added ability to add tagging class to tracers.
 
 ### 1.0.11
 
-* Removed restriction that tracers can only be created in a `companion object`. 
+* Removed restriction that tracers can only be created in a `companion object`.
 
 ### 1.0.10
 
 * Cleaned up annotation `@TraceLogLevel` to only include trace level.
- 
-* Added `@TraceOptions(includeExceptionStackTrace, includeCalledFromClass, includeCalledFromFile, includeEventInterface)`
+
+*
+Added `@TraceOptions(includeExceptionStackTrace, includeCalledFromClass, includeCalledFromFile, includeEventInterface)`
 
 * Added `throwableHolder` to `TraceEvent` so event handlers can inspect the stack as well.
 
 ### 1.0.9
 
-* Added `includeFileLocation` to `@TraceLoglevel` add the caller filename and line number to the logger.
+* Added `includeFileLocation` to `@TraceLoglevel` add the caller filename and line number to the
+  logger.
 
 ### 1.0.8
 
@@ -577,11 +584,11 @@ unclear reasons).
 * Fixed string representation of arrays.
 
 * Added unit tests for message formatting.
- 
+
 ### 1.0.5
 
 * Added `Tracer.RegisterToString` to register string handlers for class types.
- 
+
 ### 1.0.4
 
 * Fixed license and copyright messages to Apache License 2.0.
@@ -594,13 +601,13 @@ unclear reasons).
 
 * Fixed unit test helper method.
 
-* `TAG` is non-nullable for loggers. 
+* `TAG` is non-nullable for loggers.
 
-* Renamed directory structure from `src/main/kotlin` to `/src/main/java` for IntelliJ to
-understand package names
+* Renamed directory structure from `src/main/kotlin` to `/src/main/java` for IntelliJ to understand
+  package names
 
 * Added TravisCI support for Github, including status badges in README.
- 
+
 ### 1.0.0-1.0.2
 
 * Initial release

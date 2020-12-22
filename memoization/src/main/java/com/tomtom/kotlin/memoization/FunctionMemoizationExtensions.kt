@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.tomtom.kotlin.memoization
 
 /**
@@ -28,13 +27,13 @@ fun <R> (() -> R).memoize(): () -> R =
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, R> ((P1) -> R).memoize(cacheSize: Int = DEFAULT_CACHE_SIZE): (P1) -> R =
+fun <P1, R> ((P1) -> R).memoize(cacheSize: Int): (P1) -> R =
     Function1Cache(this, cacheSize = cacheSize)
 
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int = DEFAULT_CACHE_SIZE): (P1, P2) -> R =
+fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
     object : (P1, P2) -> R {
         private val cache = { pair: Pair<P1, P2> ->
             this@memoize(pair.first, pair.second)
@@ -46,7 +45,7 @@ fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int = DEFAULT_CACHE_SIZE): (P
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int = DEFAULT_CACHE_SIZE): (P1, P2, P3) -> R =
+fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) -> R =
     object : (P1, P2, P3) -> R {
         private val cache = { triple: Triple<P1, P2, P3> ->
             this@memoize(triple.first, triple.second, triple.third)
@@ -58,7 +57,7 @@ fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int = DEFAULT_CACHE_S
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int = DEFAULT_CACHE_SIZE): (P1, P2, P3, P4) -> R =
+fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2, P3, P4) -> R =
     object : (P1, P2, P3, P4) -> R {
         private val cache = { quadruple: Quadruple<P1, P2, P3, P4> ->
             this@memoize(quadruple.first, quadruple.second, quadruple.third, quadruple.fourth)
@@ -95,12 +94,6 @@ private class Function1Cache<P1, R>(
         }
     }
 }
-
-/**
- * Default size of function value cache. Providing no cache size should not provide an unbound
- * cache as that may cause an unintended memory leak if input parameters vary a lot.
- */
-private const val DEFAULT_CACHE_SIZE = 1000
 
 /**
  * Simple class to store 4 values.

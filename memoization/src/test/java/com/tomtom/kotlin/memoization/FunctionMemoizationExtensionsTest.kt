@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.tomtom.kotlin.memoization
 
 import org.junit.Test
@@ -47,7 +46,7 @@ class FunctionMemoizationExtensionsTest {
             callCounter++
             null
         }
-        val memoizedFunction = function.memoize()
+        val memoizedFunction = function.memoize(100)
         // when
         val actual1 = memoizedFunction(1)
         val actual2 = memoizedFunction(1)

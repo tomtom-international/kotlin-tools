@@ -43,8 +43,10 @@ class LogOtherClassTest {
         }
         val expected =
             "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogOtherClassTest.kt:invoke($NUMBER)\n"
-        assertEquals(expected, replaceNumber(actual, NUMBER),
-            "Perhaps you should increase STACK_TRACE_DEPTH?")
+        assertEquals(
+            expected, replaceNumber(actual, NUMBER),
+            "Perhaps you should increase STACK_TRACE_DEPTH?"
+        )
     }
 
     @Test

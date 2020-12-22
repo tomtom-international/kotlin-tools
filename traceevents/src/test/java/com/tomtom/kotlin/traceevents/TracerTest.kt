@@ -65,7 +65,8 @@ class TracerTest {
         override fun v() = TraceLog.log(LogLevel.VERBOSE, "TAG", "v()")
         override fun d(msg: Int) = TraceLog.log(LogLevel.DEBUG, "TAG", "d()")
         override fun i(msg: String, e: Int) = TraceLog.log(LogLevel.INFO, "TAG", "i()")
-        override fun w(msg: String, e: Throwable, rest: Int) = TraceLog.log(LogLevel.WARN, "TAG", "w()")
+        override fun w(msg: String, e: Throwable, rest: Int) =
+            TraceLog.log(LogLevel.WARN, "TAG", "w()")
     }
 
     companion object {

@@ -291,14 +291,16 @@ class Tracer private constructor(
                 // Only format the message for non-standard Log events. Use the annotated log level.
                 TraceLog.log(
                     logLevelAnnotation, logTag,
-                    "event=${createLogMessage(
-                        event,
-                        includeTime = false,
-                        includeExceptionStackTrace = includeExceptionStackTraceAnnotation,
-                        includeTaggingClass = includeTaggingClassAnnotation,
-                        includeFileLocation = includeFileLocationAnnotation,
-                        includeEventInterface = includeEventInterfaceAnnotation
-                    )}"
+                    "event=${
+                        createLogMessage(
+                            event,
+                            includeTime = false,
+                            includeExceptionStackTrace = includeExceptionStackTraceAnnotation,
+                            includeTaggingClass = includeTaggingClassAnnotation,
+                            includeFileLocation = includeFileLocationAnnotation,
+                            includeEventInterface = includeEventInterfaceAnnotation
+                        )
+                    }"
                 )
             }
         }
@@ -360,14 +362,16 @@ class Tracer private constructor(
                     TraceLog.log(
                         LogLevel.WARN,
                         logTag,
-                        "Event lost, event=${createLogMessage(
-                            event,
-                            includeTime = true,
-                            includeExceptionStackTrace = true,
-                            includeTaggingClass = true,
-                            includeFileLocation = true,
-                            includeEventInterface = true
-                        )}"
+                        "Event lost, event=${
+                            createLogMessage(
+                                event,
+                                includeTime = true,
+                                includeExceptionStackTrace = true,
+                                includeTaggingClass = true,
+                                includeFileLocation = true,
+                                includeEventInterface = true
+                            )
+                        }"
                     )
             }
             ++nrLostTraceEventsSinceLastMsg
@@ -623,11 +627,13 @@ class Tracer private constructor(
                     LogLevel.ERROR,
                     TAG,
                     "Incorrect log call, expected arguments (String, Throwable), " +
-                        "args=${args?.joinToString {
-                            it?.let {
-                                it.javaClass.simpleName + ":" + it.toString()
-                            } ?: "null"
-                        }}"
+                        "args=${
+                            args?.joinToString {
+                                it?.let {
+                                    it.javaClass.simpleName + ":" + it.toString()
+                                } ?: "null"
+                            }
+                        }"
                 )
                 return false
             }
@@ -695,9 +701,11 @@ class Tracer private constructor(
 
             // Event.
             sb.append(
-                "${traceEvent.eventName}(${traceEvent.args.joinToString {
-                    convertToStringUsingRegistry(it)
-                }})"
+                "${traceEvent.eventName}(${
+                    traceEvent.args.joinToString {
+                        convertToStringUsingRegistry(it)
+                    }
+                })"
             )
 
             // Called-from file location.

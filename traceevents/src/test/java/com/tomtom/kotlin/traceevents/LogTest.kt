@@ -238,7 +238,9 @@ class LogTest {
     @Test
     fun `log event with exception to stdout with stacktrace`() {
         val actual = captureStdoutReplaceTime(TIME) {
-            tracerFromLogTest.withExceptionStackTrace(IllegalStateException("error1", NullPointerException()))
+            tracerFromLogTest.withExceptionStackTrace(
+                IllegalStateException("error1", NullPointerException())
+            )
         }
 
         // Cut off just enough to NOT include line numbers of source code as they may change.
@@ -275,8 +277,10 @@ class LogTest {
         }
         val expected =
             "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogTest.kt:invoke($NUMBER)\n"
-        assertEquals(expected, replaceNumber(actual, NUMBER),
-            "Perhaps you should increase STACK_TRACE_DEPTH?")
+        assertEquals(
+            expected, replaceNumber(actual, NUMBER),
+            "Perhaps you should increase STACK_TRACE_DEPTH?"
+        )
     }
 
     @Test
