@@ -17,6 +17,10 @@ Currently, the library contains:
 * `traceevents` - This is a library to log semantic events in an application, where perhaps normally
   logging and log analysis would be used.
 
+* `uid` - This is a simple library to deal with more performant and 'typesafe' UUIDs.
+
+* `memoization` - This modules the ability to cache function results.
+
 ### Building and testing the library
 
 Use Maven to run the unit tests as follows:
@@ -502,6 +506,10 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
+
+### 1.2.1 - 1.2.2
+
+* Updated dependecies and copyright.
 
 ### 1.2.0
 
