@@ -107,9 +107,9 @@
         <junit.version>4.13.2</junit.version>
         <junit-jupiter.version>5.8.0-M1</junit-jupiter.version>
         <kotlin.version>1.4.32</kotlin.version>
-        <kotlin-test.version>1.4.21</kotlin-test.version>
-        <kotlin-test-junit.version>1.4.21</kotlin-test-junit.version>
-        <kotlinx-coroutines-core.version>1.4.2-native-mt</kotlinx-coroutines-core.version>
+        <kotlin-test.version>1.4.32</kotlin-test.version>
+        <kotlin-test-junit.version>1.4.32</kotlin-test-junit.version>
+        <kotlinx-coroutines-core.version>1.4.3-native-mt</kotlinx-coroutines-core.version>
         <mockito-core.version>3.9.0</mockito-core.version>
         <mockk.version>1.10.3-jdk8</mockk.version>
     </properties>
@@ -144,9 +144,9 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-            <id>dokka</id>
+            <id>kotlinx</id>
             <name>bintray-plugins</name>
-            <url>https://dl.bintray.com/kotlin/dokka</url>
+            <url>https://kotlin.bintray.com/kotlinx</url>
         </pluginRepository>
     </pluginRepositories>
 
@@ -255,13 +255,11 @@
             <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
-                <version>${dokka-maven-plugin.version}</version>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>${maven-project-info-reports-plugin.version}</version>
             </plugin>
         </plugins>
     </reporting>
