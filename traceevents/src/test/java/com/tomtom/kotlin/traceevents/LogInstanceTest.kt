@@ -23,7 +23,7 @@ class LogInstanceTest {
 
     @Before
     fun setUp() {
-        TraceLog.setLogger()
+        setUpTracerTest()
     }
 
     interface TestEvents : TraceEventListener {

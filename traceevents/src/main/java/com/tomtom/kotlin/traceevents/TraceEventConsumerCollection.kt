@@ -33,24 +33,19 @@ class TraceEventConsumerCollection {
     }
 
     fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
-        if (contextRegex == null) {
-            // Remove all.
-        } else {
-            // Remove only for specific context regex.
-            traceEventsConsumersWithContext.remove(TraceEventConsumerWithContext(traceEventConsumer, contextRegex))
+        for (consumer in traceEventsConsumersWithContext.asIterable()
+            .filter {
+                it.traceEventConsumer == traceEventConsumer &&
+                        (contextRegex == null || it.contextRegex == contextRegex)
+            }) {
+            traceEventsConsumersWithContext.remove(consumer)
         }
     }
 
     fun all(contextRegex: Regex? = null): Iterable<TraceEventConsumer> {
-        if (contextRegex == null) {
-            return traceEventsConsumersWithContext.asIterable()
-                .map { it.traceEventConsumer }
-        } else {
-            // Return only for specific context regex.
-            return traceEventsConsumersWithContext.asIterable()
-                .filter { it.contextRegex == contextRegex }
-                .map { it.traceEventConsumer }
-        }
+        return traceEventsConsumersWithContext.asIterable()
+            .filter { contextRegex == null || it.contextRegex == contextRegex }
+            .map { it.traceEventConsumer }
     }
 
     suspend fun consumeTraceEvent(traceEvent: TraceEvent) {

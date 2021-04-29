@@ -24,7 +24,7 @@ class LogOtherClassTest {
 
     @Before
     fun setUp() {
-        TraceLog.setLogger()
+        setUpTracerTest()
     }
 
     @Test

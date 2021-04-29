@@ -23,7 +23,7 @@ class LogOtherClassInstanceTest {
 
     @Before
     fun setUp() {
-        TraceLog.setLogger()
+        setUpTracerTest()
     }
 
     @Test

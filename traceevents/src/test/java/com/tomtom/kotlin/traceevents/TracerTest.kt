@@ -16,10 +16,7 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import io.mockk.coVerifySequence
-import io.mockk.spyk
-import io.mockk.verify
-import io.mockk.verifySequence
+import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -73,27 +70,15 @@ class TracerTest {
     companion object {
         val TAG = TracerTest::class.simpleName
         val sut = Tracer.Factory.create<TracerTest.MyEvents>(this)
+        val sutMain = Tracer.Factory.create<TracerTest.MyEvents>(this, "the main tracer")
+        val sutOther = Tracer.Factory.create<TracerTest.MyEvents>(this, "another tracer")
         val sutWrong = Tracer.Factory.create<TracerTest.WrongListener>(this)
         val sutWithoutToString = Tracer.Factory.create<TracerTest.ListenerWithoutToString>(this)
     }
 
     @Before
     fun setUp() {
-
-        /**
-         * For every test case remove all consumer, cancel the processor (which will be restarted
-         * at next add consumer) and flush all events. Make sure that when the processor starts,
-         * it starts on the thread of this test.
-         */
-        runBlocking {
-            Tracer.eventProcessorScope = CoroutineScope(Dispatchers.Unconfined)
-            Tracer.setTraceEventLoggingMode(Tracer.Companion.LoggingMode.SYNC)
-            Tracer.enableTraceEventLogging(true)
-            Tracer.removeAllTraceEventConsumers()
-            Tracer.cancelAndJoinEventProcessor()
-            Tracer.flushTraceEvents()
-            Tracer.resetToDefaults()
-        }
+        setUpTracerTest()
     }
 
     @Test
@@ -116,7 +101,62 @@ class TracerTest {
     }
 
     @Test
-    fun `generic consumer`() {
+    fun `specific consumer with no context`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)  // Should get all events.
+
+        // WHEN
+        sut.eventNoArgs()
+        sutMain.eventString("abc")
+        sutOther.eventIntsString(10, 20, "abc")
+
+        // THEN
+        coVerifySequence {
+            consumer.eventNoArgs()
+            consumer.eventString(eq("abc"))
+            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
+        }
+    }
+
+    @Test
+    fun `specific consumer with regex matching a tracer`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer, Regex(".*main.*"))
+
+        // WHEN
+        sut.eventNoArgs()
+        sutMain.eventString("abc")
+        sutOther.eventIntsString(10, 20, "abc")
+
+        // THEN
+        coVerifySequence {
+            consumer.eventString(eq("abc"))
+        }
+    }
+
+    @Test
+    fun `specific consumer with regex non matching any tracer`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer, Regex("main"))
+
+        // WHEN
+        sut.eventNoArgs()
+        sutMain.eventString("abc")
+        sutOther.eventIntsString(10, 20, "abc")
+
+        // THEN
+        verify(exactly = 0) {
+            consumer.eventNoArgs()
+            consumer.eventString(any())
+            consumer.eventIntsString(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `generic consumer with no context`() {
         // GIVEN
         val consumer = spyk(TracerTest.GenericConsumer())
         Tracer.addTraceEventConsumer(consumer)
@@ -128,9 +168,43 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq(CONTEXT_REGEX_ANY, LogLevel.DEBUG, "eventNoArgs"))
-            consumer.consumeTraceEvent(traceEq(CONTEXT_REGEX_ANY, LogLevel.DEBUG, "eventString", "xyz"))
-            consumer.consumeTraceEvent(traceEq(CONTEXT_REGEX_ANY, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
+            consumer.consumeTraceEvent(traceEq("", LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq("", LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq("", LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
+        }
+    }
+
+    @Test
+    fun `generic consumer with context that matches a tracer`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.GenericConsumer())
+        Tracer.addTraceEventConsumer(consumer, Regex(".*main.*"))
+
+        // WHEN
+        sut.eventNoArgs()
+        sutMain.eventString("xyz")
+        sutOther.eventIntsString(10, 20, "abc")
+
+        // THEN
+        coVerifySequence {
+            consumer.consumeTraceEvent(traceEq("the main tracer", LogLevel.DEBUG, "eventString", "xyz"))
+        }
+    }
+
+    @Test
+    fun `generic consumer with context that matches no tracer`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.GenericConsumer())
+        Tracer.addTraceEventConsumer(consumer, Regex("main"))
+
+        // WHEN
+        sut.eventNoArgs()
+        sutMain.eventString("xyz")
+        sutOther.eventIntsString(10, 20, "abc")
+
+        // THEN
+        coVerify(exactly = 0) {
+            consumer.consumeTraceEvent(any())
         }
     }
 
@@ -240,7 +314,8 @@ class TracerTest {
             consumer.eventString(eq("abc"))
             consumer.eventIntsString(eq(10), eq(20), eq("abc"))
 
-            // Make sure we only have the last added event here.
+            // Make sure we only have the last added events here.
+            consumer.equals(consumer)   // Used by 'remove' call.
             consumer.eventIntsString(eq(11), eq(22), eq("xyz"))
         }
     }
