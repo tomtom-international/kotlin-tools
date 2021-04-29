@@ -24,18 +24,22 @@ import kotlin.reflect.jvm.jvmName
 /**
  * Utility function to check if a trace events matches the given parameters.
  */
+val CONTEXT_REGEX_ANY = Regex(".*");
+
 fun MockKMatcherScope.traceEq(
+    contextRegex: Regex,
     logLevel: LogLevel,
     functionName: String,
     vararg args: Any
 ) =
     match<TraceEvent> { traceEvent ->
         traceEvent.logLevel == logLevel &&
-            traceEvent.taggingClassName == TracerTest::class.jvmName &&
-            traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
-            traceEvent.eventName == functionName &&
-            traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-            traceEvent.args.contentDeepEquals(args)
+                traceEvent.taggingClassName == TracerTest::class.jvmName &&
+                contextRegex.matches(traceEvent.context) &&
+                traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
+                traceEvent.eventName == functionName &&
+                traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                traceEvent.args.contentDeepEquals(args)
     }
 
 /**

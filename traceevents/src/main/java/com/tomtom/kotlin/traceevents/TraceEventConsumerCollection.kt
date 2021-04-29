@@ -19,11 +19,7 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
-import kotlin.reflect.full.allSuperclasses
-import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.isSuperclassOf
-import kotlin.reflect.full.valueParameters
+import kotlin.reflect.full.*
 import kotlin.reflect.jvm.javaMethod
 
 /**
@@ -32,22 +28,35 @@ import kotlin.reflect.jvm.javaMethod
  */
 class TraceEventConsumerCollection {
 
-    fun add(traceEventConsumer: TraceEventConsumer) {
-        traceEventsConsumers.add(traceEventConsumer)
+    fun add(traceEventConsumer: TraceEventConsumer, contextRegex: Regex?) {
+        traceEventsConsumersWithContext.add(TraceEventConsumerWithContext(traceEventConsumer, contextRegex))
     }
 
-    fun remove(traceEventConsumer: TraceEventConsumer) {
-        traceEventsConsumers.remove(traceEventConsumer)
+    fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+        if (contextRegex == null) {
+            // Remove all.
+        } else {
+            // Remove only for specific context regex.
+            traceEventsConsumersWithContext.remove(TraceEventConsumerWithContext(traceEventConsumer, contextRegex))
+        }
     }
 
-    fun all(): Iterable<TraceEventConsumer> {
-        return traceEventsConsumers.asIterable()
+    fun all(contextRegex: Regex? = null): Iterable<TraceEventConsumer> {
+        if (contextRegex == null) {
+            return traceEventsConsumersWithContext.asIterable()
+                .map { it.traceEventConsumer }
+        } else {
+            // Return only for specific context regex.
+            return traceEventsConsumersWithContext.asIterable()
+                .filter { it.contextRegex == contextRegex }
+                .map { it.traceEventConsumer }
+        }
     }
 
     suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
 
         // Trace events are offered to every handler that can handle the event.
-        for (traceEventConsumer in traceEventsConsumers) {
+        for (traceEventConsumerWithContext in traceEventsConsumersWithContext) {
 
             /**
              * Check what type of trace event consumer we're dealing with. There are two types of
@@ -55,10 +64,14 @@ class TraceEventConsumerCollection {
              * [TraceEventListener]-derived trace event consumer, that can only deal with the events they
              * define as implemented functions.
              */
-            if (traceEventConsumer is GenericTraceEventConsumer) {
-                traceEventConsumer.consumeTraceEvent(traceEvent)
-            } else {
-                handleSpecificConsumer(traceEventConsumer, traceEvent)
+            if (traceEventConsumerWithContext.contextRegex == null ||
+                traceEventConsumerWithContext.contextRegex.matches(traceEvent.context)
+            ) {
+                if (traceEventConsumerWithContext.traceEventConsumer is GenericTraceEventConsumer) {
+                    traceEventConsumerWithContext.traceEventConsumer.consumeTraceEvent(traceEvent)
+                } else {
+                    handleSpecificConsumer(traceEventConsumerWithContext.traceEventConsumer, traceEvent)
+                }
             }
         }
     }
@@ -90,17 +103,17 @@ class TraceEventConsumerCollection {
                             // Catch all exceptions, to avoid killing the event processor.
                             TraceLog.log(
                                 LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
-                                    "method=${method.name}, " +
-                                    "args=(${traceEvent.args.joinToString()})", e
+                                        "method=${method.name}, " +
+                                        "args=(${traceEvent.args.joinToString()})", e
                             )
                         }
                     } else {
                         TraceLog.log(
                             LogLevel.ERROR, TAG, "Method not found, " +
-                                "traceEventConsumer=${traceEventConsumer::class}, " +
-                                "traceEventListener=$traceEventListener, " +
-                                "traceEvent.functionName=${traceEvent.eventName}, " +
-                                "traceEvent.args.size=${traceEvent.args.size}"
+                                    "traceEventConsumer=${traceEventConsumer::class}, " +
+                                    "traceEventListener=$traceEventListener, " +
+                                    "traceEvent.functionName=${traceEvent.eventName}, " +
+                                    "traceEvent.args.size=${traceEvent.args.size}"
                         )
                     }
                 }
@@ -111,7 +124,7 @@ class TraceEventConsumerCollection {
                     LogLevel.ERROR,
                     TAG,
                     "Event is not a subclass of ${TraceEventListener::class}, " +
-                        "traceEventListener=${traceEvent.interfaceName}"
+                            "traceEventListener=${traceEvent.interfaceName}"
                 )
             }
 
@@ -119,17 +132,17 @@ class TraceEventConsumerCollection {
         } catch (e: ClassNotFoundException) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Class not found, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e
+                        "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: LinkageError) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Linkage error, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e
+                        "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: ExceptionInInitializerError) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Initialization error, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e
+                        "traceEventListener=${traceEvent.interfaceName}", e
             )
         }
     }
@@ -203,12 +216,17 @@ class TraceEventConsumerCollection {
         val nrArgs: Int
     )
 
+    private data class TraceEventConsumerWithContext(
+        val traceEventConsumer: TraceEventConsumer,
+        val contextRegex: Regex?
+    )
+
     /**
      * The set of consumers needs to be thread-safe as it is used from both the caller
      * thread and the event processor thread. For lack of a ConcurrentSet, we use
      * the keys set of a [ConcurrentHashMap].
      */
-    private val traceEventsConsumers = ConcurrentHashMap.newKeySet<TraceEventConsumer>()
+    private val traceEventsConsumersWithContext = ConcurrentHashMap.newKeySet<TraceEventConsumerWithContext>()
 
     /**
      * The cached event functions are only used on the event processor thread.

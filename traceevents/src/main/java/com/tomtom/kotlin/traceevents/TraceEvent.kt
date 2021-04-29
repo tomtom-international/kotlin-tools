@@ -25,6 +25,7 @@ import java.time.LocalDateTime
  * @param logLevel Log level (from [TraceLogLevel] annotation).
  * @param tracerClassName Class logging the event.
  * @param taggingClassName Tagging class passed to event, for convenience of debugging.
+ * @param context Disambiguation context for event tracers with the same tags.
  * @param interfaceName Interface name, derived from [TraceEventListener].
  * @param stackTraceHolder Throwable from which a stack trace can be produced. `null` when unavailable.
  * @param eventName Function name in interface, which represents the trace event name.
@@ -35,10 +36,11 @@ data class TraceEvent(
     val logLevel: LogLevel,
     val tracerClassName: String,
     val taggingClassName: String,
+    val context: String,
     val interfaceName: String,
     val stackTraceHolder: Throwable?,
     val eventName: String,
-    val args: Array<Any?>
+    val args: Array<Any?>,
 ) {
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
@@ -54,6 +56,7 @@ data class TraceEvent(
         if (logLevel != other.logLevel) return false
         if (tracerClassName != other.tracerClassName) return false
         if (taggingClassName != other.taggingClassName) return false
+        if (context != other.context) return false
         if (interfaceName != other.interfaceName) return false
         if (stackTraceHolder != other.stackTraceHolder) return false
         if (eventName != other.eventName) return false
@@ -67,6 +70,7 @@ data class TraceEvent(
         result = 31 * result + logLevel.hashCode()
         result = 31 * result + tracerClassName.hashCode()
         result = 31 * result + taggingClassName.hashCode()
+        result = 31 * result + context.hashCode()
         result = 31 * result + interfaceName.hashCode()
         result = 31 * result + (stackTraceHolder?.hashCode() ?: 0)
         result = 31 * result + eventName.hashCode()

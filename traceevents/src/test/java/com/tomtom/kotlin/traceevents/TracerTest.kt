@@ -128,9 +128,9 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq(LogLevel.DEBUG, "eventNoArgs"))
-            consumer.consumeTraceEvent(traceEq(LogLevel.DEBUG, "eventString", "xyz"))
-            consumer.consumeTraceEvent(traceEq(LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
+            consumer.consumeTraceEvent(traceEq(CONTEXT_REGEX_ANY, LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq(CONTEXT_REGEX_ANY, LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq(CONTEXT_REGEX_ANY, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
         }
     }
 
