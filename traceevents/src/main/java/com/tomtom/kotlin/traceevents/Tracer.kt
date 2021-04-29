@@ -573,10 +573,10 @@ class Tracer private constructor(
          * Remove all event consumers.
          *
          * @param contextRegex If this is `null`, all trace event consumers will be removed. Otherwise,
-         * tarce event consumer for specific contexts are removed.
+         * trace event consumer for specific contexts are removed.
          */
         fun removeAllTraceEventConsumers(contextRegex: Regex? = null) {
-            traceEventConsumers.all().asSequence().forEach { removeTraceEventConsumer(it) }
+            traceEventConsumers.all().asSequence().forEach { removeTraceEventConsumer(it, contextRegex) }
         }
 
         /**
