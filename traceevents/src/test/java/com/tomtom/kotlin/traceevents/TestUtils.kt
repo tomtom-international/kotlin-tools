@@ -17,6 +17,9 @@ package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import io.mockk.MockKMatcherScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import kotlin.reflect.jvm.jvmName
@@ -25,17 +28,19 @@ import kotlin.reflect.jvm.jvmName
  * Utility function to check if a trace events matches the given parameters.
  */
 fun MockKMatcherScope.traceEq(
+    context: String,
     logLevel: LogLevel,
     functionName: String,
     vararg args: Any
 ) =
     match<TraceEvent> { traceEvent ->
         traceEvent.logLevel == logLevel &&
-            traceEvent.taggingClassName == TracerTest::class.jvmName &&
-            traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
-            traceEvent.eventName == functionName &&
-            traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-            traceEvent.args.contentDeepEquals(args)
+                traceEvent.taggingClassName == TracerTest::class.jvmName &&
+                traceEvent.context == context &&
+                traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
+                traceEvent.eventName == functionName &&
+                traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                traceEvent.args.contentDeepEquals(args)
     }
 
 /**
@@ -77,6 +82,25 @@ fun replaceNumber(msg: String?, replaceWith: String) = msg?.replace(
     "\\b[0-9]+\\b".toRegex(RegexOption.MULTILINE),
     replaceWith
 ) ?: ""
+
+fun setUpTracerTest() {
+
+    /**
+     * For every test case remove all consumer, cancel the processor (which will be restarted
+     * at next add consumer) and flush all events. Make sure that when the processor starts,
+     * it starts on the thread of this test.
+     */
+    runBlocking {
+        TraceLog.setLogger()
+        Tracer.eventProcessorScope = CoroutineScope(Dispatchers.Unconfined)
+        Tracer.setTraceEventLoggingMode(Tracer.Companion.LoggingMode.SYNC)
+        Tracer.enableTraceEventLogging(true)
+        Tracer.removeAllTraceEventConsumers()
+        Tracer.cancelAndJoinEventProcessor()
+        Tracer.flushTraceEvents()
+        Tracer.resetToDefaults()
+    }
+}
 
 /**
  * Replacements for times and numbers.

@@ -16,13 +16,8 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.InvocationHandler
@@ -127,10 +122,39 @@ import kotlin.reflect.jvm.jvmName
  *     }
  * }
  * ```
+ *
+ * DISAMBIGUATION OF TRACE EVENT TRACERS
+ * -------------------------------------
+ *
+ * Sometimes multiple tracers may exist for a single class (if multiple instances of the tracer are initiated).
+ * In those cases, it may be necessary to be able disambiguate the tracer that the trace events came from.
+ * This is solved by adding a `context` string to the `create` method. This context string is passed to
+ * trace event consumers. Alternatively, trace event consumers can specify a regular expression to make sure
+ * they only get the trace events for the specified tracer context(s).
+ *
+ * ```
+ * // Declare 2 tracers.
+ * val tracerMain = Tracer.Factory.create<SomeClass>(this::class, "main loop")
+ * val tracerSec  = Tracer.Factory.create<SomeClass>(this::class, "secondary")
+ *
+ * // Declare a consumer for main loop events only.
+ * val consumerSpecific = MyEventConsumerForSomeClass()
+ * Tracer.addTraceEventConsumer(consumerSpecific, Regex("main.*"));
+ *
+ * // Declare a consumer for all events.
+ * val consumerAll = MyEventConsumerForSomeClass()
+ * Tracer.addTraceEventConsumer(consumerAll);
+ * ```
+ *
+ * Note that only `GenericTraceEventConsumer`s are able to retrieve the context passed by the tracer (as it is
+ * part of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer
+ * interface), cannot access the context.
+ *
  */
 class Tracer private constructor(
     private val tracerClassName: String,
-    private val taggingClassName: String
+    private val taggingClassName: String,
+    private val context: String
 ) : InvocationHandler {
     val logTag = stripPackageFromClassName(tracerClassName)
 
@@ -146,14 +170,16 @@ class Tracer private constructor(
              *
              * @param taggingObject Owner object of the class using the event logger,
              *     specified as `this` from the companion object or an instance.
+             * @param context Optional string to disambiguate tracers with the same tagging object.
              * @return [TraceEventListener]-derived object, normally called the "tracer", to be used
              *     as `tracer.someEvent()`.
              */
-            inline fun <reified T : TraceEventListener> create(taggingObject: Any) =
+            inline fun <reified T : TraceEventListener> create(taggingObject: Any, context: String = "") =
                 createForListener_internal<T>(
                     tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
-                    traceEventListener = T::class
+                    traceEventListener = T::class,
+                    context = context
                 )
 
             /**
@@ -164,12 +190,13 @@ class Tracer private constructor(
              * location.
              */
             @Suppress("NOTHING_TO_INLINE")
-            inline fun createLoggerOnly(taggingObject: Any) =
+            inline fun createLoggerOnly(taggingObject: Any, context: String = "") =
                 createForListenerAndLogger_internal<TraceEventListener>(
                     tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
                     traceEventListener = TraceEventListener::class,
-                    isLoggerOnly = true
+                    isLoggerOnly = true,
+                    context = context
                 )
 
             /**
@@ -186,11 +213,14 @@ class Tracer private constructor(
             fun <T : TraceEventListener> createForListener_internal(
                 tracerClassName: String,
                 taggingClass: KClass<*>,
-                traceEventListener: KClass<out TraceEventListener>
+                traceEventListener: KClass<out TraceEventListener>,
+                context: String
             ): T = createForListenerAndLogger_internal<T>(
                 tracerClassName = tracerClassName,
                 taggingClass = taggingClass,
-                traceEventListener = traceEventListener
+                traceEventListener = traceEventListener,
+                isLoggerOnly = false,
+                context = context
             )
 
             /**
@@ -205,7 +235,8 @@ class Tracer private constructor(
                 tracerClassName: String,
                 taggingClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>,
-                isLoggerOnly: Boolean = false
+                isLoggerOnly: Boolean,
+                context: String
             ): T {
                 require(isLoggerOnly || traceEventListener != TraceEventListener::class) {
                     "Derive an interface from TraceEventListener, or use createLoggerOnly()"
@@ -222,7 +253,8 @@ class Tracer private constructor(
                     arrayOf<Class<*>?>(traceEventListener.java),
                     Tracer(
                         tracerClassName = tracerClassName,
-                        taggingClassName = taggingClassTopLevel.jvmName
+                        taggingClassName = taggingClassTopLevel.jvmName,
+                        context = context
                     )
                 ) as T
             }
@@ -269,6 +301,7 @@ class Tracer private constructor(
             logLevel = logLevelAnnotation,
             tracerClassName = tracerClassName,
             taggingClassName = taggingClassName,
+            context = context,
             interfaceName = method.declaringClass.name,
             stackTraceHolder = Throwable(),
             eventName = method.name,
@@ -387,8 +420,8 @@ class Tracer private constructor(
                 LogLevel.WARN,
                 logTag,
                 "Trace event channel is full, " +
-                    "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
-                    "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
+                        "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
+                        "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
             )
             nrLostTraceEventsSinceLastMsg = 0L
             timeLastLostTraceEvent = now
@@ -413,7 +446,6 @@ class Tracer private constructor(
                     // Signal the listener an incorrect signature was found.
                     incorrectLogSignatureFound()
                 }
-            } else {
             }
         }
     }
@@ -505,9 +537,13 @@ class Tracer private constructor(
          * Add a trace event consumer for trace processing. This also starts the event processor
          * if it wasn't started already. (No need for the processor to run if there are no
          * consumers.)
+         *
+         * @param traceEventConsumer Trace event consumer to receive trace events.
+         * @param contextRegex Regular expression to filter trace events. Only events from tracers with a context
+         * that matches the regular expression will be received. If omitted, or `null`, all events will be received.
          */
-        fun addTraceEventConsumer(traceEventConsumer: TraceEventConsumer) {
-            traceEventConsumers.add(traceEventConsumer)
+        fun addTraceEventConsumer(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+            traceEventConsumers.add(traceEventConsumer, contextRegex)
 
             /**
              * The event processor is started only when the first consumer is registered and stays
@@ -524,16 +560,23 @@ class Tracer private constructor(
         /**
          * Remove a trace event consumer. The event processor should not be stopped if there are
          * no consumers left, because it holds the event queue and you may lose events then.
+         *
+         * @param traceEventConsumer Trace event consumer to remove.
+         * @param contextRegex If this is `null`, all trace event consumers for the same tracers will be removed.
+         * Otherwise only the specific trace event consumer for that regular expression is removed.
          */
-        fun removeTraceEventConsumer(traceEventConsumer: TraceEventConsumer) {
-            traceEventConsumers.remove(traceEventConsumer)
+        fun removeTraceEventConsumer(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+            traceEventConsumers.remove(traceEventConsumer, contextRegex)
         }
 
         /**
          * Remove all event consumers.
+         *
+         * @param contextRegex If this is `null`, all trace event consumers will be removed. Otherwise,
+         * trace event consumer for specific contexts are removed.
          */
-        fun removeAllTraceEventConsumers() {
-            traceEventConsumers.all().asSequence().forEach { removeTraceEventConsumer(it) }
+        fun removeAllTraceEventConsumers(contextRegex: Regex? = null) {
+            traceEventConsumers.all().asSequence().forEach { removeTraceEventConsumer(it, contextRegex) }
         }
 
         /**
@@ -621,20 +664,20 @@ class Tracer private constructor(
             if (args == null || args.isEmpty() ||
                 args[0] == null || args[0]!!::class != String::class ||
                 (args.size == 2 &&
-                    args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
+                        args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
                 args.size > 2
             ) {
                 TraceLog.log(
                     LogLevel.ERROR,
                     TAG,
                     "Incorrect log call, expected arguments (String, Throwable), " +
-                        "args=${
-                            args?.joinToString {
-                                it?.let {
-                                    it.javaClass.simpleName + ":" + it.toString()
-                                } ?: "null"
-                            }
-                        }"
+                            "args=${
+                                args?.joinToString {
+                                    it?.let {
+                                        it.javaClass.simpleName + ":" + it.toString()
+                                    } ?: "null"
+                                }
+                            }"
                 )
                 return false
             }
@@ -791,7 +834,7 @@ class Tracer private constructor(
                  */
                 val item = stack[i + 2]
                 "${item.fileName ?: "(unknown)"}:${item.methodName}(" +
-                    "${if (item.lineNumber >= 0) item.lineNumber.toString() else "unknown"})"
+                        "${if (item.lineNumber >= 0) item.lineNumber.toString() else "unknown"})"
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.

@@ -32,22 +32,61 @@ import kotlin.reflect.jvm.javaMethod
  */
 class TraceEventConsumerCollection {
 
-    fun add(traceEventConsumer: TraceEventConsumer) {
-        traceEventsConsumers.add(traceEventConsumer)
+    /**
+     * Add a trace event consumer, possibly for a specific context only (specified as a regex).
+     * Trace event consumers are called at most once for a single event (even if they are
+     * added multiple times, for different (possibly overlapping) context regex's).
+     *
+     * @param traceEventConsumer Consumer to add.
+     * @param contextRegex If the regex matches the trace event context, the consumer will be called.
+     *                     If the regex is null, the consumer gets all events.
+     */
+    fun add(traceEventConsumer: TraceEventConsumer, contextRegex: Regex?) {
+        traceEventsConsumersWithContext.add(TraceEventConsumerWithContext(traceEventConsumer, contextRegex))
     }
 
-    fun remove(traceEventConsumer: TraceEventConsumer) {
-        traceEventsConsumers.remove(traceEventConsumer)
+
+    /**
+     * Remove a trace event consumer. The original regex specified when adding the consumer may be
+     * specified, to remove the consumer only for a specific context. The caller needs to make sure
+     * exactly the same regex is used as when adding the consumer, or the consumer won't be removed.
+     *
+     * @param traceEventConsumer Consumer to remove.
+     * @param contextRegex Only the consumer for the given regex is removed. The consumer is removed
+     *                     for all contexts if the regex is null.
+     */
+    fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+        traceEventsConsumersWithContext.removeAll {
+            it.traceEventConsumer == traceEventConsumer &&
+                    (contextRegex == null || it.contextRegex == contextRegex)
+        }
     }
 
-    fun all(): Iterable<TraceEventConsumer> {
-        return traceEventsConsumers.asIterable()
+    /**
+     * List all consumers, for a specific regex. The regex specified has to be exactly the same
+     * regex as used when adding the consumer(s).
+     *
+     * @param contextRegex Regex used when adding the consumer(s), or null to list all consumers.
+     */
+    fun all(contextRegex: Regex? = null): Iterable<TraceEventConsumer> {
+        return traceEventsConsumersWithContext.asIterable()
+            .filter { contextRegex == null || it.contextRegex == contextRegex }
+            .map { it.traceEventConsumer }
     }
 
+    /**
+     * Send a single trace event to the correct consumers. A single consumer will get a single
+     * trace event at most once, regardless of how often the consumer was added.
+     *
+     * @param traceEvent Trace event to consume.
+     */
     suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
 
+        // Make sure we call each trace event consumer at most once.
+        var calledConsumers = mutableSetOf<TraceEventConsumer>();
+
         // Trace events are offered to every handler that can handle the event.
-        for (traceEventConsumer in traceEventsConsumers) {
+        for (traceEventConsumerWithContext in traceEventsConsumersWithContext) {
 
             /**
              * Check what type of trace event consumer we're dealing with. There are two types of
@@ -55,10 +94,16 @@ class TraceEventConsumerCollection {
              * [TraceEventListener]-derived trace event consumer, that can only deal with the events they
              * define as implemented functions.
              */
-            if (traceEventConsumer is GenericTraceEventConsumer) {
-                traceEventConsumer.consumeTraceEvent(traceEvent)
-            } else {
-                handleSpecificConsumer(traceEventConsumer, traceEvent)
+            if (!calledConsumers.contains(traceEventConsumerWithContext.traceEventConsumer) &&
+                traceEventConsumerWithContext.contextRegex == null ||
+                traceEventConsumerWithContext.contextRegex!!.matches(traceEvent.context)
+            ) {
+                calledConsumers.add(traceEventConsumerWithContext.traceEventConsumer);
+                if (traceEventConsumerWithContext.traceEventConsumer is GenericTraceEventConsumer) {
+                    traceEventConsumerWithContext.traceEventConsumer.consumeTraceEvent(traceEvent)
+                } else {
+                    handleSpecificConsumer(traceEventConsumerWithContext.traceEventConsumer, traceEvent)
+                }
             }
         }
     }
@@ -90,17 +135,17 @@ class TraceEventConsumerCollection {
                             // Catch all exceptions, to avoid killing the event processor.
                             TraceLog.log(
                                 LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
-                                    "method=${method.name}, " +
-                                    "args=(${traceEvent.args.joinToString()})", e
+                                        "method=${method.name}, " +
+                                        "args=(${traceEvent.args.joinToString()})", e
                             )
                         }
                     } else {
                         TraceLog.log(
                             LogLevel.ERROR, TAG, "Method not found, " +
-                                "traceEventConsumer=${traceEventConsumer::class}, " +
-                                "traceEventListener=$traceEventListener, " +
-                                "traceEvent.functionName=${traceEvent.eventName}, " +
-                                "traceEvent.args.size=${traceEvent.args.size}"
+                                    "traceEventConsumer=${traceEventConsumer::class}, " +
+                                    "traceEventListener=$traceEventListener, " +
+                                    "traceEvent.functionName=${traceEvent.eventName}, " +
+                                    "traceEvent.args.size=${traceEvent.args.size}"
                         )
                     }
                 }
@@ -111,7 +156,7 @@ class TraceEventConsumerCollection {
                     LogLevel.ERROR,
                     TAG,
                     "Event is not a subclass of ${TraceEventListener::class}, " +
-                        "traceEventListener=${traceEvent.interfaceName}"
+                            "traceEventListener=${traceEvent.interfaceName}"
                 )
             }
 
@@ -119,17 +164,17 @@ class TraceEventConsumerCollection {
         } catch (e: ClassNotFoundException) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Class not found, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e
+                        "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: LinkageError) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Linkage error, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e
+                        "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: ExceptionInInitializerError) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Initialization error, " +
-                    "traceEventListener=${traceEvent.interfaceName}", e
+                        "traceEventListener=${traceEvent.interfaceName}", e
             )
         }
     }
@@ -203,12 +248,17 @@ class TraceEventConsumerCollection {
         val nrArgs: Int
     )
 
+    private data class TraceEventConsumerWithContext(
+        val traceEventConsumer: TraceEventConsumer,
+        val contextRegex: Regex?
+    )
+
     /**
      * The set of consumers needs to be thread-safe as it is used from both the caller
      * thread and the event processor thread. For lack of a ConcurrentSet, we use
      * the keys set of a [ConcurrentHashMap].
      */
-    private val traceEventsConsumers = ConcurrentHashMap.newKeySet<TraceEventConsumer>()
+    private val traceEventsConsumersWithContext = ConcurrentHashMap.newKeySet<TraceEventConsumerWithContext>()
 
     /**
      * The cached event functions are only used on the event processor thread.

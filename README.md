@@ -360,6 +360,32 @@ rather than an object reference.
 
 Use `Tracer.resetToDefaults()` to de-register all custom `toString` handlers.
 
+### Using a `context` to disambiguate tracers with the same name
+
+Sometimes multiple tracers may exist for a single class (if multiple instances of the tracer are initiated).
+In those cases, it may be necessary to be able to disambiguate the tracer that the trace events came from.
+This is solved by adding a `context` string to the `create` method. This context string is passed to
+trace event consumers. Alternatively, trace event consumers can specify a regular expression to make sure
+they only get the trace events for the specified tracer context(s).
+
+```
+// Declare 2 tracers.
+val tracerMain = Tracer.Factory.create<SomeClass>(this::class, "main loop")
+val tracerSec  = Tracer.Factory.create<SomeClass>(this::class, "secondary")
+
+// Declare a consumer for events from any tracer starting with "main".
+val consumerMain = MyEventConsumerForSomeClass()
+Tracer.addTraceEventConsumer(consumerMain, Regex("main.*"));
+
+// Declare a consumer for all events (leaving out the regex).
+val consumerAll = MyEventConsumerForSomeClass()
+Tracer.addTraceEventConsumer(consumerAll);
+```
+
+Note that only `GenericTraceEventConsumer`s are able to retrieve the context string passed by the tracer (as it is
+part of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer
+interface), cannot access the context while processing events. 
+
 ### Advanced examples
 
 Advanced examples of using this trace event mechanism are:
@@ -506,6 +532,10 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
+
+### 1.3.0
+
+* Added `context` to `Tracer.create` to allow disambiguation of tracers, if there are multiple for the same class.
 
 ### 1.2.1 - 1.2.2
 
