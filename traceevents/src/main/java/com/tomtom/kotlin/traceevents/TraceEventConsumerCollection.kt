@@ -19,7 +19,11 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
-import kotlin.reflect.full.*
+import kotlin.reflect.full.allSuperclasses
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.javaMethod
 
 /**
@@ -28,17 +32,32 @@ import kotlin.reflect.jvm.javaMethod
  */
 class TraceEventConsumerCollection {
 
+    /**
+     * Add a trace event consumer, possibly for a specific context only (specified as a regex).
+     * Trace event consumer are called at most once for a single event (even if they are
+     * add multiple times, for different (possibly overlapping) context regex).
+     *
+     * @param traceEventConsumer Consumer to add.
+     * @param contextRegex If the regex matches the trace event context, the consumer will be called.
+     *                     If the regex is null, the consumer gets all events.
+     */
     fun add(traceEventConsumer: TraceEventConsumer, contextRegex: Regex?) {
         traceEventsConsumersWithContext.add(TraceEventConsumerWithContext(traceEventConsumer, contextRegex))
     }
 
+
+    /**
+     * Remove a trace event consumer. The original regex specified when adding the consumer may be
+     * specified, to remove the consumer only for a specific context.
+     *
+     * @param traceEventConsumer Consumer to remove.
+     * @param contextRegex Only the consumer for the given regex is removed. The consumer is removed
+     *                     for all contextx if the regex is null.
+     */
     fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
-        for (consumer in traceEventsConsumersWithContext.asIterable()
-            .filter {
-                it.traceEventConsumer == traceEventConsumer &&
-                        (contextRegex == null || it.contextRegex == contextRegex)
-            }) {
-            traceEventsConsumersWithContext.remove(consumer)
+        traceEventsConsumersWithContext.removeAll {
+            it.traceEventConsumer == traceEventConsumer &&
+                    (contextRegex == null || it.contextRegex == contextRegex)
         }
     }
 
@@ -50,6 +69,9 @@ class TraceEventConsumerCollection {
 
     suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
 
+        // Make sure we call each trace event consumer at most once.
+        var calledConsumers = mutableSetOf<TraceEventConsumer>();
+
         // Trace events are offered to every handler that can handle the event.
         for (traceEventConsumerWithContext in traceEventsConsumersWithContext) {
 
@@ -59,9 +81,11 @@ class TraceEventConsumerCollection {
              * [TraceEventListener]-derived trace event consumer, that can only deal with the events they
              * define as implemented functions.
              */
-            if (traceEventConsumerWithContext.contextRegex == null ||
-                traceEventConsumerWithContext.contextRegex.matches(traceEvent.context)
+            if (!calledConsumers.contains(traceEventConsumerWithContext.traceEventConsumer) &&
+                traceEventConsumerWithContext.contextRegex == null ||
+                traceEventConsumerWithContext.contextRegex!!.matches(traceEvent.context)
             ) {
+                calledConsumers.add(traceEventConsumerWithContext.traceEventConsumer);
                 if (traceEventConsumerWithContext.traceEventConsumer is GenericTraceEventConsumer) {
                     traceEventConsumerWithContext.traceEventConsumer.consumeTraceEvent(traceEvent)
                 } else {
