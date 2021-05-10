@@ -34,8 +34,8 @@ class TraceEventConsumerCollection {
 
     /**
      * Add a trace event consumer, possibly for a specific context only (specified as a regex).
-     * Trace event consumer are called at most once for a single event (even if they are
-     * add multiple times, for different (possibly overlapping) context regex).
+     * Trace event consumers are called at most once for a single event (even if they are
+     * added multiple times, for different (possibly overlapping) context regex's).
      *
      * @param traceEventConsumer Consumer to add.
      * @param contextRegex If the regex matches the trace event context, the consumer will be called.
@@ -48,11 +48,12 @@ class TraceEventConsumerCollection {
 
     /**
      * Remove a trace event consumer. The original regex specified when adding the consumer may be
-     * specified, to remove the consumer only for a specific context.
+     * specified, to remove the consumer only for a specific context. The caller needs to make sure
+     * exactly the same regex is used as when adding the consumer, or the consumer won't be removed.
      *
      * @param traceEventConsumer Consumer to remove.
      * @param contextRegex Only the consumer for the given regex is removed. The consumer is removed
-     *                     for all contextx if the regex is null.
+     *                     for all contexts if the regex is null.
      */
     fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
         traceEventsConsumersWithContext.removeAll {
@@ -61,12 +62,24 @@ class TraceEventConsumerCollection {
         }
     }
 
+    /**
+     * List all consumers, for a specific regex. The regex specified has to be exactly the same
+     * regex as used when adding the consumer(s).
+     *
+     * @param contextRegex Regex used when adding the consumer(s), or null to list all consumers.
+     */
     fun all(contextRegex: Regex? = null): Iterable<TraceEventConsumer> {
         return traceEventsConsumersWithContext.asIterable()
             .filter { contextRegex == null || it.contextRegex == contextRegex }
             .map { it.traceEventConsumer }
     }
 
+    /**
+     * Send a single trace event to the correct consumers. A single consumer will get a single
+     * trace event at most once, regardless of how often the consumer was added.
+     *
+     * @param traceEvent Trace event to consume.
+     */
     suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
 
         // Make sure we call each trace event consumer at most once.
