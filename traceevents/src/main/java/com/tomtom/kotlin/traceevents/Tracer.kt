@@ -772,6 +772,11 @@ class Tracer private constructor(
                 sb.append(", eventInterface=${traceEvent.interfaceName}")
             }
 
+            // Context.
+            if (traceEvent.context.isNotEmpty()) {
+                sb.append(", context=${traceEvent.context}")
+            }
+
             // Stack trace for last parameter, if it's an exception.
             if (includeExceptionStackTrace && !traceEvent.args.isEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {

@@ -533,6 +533,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.3.1
+
+* Added `context` to logging, if context is not empty.
+
 ### 1.3.0
 
 * Added `context` to `Tracer.create` to allow disambiguation of tracers, if there are multiple for the same class.
