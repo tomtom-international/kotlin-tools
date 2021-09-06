@@ -533,6 +533,12 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.4.0
+
+* Updated POM dependencies.
+
+* Removed dependency on `kotlin.bintray.com`.
+
 ### 1.3.1
 
 * Added `context` to logging, if context is not empty.
