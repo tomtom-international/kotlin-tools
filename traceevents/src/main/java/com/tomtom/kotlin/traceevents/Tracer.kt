@@ -156,7 +156,7 @@ class Tracer private constructor(
     private val taggingClassName: String,
     private val context: String
 ) : InvocationHandler {
-    val logTag = stripPackageFromClassName(tracerClassName)
+    private val logTag = stripPackageFromClassName(tracerClassName)
 
     class Factory {
         companion object {
@@ -376,7 +376,7 @@ class Tracer private constructor(
         event: TraceEvent,
         now: LocalDateTime?
     ) {
-        if (!traceEventChannel.offer(event)) {
+        if (!traceEventChannel.trySend(event).isSuccess) {
             when (loggingMode) {
                 LoggingMode.SYNC ->
 
@@ -451,8 +451,8 @@ class Tracer private constructor(
     }
 
     companion object {
-        val TAG = Tracer::class.simpleName!!
-        const val STACK_TRACE_DEPTH = 5L
+        private val TAG = Tracer::class.simpleName!!
+        private const val STACK_TRACE_DEPTH = 5L
 
         /**
          * Names of simple, predefined log functions (from standard loggers).
@@ -478,7 +478,7 @@ class Tracer private constructor(
         /**
          * Default handler for asynchronous logging.
          */
-        internal val loggingTraceEventConsumer = LoggingTraceEventConsumer()
+        private val loggingTraceEventConsumer = LoggingTraceEventConsumer()
 
         /**
          * The co-routine scope of the event processor is internal, not private, to
@@ -491,14 +491,14 @@ class Tracer private constructor(
          * This is the event processor job, running in co-routine scope
          * [eventProcessorScope].
          */
-        internal lateinit var eventProcessorJob: Job
+        private lateinit var eventProcessorJob: Job
 
         /**
          * Capacity definition for the channel that queues traces.
          */
         private const val CHANNEL_CAPACITY = 10000
         internal val traceEventChannel = Channel<TraceEvent>(CHANNEL_CAPACITY)
-        internal val traceEventConsumers = TraceEventConsumerCollection()
+        private val traceEventConsumers = TraceEventConsumerCollection()
 
         /**
          * Parameters to indicate and deal with loss of traces.
@@ -590,7 +590,7 @@ class Tracer private constructor(
             enabled = false
 
             eventProcessorScope.launch(CoroutineName("flushTraceEvents")) {
-                while (traceEventChannel.poll() != null) {
+                while (traceEventChannel.tryReceive().getOrNull() != null) {
                     // Loop until queue is empty.
                 }
             }.join()
