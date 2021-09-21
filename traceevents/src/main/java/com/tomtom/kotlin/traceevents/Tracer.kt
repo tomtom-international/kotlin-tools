@@ -306,7 +306,7 @@ class Tracer private constructor(
             stackTraceHolder = Throwable(),
             eventName = method.name,
             args = args ?: arrayOf(),
-            eventDiagnosticContext = TraceContext.getCopyOfContextMap()
+            eventDiagnosticContext = TraceDiagnosticContext.getCopyOfContextMap()
         )
 
         /**

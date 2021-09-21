@@ -218,7 +218,7 @@ class TracerTest {
 
         // WHEN
         sut.eventNoArgs()
-        TraceContext.put("id", 123123)
+        TraceDiagnosticContext.put("id", 123123)
         sut.eventNoArgs()
 
 

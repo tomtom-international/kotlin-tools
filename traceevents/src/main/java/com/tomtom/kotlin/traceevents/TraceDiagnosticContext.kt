@@ -4,7 +4,7 @@ package com.tomtom.kotlin.traceevents
 /**
  * ThreadLocal trace context, basically copied from the basic MDC implementation
  */
-object TraceContext {
+object TraceDiagnosticContext {
 
     private val inheritableThreadLocal: InheritableThreadLocal<MutableMap<String, Any>?> = object : InheritableThreadLocal<MutableMap<String, Any>?>() {
         fun childValue(parentValue: Map<String, Any>?): Map<String, Any>? {
