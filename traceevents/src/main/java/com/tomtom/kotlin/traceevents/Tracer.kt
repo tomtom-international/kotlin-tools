@@ -305,7 +305,8 @@ class Tracer private constructor(
             interfaceName = method.declaringClass.name,
             stackTraceHolder = Throwable(),
             eventName = method.name,
-            args = args ?: arrayOf<Any?>()
+            args = args ?: arrayOf(),
+            eventDiagnosticContext = TraceContext.getCopyOfContextMap()
         )
 
         /**
@@ -775,6 +776,11 @@ class Tracer private constructor(
             // Context.
             if (traceEvent.context.isNotEmpty()) {
                 sb.append(", context=${traceEvent.context}")
+            }
+
+            // Diagnostics
+            if (traceEvent.eventDiagnosticContext != null) {
+                sb.append(", diagnostics=${traceEvent.eventDiagnosticContext}")
             }
 
             // Stack trace for last parameter, if it's an exception.

@@ -41,6 +41,7 @@ data class TraceEvent(
     val stackTraceHolder: Throwable?,
     val eventName: String,
     val args: Array<Any?>,
+    val eventDiagnosticContext: Map<String, Any?>? = emptyMap()
 ) {
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
@@ -52,6 +53,7 @@ data class TraceEvent(
 
         other as TraceEvent
 
+        if (eventDiagnosticContext != other.eventDiagnosticContext) return false
         if (dateTime != other.dateTime) return false
         if (logLevel != other.logLevel) return false
         if (tracerClassName != other.tracerClassName) return false
@@ -75,6 +77,7 @@ data class TraceEvent(
         result = 31 * result + (stackTraceHolder?.hashCode() ?: 0)
         result = 31 * result + eventName.hashCode()
         result = 31 * result + args.contentDeepHashCode()
+        result = 31 * result + eventDiagnosticContext.hashCode()
         return result
     }
 }

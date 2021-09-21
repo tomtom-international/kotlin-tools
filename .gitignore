@@ -143,3 +143,5 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/maven,kotlin,intellij
+.idea/
+.gradle/
