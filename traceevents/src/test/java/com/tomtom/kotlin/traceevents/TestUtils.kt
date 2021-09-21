@@ -29,18 +29,21 @@ import kotlin.reflect.jvm.jvmName
  */
 fun MockKMatcherScope.traceEq(
     context: String,
+    diagnosticContext: Map<String, Any?>? = null,
     logLevel: LogLevel,
     functionName: String,
     vararg args: Any
 ) =
     match<TraceEvent> { traceEvent ->
+
         traceEvent.logLevel == logLevel &&
                 traceEvent.taggingClassName == TracerTest::class.jvmName &&
                 traceEvent.context == context &&
                 traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
                 traceEvent.eventName == functionName &&
                 traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-                traceEvent.args.contentDeepEquals(args)
+                traceEvent.args.contentDeepEquals(args) &&
+                traceEvent.eventDiagnosticContext == diagnosticContext
     }
 
 /**

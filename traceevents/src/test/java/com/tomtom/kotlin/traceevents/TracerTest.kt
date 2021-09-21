@@ -170,9 +170,9 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq("", LogLevel.DEBUG, "eventNoArgs"))
-            consumer.consumeTraceEvent(traceEq("", LogLevel.DEBUG, "eventString", "xyz"))
-            consumer.consumeTraceEvent(traceEq("", LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
+            consumer.consumeTraceEvent(traceEq("",null, LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq("",null, LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
         }
     }
 
@@ -189,7 +189,7 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq("the main tracer", LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq("the main tracer", null, LogLevel.DEBUG, "eventString", "xyz"))
         }
     }
 
@@ -207,6 +207,25 @@ class TracerTest {
         // THEN
         coVerify(exactly = 0) {
             consumer.consumeTraceEvent(any())
+        }
+    }
+
+    @Test
+    fun `generic consumer with diagnostic context`() {
+        // GIVEN
+        val consumer = spyk(TracerTest.GenericConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        // WHEN
+        sut.eventNoArgs()
+        TraceContext.put("id", 123123)
+        sut.eventNoArgs()
+
+
+        // THEN
+        coVerifySequence {
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq("", HashMap(mapOf("id" to 123123)), LogLevel.DEBUG, "eventNoArgs"))
         }
     }
 
