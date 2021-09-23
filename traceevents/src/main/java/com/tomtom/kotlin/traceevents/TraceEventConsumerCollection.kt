@@ -108,7 +108,7 @@ class TraceEventConsumerCollection {
         }
     }
 
-    private suspend fun handleSpecificConsumer(
+    private fun handleSpecificConsumer(
         traceEventConsumer: TraceEventConsumer,
         traceEvent: TraceEvent
     ) {
@@ -179,7 +179,7 @@ class TraceEventConsumerCollection {
         }
     }
 
-    private suspend fun findFunctionByInspection(
+    private fun findFunctionByInspection(
         traceEventsConsumerClass: KClass<*>,
         traceEventListenerInterface: KClass<out TraceEventListener>,
         traceEventFunction: String,
@@ -209,7 +209,7 @@ class TraceEventConsumerCollection {
         return null
     }
 
-    private suspend fun findAndCacheFunction(
+    private fun findAndCacheFunction(
         traceEventConsumerClass: KClass<out TraceEventConsumer>,
         traceEventListenerInterface: KClass<out TraceEventListener>,
         traceEventFunction: String,

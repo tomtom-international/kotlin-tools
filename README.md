@@ -533,6 +533,16 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.4.1
+
+* Updated POM dependencies.
+
+* Replaced deprecated `Channel` methods `offer` and `poll` with current method variants `trySend` and `tryReceive`.
+
+* Replaced some `internal` properties with `private` to be stricter on visibility. 
+
+* Removed redundant `suspend` modifiers from methods.
+
 ### 1.4.0
 
 * Updated POM dependencies.
