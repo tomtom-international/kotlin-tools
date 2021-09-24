@@ -548,14 +548,14 @@ And then choose the pre-defined style `Kotlin Style Guide`. Voila!
 
 Author: Rijn Buve
 
-Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
+Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski, Chris Owen
 
 ## Release notes
 
 ### 1.5.0
 
 * Added ability to store threadlocal diagnostic context to trace events. This context can be processed
-  by `GenericTraceEventConsumer`s.
+  by `GenericTraceEventConsumer`s. Initial idea by Chris Owen.
 
 ### 1.4.1
 
