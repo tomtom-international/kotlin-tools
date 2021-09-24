@@ -388,9 +388,14 @@ access the context while processing events.
 
 ### Adding threadlocal diagnostic context to trace events
 
-Similar to adding a regular context string, you can also add more advanced context to trace events that is stored per
-thread that the tracer is being used on to generate events. This is done by adding elements to
-the `TraceDiagnosticContext` map, which is stored as a threadlocal object.
+The `context` mechanism described above is specifically for differentiating between multiple tracers.
+But sometimes it's useful to be able to retrieve more dynamic information from a trace event that perhaps
+wasn't even available at the location where the event was generated, but at an earlier time. This effectively
+allows the developer to create much richer events than are normally possible.  
+
+Java logging introduced MDC, mapped diagnostic context, for that. This allowed Java users to add threadlocal
+data that was added to log lines. The `tracevents` module allows something similar with the `TraceDiagnosticContext`
+feature.
 
 Here's an example of storing additional context in trace events.
 
@@ -398,8 +403,80 @@ Here's an example of storing additional context in trace events.
 TraceDiagnosticContext.put("currentRequest", myRequest)
 ```
 
-This would add a map with `{key=currentRequest, value=myRequest}` to each trace event generated in that same thread.
-This is particularly useful if you wish to add threadlocal context information to multiple events.
+This would add a map with `{currentRequest: myRequest}` to each trace event generated from the same thread
+as this call to `put` was on. 
+
+This is particularly useful for adding information that isn't necessarily available at the location where the
+trace event is generated. Without this feature, such events would require more parameters, just for the sake
+of adding context to events, which would clutter the main code. 
+
+For example, suppose you've written a media player and wish to generate a `skipToNext` event when the user
+presses the "skip to next" button. You would like to know the current song name when the 
+user presses the button, but that information is not available in the "skip to next" method.
+
+Let's have a look at what this looks like without the `TraceDiagnosticContext`.
+
+Let's assume the media player always plays random songs and when you press "skip to next" it selects a
+new random song. The interface for the events for the media player could look like:
+
+```
+interface MediaPlayerEvents : TraceEventListener {
+    fun eventPlaySong(songName: String)
+    fun eventSkipToNext()
+}
+```
+
+And the events to log the song name, the playing position, and the skip to next event, would be generated in
+different methods:
+
+```
+fun playRandomSong() {
+    val song = chooseRandomSong(allSongs)
+    eventPlaySong(song.name) // <-- this generates an event with the current song name
+    startPlaying(song)
+}
+
+fun userPressedNext() {
+    eventSkipToNext() // <-- this generates the sip to next event
+    playRandomSong()
+}
+```
+
+When this code is run, you'll get events like:
+
+```
+eventPlaySong(songName = "Dancing Queen")
+eventPlaySong(songName = "Bohemian Rhapsody")
+eventSkipToNext()
+eventPlaySong(songName = "Breakfast in America")
+```
+
+Especially when these events are interlaced with other events, it becomes really hard to figure out which
+song was playing then "skip to next" was pressed. And if the program is multi-threaded, it becomes undoable.
+
+Now, let's have a look at the code when `TraceDiagnosticContext` is used. Eveything remains the same except
+for the implementation of `playRandomSong`:
+
+
+```
+fun playRandomSong() {
+    val song = chooseRandomSong(allSongs)
+    TraceDiagnosticContext.put("songName", song.name) // <-- and the new song name as 'current'
+    eventPlaySong(song.name) // <-- this generates an event with the current song name
+    startPlaying(song)
+}
+```
+
+The events that are generated now, look like this:
+
+```
+eventPlaySong(songName = "Dancing Queen", traceDiagnosticContext = null)
+eventPlaySong(songName = "Bohemian Rhapsody", traceDiagnosticContext = {"songName": "Dancing Queen"})
+eventSkipToNext(traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
+eventPlaySong(songName = "Breakfast in America", traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
+```
+
+Now it becomes trivial to see that "Bohemian Rhapsody" was skipped to arrive at "Breakfast in America'.
 
 Note that only `GenericTraceEventConsumer`s are able to retrieve the context map passed by the tracer (as it is part of
 the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer interface), cannot
