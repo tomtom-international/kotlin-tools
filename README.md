@@ -435,12 +435,12 @@ different methods:
 ```
 fun playRandomSong() {
     val song = chooseRandomSong(allSongs)
-    eventPlaySong(song.name) // <-- this generates an event with the current song name
+    eventPlaySong(song.name)    // <-- generate an event with the current song name
     startPlaying(song)
 }
 
 fun userPressedNext() {
-    eventSkipToNext() // <-- this generates the sip to next event
+    eventSkipToNext()           // <-- generate the sip to next event
     playRandomSong()
 }
 ```
@@ -464,8 +464,8 @@ for the implementation of `playRandomSong`:
 ```
 fun playRandomSong() {
     val song = chooseRandomSong(allSongs)
-    TraceDiagnosticContext.put("songName", song.name) // <-- and the new song name as 'current'
-    eventPlaySong(song.name) // <-- this generates an event with the current song name
+    TraceDiagnosticContext.put("songName", song.name) // <-- store the song name in (threadlocal) data
+    eventPlaySong(song.name)                          // <-- generate an event with the current song name
     startPlaying(song)
 }
 ```
@@ -479,7 +479,8 @@ eventSkipToNext(traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
 eventPlaySong(songName = "Breakfast in America", traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
 ```
 
-Now it becomes trivial to see that "Bohemian Rhapsody" was skipped to arrive at "Breakfast in America".
+Now it becomes trivial to see that "Bohemian Rhapsody" was skipped, and that "Breakfast in America" was played
+before that.
 
 ### Advanced examples
 
