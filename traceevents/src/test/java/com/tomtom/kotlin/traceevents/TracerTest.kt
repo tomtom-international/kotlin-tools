@@ -16,9 +16,11 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import io.mockk.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import io.mockk.coVerify
+import io.mockk.coVerifySequence
+import io.mockk.spyk
+import io.mockk.verify
+import io.mockk.verifySequence
 import kotlinx.coroutines.runBlocking
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Before
@@ -69,11 +71,11 @@ class TracerTest {
 
     companion object {
         val TAG = TracerTest::class.simpleName
-        val sut = Tracer.Factory.create<TracerTest.MyEvents>(this)
-        val sutMain = Tracer.Factory.create<TracerTest.MyEvents>(this, "the main tracer")
-        val sutOther = Tracer.Factory.create<TracerTest.MyEvents>(this, "another tracer")
-        val sutWrong = Tracer.Factory.create<TracerTest.WrongListener>(this)
-        val sutWithoutToString = Tracer.Factory.create<TracerTest.ListenerWithoutToString>(this)
+        val sut = Tracer.Factory.create<MyEvents>(this)
+        val sutMain = Tracer.Factory.create<MyEvents>(this, "the main tracer")
+        val sutOther = Tracer.Factory.create<MyEvents>(this, "another tracer")
+        val sutWrong = Tracer.Factory.create<WrongListener>(this)
+        val sutWithoutToString = Tracer.Factory.create<ListenerWithoutToString>(this)
     }
 
     @Before
@@ -84,7 +86,7 @@ class TracerTest {
     @Test
     fun `specific consumer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -103,7 +105,7 @@ class TracerTest {
     @Test
     fun `specific consumer with no context`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)  // Should get all events.
 
         // WHEN
@@ -122,7 +124,7 @@ class TracerTest {
     @Test
     fun `specific consumer with regex matching a tracer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer, Regex(".*main.*"))
 
         // WHEN
@@ -139,7 +141,7 @@ class TracerTest {
     @Test
     fun `specific consumer with regex non matching any tracer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer, Regex("main"))
 
         // WHEN
@@ -158,7 +160,7 @@ class TracerTest {
     @Test
     fun `generic consumer with no context`() {
         // GIVEN
-        val consumer = spyk(TracerTest.GenericConsumer())
+        val consumer = spyk(GenericConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -168,16 +170,16 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq("", LogLevel.DEBUG, "eventNoArgs"))
-            consumer.consumeTraceEvent(traceEq("", LogLevel.DEBUG, "eventString", "xyz"))
-            consumer.consumeTraceEvent(traceEq("", LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
         }
     }
 
     @Test
     fun `generic consumer with context that matches a tracer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.GenericConsumer())
+        val consumer = spyk(GenericConsumer())
         Tracer.addTraceEventConsumer(consumer, Regex(".*main.*"))
 
         // WHEN
@@ -187,14 +189,14 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq("the main tracer", LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq("the main tracer", null, LogLevel.DEBUG, "eventString", "xyz"))
         }
     }
 
     @Test
     fun `generic consumer with context that matches no tracer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.GenericConsumer())
+        val consumer = spyk(GenericConsumer())
         Tracer.addTraceEventConsumer(consumer, Regex("main"))
 
         // WHEN
@@ -209,9 +211,28 @@ class TracerTest {
     }
 
     @Test
+    fun `generic consumer with diagnostic context`() {
+        // GIVEN
+        val consumer = spyk(GenericConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        // WHEN
+        sut.eventNoArgs()
+        TraceDiagnosticContext.put("id", 123)
+        sut.eventNoArgs()
+
+
+        // THEN
+        coVerifySequence {
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventNoArgs"))
+            consumer.consumeTraceEvent(traceEq("", HashMap(mapOf("id" to 123)), LogLevel.DEBUG, "eventNoArgs"))
+        }
+    }
+
+    @Test
     fun `duplicate events`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -225,7 +246,7 @@ class TracerTest {
     @Test
     fun `remove consumer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
         Tracer.removeTraceEventConsumer(consumer)
 
@@ -239,7 +260,7 @@ class TracerTest {
     @Test
     fun `duplicate consumer`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
         Tracer.addTraceEventConsumer(consumer)
 
@@ -253,8 +274,8 @@ class TracerTest {
     @Test
     fun `multiple consumers`() {
         // GIVEN
-        val consumer1 = spyk(TracerTest.SpecificConsumer())
-        val consumer2 = spyk(TracerTest.SpecificConsumer())
+        val consumer1 = spyk(SpecificConsumer())
+        val consumer2 = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer1)
         Tracer.addTraceEventConsumer(consumer2)
 
@@ -315,7 +336,7 @@ class TracerTest {
             consumer.eventIntsString(eq(10), eq(20), eq("abc"))
 
             // Make sure we only have the last added events here.
-            consumer.equals(consumer)   // Used by 'remove' call.
+            consumer.equals(consumer)   // <-- This call is added because `remove` uses it.
             consumer.eventIntsString(eq(11), eq(22), eq("xyz"))
         }
     }
@@ -369,7 +390,7 @@ class TracerTest {
     @Test
     fun `nullable arguments`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -388,7 +409,7 @@ class TracerTest {
     @Test
     fun `list with null objects`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
@@ -409,7 +430,7 @@ class TracerTest {
     @Test
     fun `array with null objects`() {
         // GIVEN
-        val consumer = spyk(TracerTest.SpecificConsumer())
+        val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN

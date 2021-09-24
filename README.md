@@ -382,17 +382,36 @@ val consumerAll = MyEventConsumerForSomeClass()
 Tracer.addTraceEventConsumer(consumerAll);
 ```
 
-Note that only `GenericTraceEventConsumer`s are able to retrieve the context string passed by the tracer (as it is
-part of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer
-interface), cannot access the context while processing events. 
+Note that only `GenericTraceEventConsumer`s are able to retrieve the context string passed by the tracer (as it is part
+of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer interface), cannot
+access the context while processing events.
+
+### Adding threadlocal diagnostic context to trace events
+
+Similar to adding a regular context string, you can also add more advanced context to trace events that is stored per
+thread that the tracer is being used on to generate events. This is done by adding elements to
+the `TraceDiagnosticContext` map, which is stored as a threadlocal object.
+
+Here's an example of storing additional context in trace events.
+
+```
+TraceDiagnosticContext.put("currentRequest", myRequest)
+```
+
+This would add a map with `{key=currentRequest, value=myRequest}` to each trace event generated in that same thread.
+This is particularly useful if you wish to add threadlocal context information to multiple events.
+
+Note that only `GenericTraceEventConsumer`s are able to retrieve the context map passed by the tracer (as it is part of
+the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer interface), cannot
+access the context while processing events.
 
 ### Advanced examples
 
 Advanced examples of using this trace event mechanism are:
 
-* Sending events to a simulation system, which simulates the environment of the system. For example,
-  an event that the cabin temperature has been set, may be processed by a simulator which uses a
-  trace event consumer to receive such messages.
+* Sending events to a simulation system, which simulates the environment of the system. For example, an event that the
+  cabin temperature has been set, may be processed by a simulator which uses a trace event consumer to receive such
+  messages.
 
 * Displaying events on a dashboard, to gain more insight in the current status of the system, rather
   than having only a scrolling log to look at.
@@ -533,13 +552,18 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.5.0
+
+* Added ability to store threadlocal diagnostic context to trace events. This context can be processed
+  by `GenericTraceEventConsumer`s.
+
 ### 1.4.1
 
 * Updated POM dependencies.
 
 * Replaced deprecated `Channel` methods `offer` and `poll` with current method variants `trySend` and `tryReceive`.
 
-* Replaced some `internal` properties with `private` to be stricter on visibility. 
+* Replaced some `internal` properties with `private` to be stricter on visibility.
 
 * Removed redundant `suspend` modifiers from methods.
 
