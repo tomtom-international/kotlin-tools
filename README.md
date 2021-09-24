@@ -403,8 +403,11 @@ Here's an example of storing additional context in trace events.
 TraceDiagnosticContext.put("currentRequest", myRequest)
 ```
 
-This would add a map with `{currentRequest: myRequest}` to each trace event generated from the same thread
-as this call to `put` was on. 
+This would add a map called `traceDiagnosticContext` to the event with value `{"currentRequest": "myRequest"}` 
+to each trace event generated from the same thread as this call to `put` was on. 
+
+The map `traceDiagnosticContext` is available for `GenericTraceEventConsumer`s only and it is `null` when
+no threadlocal data was stored, or a non-empty map when data was stored.
 
 This is particularly useful for adding information that isn't necessarily available at the location where the
 trace event is generated. Without this feature, such events would require more parameters, just for the sake
@@ -476,11 +479,7 @@ eventSkipToNext(traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
 eventPlaySong(songName = "Breakfast in America", traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
 ```
 
-Now it becomes trivial to see that "Bohemian Rhapsody" was skipped to arrive at "Breakfast in America'.
-
-Note that only `GenericTraceEventConsumer`s are able to retrieve the context map passed by the tracer (as it is part of
-the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer interface), cannot
-access the context while processing events.
+Now it becomes trivial to see that "Bohemian Rhapsody" was skipped to arrive at "Breakfast in America".
 
 ### Advanced examples
 
