@@ -93,11 +93,15 @@ class TracerTest {
         sut.eventNoArgs()
         sut.eventString("abc")
         sut.eventIntsString(10, 20, "abc")
+        sut.eventIntsString(number1 = 10, number2 = 20, message = "abc")
+        sut.eventIntsString(message = "abc", number1 = 10, number2 = 20)
 
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
             consumer.eventString(eq("abc"))
+            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
+            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
             consumer.eventIntsString(eq(10), eq(20), eq("abc"))
         }
     }
@@ -167,11 +171,15 @@ class TracerTest {
         sut.eventNoArgs()
         sut.eventString("xyz")
         sut.eventIntsString(10, 20, "abc")
+        sut.eventIntsString(number1 = 10, number2 = 20, message = "abc")
+        sut.eventIntsString(message = "abc", number1 = 10, number2 = 20)
 
         // THEN
         coVerifySequence {
             consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventNoArgs"))
             consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventString", "xyz"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
             consumer.consumeTraceEvent(traceEq("", null, LogLevel.ERROR, "eventIntsString", 10, 20, "abc"))
         }
     }

@@ -38,7 +38,7 @@ data class TraceEvent(
     val tracerClassName: String,
     val taggingClassName: String,
     val context: String,
-    val traceThreadLocalContext: Map<String, Any?>? = emptyMap(),
+    val traceThreadLocalContext: Map<String, Any?>?,
     val interfaceName: String,
     val stackTraceHolder: Throwable?,
     val eventName: String,
