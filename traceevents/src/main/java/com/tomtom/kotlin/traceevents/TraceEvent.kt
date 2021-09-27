@@ -32,7 +32,7 @@ import java.time.LocalDateTime
  * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
  * @param parameterNames Names of the parameters, in the same order as the `args` values. Normally, you would use
- * `getParametersMap` to access the parameters names and values. If `null` the map could not be created for some reason.
+ * `getNamedParametersMap` to access the parameters names and values. If `null` the map could not be created for some reason.
  * You can still use the `args` array in that case.
  */
 data class TraceEvent(
@@ -57,7 +57,7 @@ data class TraceEvent(
      * Returns an empty map for parameterless methods and `null` if 1 or more parameter names are not
      * available for some reason.
      */
-    fun getParametersMap() = if (parameterNames == null) null else
+    fun getNamedParametersMap() = if (parameterNames == null) null else
         parameterNames.indices.associateBy({ parameterNames[it] }, { args[it] })
 
     /**
