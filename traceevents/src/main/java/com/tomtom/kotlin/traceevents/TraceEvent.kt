@@ -48,16 +48,17 @@ data class TraceEvent(
     val args: Array<Any?>,
     val parameterNames: Array<String>?
 ) {
+    init {
+        check(parameterNames == null || args.size == parameterNames.size)
+    }
+
     /**
      * Get the method parameters as a map that maps the parameter name to its value.
      * Returns an empty map for parameterless methods and `null` if 1 or more parameter names are not
      * available for some reason.
      */
-    fun getParametersMap(): Map<String, Any?>? = if (parameterNames == null) null else {
-        var map = mutableMapOf<String, Any?>()
-        parameterNames.indices.forEach { map[parameterNames[it]] = args[it] }
-        map
-    }
+    fun getParametersMap() = if (parameterNames == null) null else
+        parameterNames.indices.associateBy({ parameterNames[it] }, { args[it] })
 
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
