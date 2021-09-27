@@ -299,7 +299,8 @@ class Tracer private constructor(
 
         /**
          * Get the parameter names for the method.
-         * For performance reasons, Make sure this code is executed only once per method call.
+         * For performance reasons, make sure this code is normally executed only once per method call. Note that
+         * this method may be called by multiple threads, so it must be thread-safe as well.
          * Also make sure the parameter names are only provided if there is exactly 1 name for each parameter only.
          */
         val parameterNames: Array<String>?
