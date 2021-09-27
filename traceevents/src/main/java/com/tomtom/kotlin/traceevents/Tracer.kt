@@ -307,13 +307,11 @@ class Tracer private constructor(
         if (parameterNamesCache.containsKey(method)) {
             parameterNames = parameterNamesCache.get(method)
         } else {
-            val kotlinFunction = method.kotlinFunction
-            parameterNames = if (kotlinFunction == null || args == null) null else {
-                val nonEmptyParametersNames = kotlinFunction.parameters
-                    .filter { it.name != null }.map { it.name!! }.toTypedArray()
-                if (args.size != nonEmptyParametersNames.size) null else {
-                    parameterNamesCache[method] = nonEmptyParametersNames
-                    nonEmptyParametersNames
+            parameterNames = if (args == null) null else {
+                val nonEmptyParameterNames = method.kotlinFunction?.parameters?.mapNotNull { it.name }?.toTypedArray()
+                if (args.size != nonEmptyParameterNames?.size) null else {
+                    parameterNamesCache[method] = nonEmptyParameterNames
+                    nonEmptyParameterNames
                 }
             }
         }

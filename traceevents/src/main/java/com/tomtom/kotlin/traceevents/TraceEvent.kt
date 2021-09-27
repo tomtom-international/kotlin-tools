@@ -54,7 +54,7 @@ data class TraceEvent(
      * available for some reason.
      */
     fun getParametersMap(): Map<String, Any?>? = if (parameterNames == null) null else {
-        var map: MutableMap<String, Any?> = mutableMapOf()
+        var map = mutableMapOf<String, Any?>()
         parameterNames.indices.forEach { map[parameterNames[it]] = args[it] }
         map
     }
