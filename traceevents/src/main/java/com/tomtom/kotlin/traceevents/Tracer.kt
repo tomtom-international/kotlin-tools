@@ -302,10 +302,11 @@ class Tracer private constructor(
             tracerClassName = tracerClassName,
             taggingClassName = taggingClassName,
             context = context,
+            traceThreadLocalContext = TraceThreadLocalContext.getCopyOfContextMap(),
             interfaceName = method.declaringClass.name,
             stackTraceHolder = Throwable(),
             eventName = method.name,
-            args = args ?: arrayOf<Any?>()
+            args = args ?: arrayOf()
         )
 
         /**
@@ -777,8 +778,13 @@ class Tracer private constructor(
                 sb.append(", context=${traceEvent.context}")
             }
 
+            // Thread-local context
+            if (traceEvent.traceThreadLocalContext != null) {
+                sb.append(", traceThreadLocalContext=${traceEvent.traceThreadLocalContext}")
+            }
+
             // Stack trace for last parameter, if it's an exception.
-            if (includeExceptionStackTrace && !traceEvent.args.isEmpty()) {
+            if (includeExceptionStackTrace && traceEvent.args.isNotEmpty()) {
                 (traceEvent.args.last() as? Throwable)?.let {
                     sb.append("\n")
                     sb.append(formatThrowable(it, includeExceptionStackTrace))

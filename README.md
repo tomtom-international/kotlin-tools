@@ -382,17 +382,112 @@ val consumerAll = MyEventConsumerForSomeClass()
 Tracer.addTraceEventConsumer(consumerAll);
 ```
 
-Note that only `GenericTraceEventConsumer`s are able to retrieve the context string passed by the tracer (as it is
-part of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer
-interface), cannot access the context while processing events. 
+Note that only `GenericTraceEventConsumer`s are able to retrieve the context string passed by the tracer (as it is part
+of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer interface), cannot
+access the context while processing events.
+
+### Adding thread-local, or MDC-style diagnostic, context to trace events
+
+Sometimes it's useful to be able to retrieve more dynamic information from a trace event that perhaps
+wasn't even available at the location where the event was generated, but at an earlier time. This effectively
+allows the developer to create much richer events than are normally possible.  
+
+Java logging introduced MDC, mapped diagnostic context, for that. This allowed Java users to add thread-local
+data that was added to log lines. The `tracevents` module allows something similar with the `TraceThreadLocalContext`
+feature.
+
+Here's an example of storing additional context in trace events.
+
+```
+TraceThreadLocalContext.put("currentRequest", myRequest)
+```
+
+This would add a map called `traceThreadLocalContext` to the event with value `{"currentRequest": "myRequest"}` 
+to each trace event generated from the same thread as this call to `put` was on. 
+
+The map `traceThreadLocalContext` is available for `GenericTraceEventConsumer`s only and it is `null` when
+no thread-local data was stored, or a non-empty map when data was stored.
+
+This is particularly useful for adding information that isn't necessarily available at the location where the
+trace event is generated. Without this feature, such events would require more parameters, just for the sake
+of adding context to events, which would clutter the main code. 
+
+For example, suppose you've written a media player and wish to generate a `skipToNext` event when the user
+presses the "skip to next" button. You would like to know the current song name when the 
+user presses the button, but that information is not available in the "skip to next" method.
+
+Let's have a look at what this looks like without the `TraceThreadLocalContext`.
+
+Let's assume the media player always plays random songs and when you press "skip to next" it selects a
+new random song. The interface for the events for the media player could look like:
+
+```
+interface MediaPlayerEvents : TraceEventListener {
+    fun eventPlaySong(songName: String)
+    fun eventSkipToNext()
+}
+```
+
+And the events to log the song name, the playing position, and the skip to next event, would be generated in
+different methods:
+
+```
+fun playRandomSong() {
+    val song = chooseRandomSong(allSongs)
+    eventPlaySong(song.name)    // <-- generate an event with the current song name
+    startPlaying(song)
+}
+
+fun userPressedNext() {
+    eventSkipToNext()           // <-- generate the sip to next event
+    playRandomSong()
+}
+```
+
+When this code is run, you'll get events like:
+
+```
+eventPlaySong(songName = "Dancing Queen")
+eventPlaySong(songName = "Bohemian Rhapsody")
+eventSkipToNext()
+eventPlaySong(songName = "Breakfast in America")
+```
+
+Especially when these events are interlaced with other events, it becomes really hard to figure out which
+song was playing then "skip to next" was pressed. And if the program is multi-threaded, it becomes undoable.
+
+Now, let's have a look at the code when `TraceThreadLocalContext` is used. Eveything remains the same except
+for the implementation of `playRandomSong`:
+
+
+```
+fun playRandomSong() {
+    val song = chooseRandomSong(allSongs)
+    TraceThreadLocalContext.put("songName", song.name) // <-- store the song name in (thread-local) data
+    eventPlaySong(song.name)                          // <-- generate an event with the current song name
+    startPlaying(song)
+}
+```
+
+The events that are generated now, look like this:
+
+```
+eventPlaySong(songName = "Dancing Queen", traceThreadLocalContext = null)
+eventPlaySong(songName = "Bohemian Rhapsody", traceThreadLocalContext = {"songName": "Dancing Queen"})
+eventSkipToNext(traceThreadLocalContext = {"songName": "Bohemian Rhapsody"})
+eventPlaySong(songName = "Breakfast in America", traceThreadLocalContext = {"songName": "Bohemian Rhapsody"})
+```
+
+Now it becomes trivial to see that "Bohemian Rhapsody" was skipped, and that "Breakfast in America" was played
+before that.
 
 ### Advanced examples
 
 Advanced examples of using this trace event mechanism are:
 
-* Sending events to a simulation system, which simulates the environment of the system. For example,
-  an event that the cabin temperature has been set, may be processed by a simulator which uses a
-  trace event consumer to receive such messages.
+* Sending events to a simulation system, which simulates the environment of the system. For example, an event that the
+  cabin temperature has been set, may be processed by a simulator which uses a trace event consumer to receive such
+  messages.
 
 * Displaying events on a dashboard, to gain more insight in the current status of the system, rather
   than having only a scrolling log to look at.
@@ -533,13 +628,18 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.5.0
+
+* Added ability to store thread-local (MDC-style) context to trace events using `TraceThreadLocalContext`. 
+  This context can be processed by `GenericTraceEventConsumer`s. Initial idea by Chris Owen.
+
 ### 1.4.1
 
 * Updated POM dependencies.
 
 * Replaced deprecated `Channel` methods `offer` and `poll` with current method variants `trySend` and `tryReceive`.
 
-* Replaced some `internal` properties with `private` to be stricter on visibility. 
+* Replaced some `internal` properties with `private` to be stricter on visibility.
 
 * Removed redundant `suspend` modifiers from methods.
 
