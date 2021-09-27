@@ -91,7 +91,7 @@ fun setUpTracerTest() {
     /**
      * For every test case remove all consumer, cancel the processor (which will be restarted
      * at next add consumer) and flush all events. Make sure that when the processor starts,
-     * it starts on the thread of this test and clear all threadlocal data.
+     * it starts on the thread of this test and clears all threadlocal data.
      */
     runBlocking {
         TraceDiagnosticContext.clear()
