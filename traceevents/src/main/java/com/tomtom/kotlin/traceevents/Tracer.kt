@@ -25,9 +25,11 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmName
+import kotlin.reflect.jvm.kotlinFunction
 
 
 /**
@@ -157,6 +159,7 @@ class Tracer private constructor(
     private val context: String
 ) : InvocationHandler {
     private val logTag = stripPackageFromClassName(tracerClassName)
+    private val parameterNamesCache: ConcurrentHashMap<Method, Array<String>> = ConcurrentHashMap()
 
     class Factory {
         companion object {
@@ -296,8 +299,22 @@ class Tracer private constructor(
 
         /**
          * Get the parameter names for the method.
+         * For performance reasons, Make sure this code is executed only once per method call.
          */
-        val parameterNames = method.parameters.map{ it.name }
+        val parameterNames: Array<String>
+        if (parameterNamesCache.containsKey(method)) {
+            parameterNames = parameterNamesCache.get(method)!!
+        } else {
+            val kotlinFunction = method.kotlinFunction
+            if (kotlinFunction == null) {
+                parameterNames = arrayOf()
+            } else {
+                parameterNames = kotlinFunction.parameters.filter { it.name != null }.map { it.name!! }.toTypedArray()
+            }
+
+            // The cache may be updated in parallel by multiple threads, so make sure we use a concurrent hash map.
+            parameterNamesCache.put(method, parameterNames)
+        }
 
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
@@ -312,7 +329,7 @@ class Tracer private constructor(
             stackTraceHolder = Throwable(),
             eventName = method.name,
             args = args ?: arrayOf(),
-            parameterNames = parameterNames.toTypedArray()
+            parameterNames = parameterNames
         )
 
         /**

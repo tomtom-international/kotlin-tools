@@ -16,6 +16,7 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
+import io.mockk.MockKMatcherScope
 import io.mockk.coVerify
 import io.mockk.coVerifySequence
 import io.mockk.spyk
@@ -25,6 +26,7 @@ import kotlinx.coroutines.runBlocking
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Before
 import org.junit.Test
+import kotlin.reflect.jvm.jvmName
 import kotlin.test.assertEquals
 
 class TracerTest {
@@ -76,6 +78,24 @@ class TracerTest {
         val sutOther = Tracer.Factory.create<MyEvents>(this, "another tracer")
         val sutWrong = Tracer.Factory.create<WrongListener>(this)
         val sutWithoutToString = Tracer.Factory.create<ListenerWithoutToString>(this)
+
+        fun MockKMatcherScope.traceEq(
+            context: String,
+            traceThreadLocalContext: Map<String, Any?>? = null,
+            logLevel: LogLevel,
+            functionName: String,
+            vararg args: Any
+        ) =
+            match<TraceEvent> { traceEvent ->
+                traceEvent.logLevel == logLevel &&
+                        traceEvent.taggingClassName == TracerTest::class.jvmName &&
+                        traceEvent.context == context &&
+                        traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
+                        traceEvent.interfaceName == MyEvents::class.jvmName &&
+                        traceEvent.eventName == functionName &&
+                        traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                        traceEvent.args.contentDeepEquals(args)
+            }
     }
 
     @Before

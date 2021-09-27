@@ -628,6 +628,12 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.5.1
+
+* Added `getParametersMap` to `TraceEvent`, which allows generic trace event consumers to access parameters and 
+their values through a map that maps parameters names to their values. The other way to access parameter values
+is by using `args`, which is an array with paramters values, in the order of the method declaration.  
+
 ### 1.5.0
 
 * Added ability to store thread-local (MDC-style) context to trace events using `TraceThreadLocalContext`. 

@@ -31,6 +31,8 @@ import java.time.LocalDateTime
  * @param stackTraceHolder Throwable from which a stack trace can be produced. `null` when unavailable.
  * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
+ * @param parameterNames Names of the parameters, in the same order as the `args` values. Normally, you would use
+ * `getParametersMap` to access the parameters names and values.
  */
 data class TraceEvent(
     val dateTime: LocalDateTime,
@@ -45,6 +47,16 @@ data class TraceEvent(
     val args: Array<Any?>,
     val parameterNames: Array<String>
 ) {
+    /**
+     * Get the method parameters as a map that maps the parameter name to its value.
+     */
+    fun getParametersMap(): Map<String, Any?> {
+        assert(args.size == parameterNames.size)
+        var map: MutableMap<String, Any?> = mutableMapOf()
+        args.indices.forEach { map.put(parameterNames[it], args[it]) }
+        return map
+    }
+
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
      * an `Array`. Otherwise, `equals` would always return `false`.

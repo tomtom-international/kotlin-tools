@@ -16,39 +16,55 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import io.mockk.coVerify
+import io.mockk.MockKMatcherScope
 import io.mockk.coVerifySequence
 import io.mockk.spyk
-import io.mockk.verify
-import io.mockk.verifySequence
-import kotlinx.coroutines.runBlocking
-import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Before
 import org.junit.Test
+import kotlin.reflect.jvm.jvmName
 import kotlin.test.assertEquals
 
 class NamedParametersTest {
 
     interface MyEvents : TraceEventListener {
-        fun eventNoArgs()
-        fun eventWithParameters(message: String, someInt: Int, anyList: List<Int>)
+        fun event()
+        fun event(message: String, someInt: Int, anyList: List<Int>)
     }
 
     class SpecificConsumer : MyEvents, TraceEventConsumer {
-        override fun eventNoArgs() {}
-        override fun eventWithParameters(message: String, someInt: Int, anyList: List<Int>) {
+        override fun event() {}
+        override fun event(message: String, someInt: Int, anyList: List<Int>) {
 
         }
     }
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent}")
+            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.getParametersMap()}")
     }
 
     companion object {
         val TAG = TracerTest::class.simpleName
         val sut = Tracer.Factory.create<MyEvents>(this)
+
+        fun MockKMatcherScope.traceEq(
+            context: String,
+            traceThreadLocalContext: Map<String, Any?>? = null,
+            logLevel: LogLevel,
+            functionName: String,
+            vararg args: Any
+        ) =
+            match<TraceEvent> { traceEvent ->
+                val eq = traceEvent.logLevel == logLevel &&
+                        traceEvent.taggingClassName == NamedParametersTest::class.jvmName &&
+                        traceEvent.context == context &&
+                        traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
+                        traceEvent.interfaceName == MyEvents::class.jvmName &&
+                        traceEvent.eventName == functionName &&
+                        traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                        traceEvent.args.contentDeepEquals(args)
+                eq
+            }
     }
 
     @Before
@@ -57,38 +73,69 @@ class NamedParametersTest {
     }
 
     @Test
-    fun `use named parameters in a pecific consumer`() {
+    fun `use named parameters in specific consumer`() {
         // GIVEN
         val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
-        sut.eventNoArgs()
-        sut.eventWithParameters(message = "my string", someInt = 123, anyList = listOf(1, 2, 3))
-        sut.eventWithParameters("my string", 123, listOf(1, 2, 3))
+        sut.event()
+        sut.event(anyList = listOf(1, 2, 3), message = "my string", someInt = 123)
+        sut.event(message = "more", someInt = 456, anyList = listOf(5))
+        sut.event("final", 789, listOf())
 
         // THEN
         coVerifySequence {
-            consumer.eventNoArgs()
-            consumer.eventWithParameters(eq("my string"), eq(123), eq(listOf(1, 2, 3)))
+            consumer.event()
+            consumer.event(eq("my string"), eq(123), eq(listOf(1, 2, 3)))
+            consumer.event(eq("more"), eq(456), eq(listOf(5)))
+            consumer.event(eq("final"), eq(789), eq(listOf()))
         }
     }
 
     @Test
-    fun `use named parameters generic consumer with no context`() {
+    fun `use named parameters in generic consumer`() {
         // GIVEN
         val consumer = spyk(GenericConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
-        sut.eventNoArgs()
-        sut.eventWithParameters("my string", 123, listOf(1, 2, 3))
+        sut.event()
+        sut.event(anyList = listOf(1, 2, 3), message = "my string", someInt = 123)
+        sut.event(message = "more", someInt = 456, anyList = listOf(5))
+        sut.event("final", 789, listOf())
 
         // THEN
         coVerifySequence {
-            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "eventNoArgs"))
-            consumer.consumeTraceEvent(traceEq("", null, LogLevel.ERROR,
-                "eventWithParameters", "my string", 123, listOf(1, 2, 3)))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "event"))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "event", "my string", 123, listOf(1, 2, 3)))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "event", "more", 456, listOf(5)))
+            consumer.consumeTraceEvent(traceEq("", null, LogLevel.DEBUG, "event", "final", 789, listOf<Int>()))
         }
+    }
+
+    @Test
+    fun `use named parameters in generic consumer with map`() {
+        // GIVEN
+        val consumer = spyk(GenericConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        val actual = captureStdoutReplaceTime(TIME) {
+
+            // WHEN
+            sut.event(anyList = listOf(1, 2, 3), message = "my string", someInt = 123)
+            sut.event(message = "more", someInt = 456, anyList = listOf(5))
+            sut.event("final", 789, listOf())
+        }
+
+        // THEN
+        val expected =
+            "$TIME DEBUG NamedParametersTest: event=event(my string, 123, [1, 2, 3])\n" +
+                    "$TIME DEBUG TAG: {message=my string, someInt=123, anyList=[1, 2, 3]}\n" +
+                    "$TIME DEBUG NamedParametersTest: event=event(more, 456, [5])\n" +
+                    "$TIME DEBUG TAG: {message=more, someInt=456, anyList=[5]}\n" +
+                    "$TIME DEBUG NamedParametersTest: event=event(final, 789, [])\n" +
+                    "$TIME DEBUG TAG: {message=final, someInt=789, anyList=[]}\n"
+        assertEquals(expected, actual)
     }
 }
