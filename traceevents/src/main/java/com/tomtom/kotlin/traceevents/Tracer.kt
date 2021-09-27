@@ -294,6 +294,11 @@ class Tracer private constructor(
             return null
         }
 
+        /**
+         * Get the parameter names for the method.
+         */
+        val parameterNames = method.parameters.map{ it.name }
+
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
         val event = TraceEvent(
@@ -306,7 +311,8 @@ class Tracer private constructor(
             interfaceName = method.declaringClass.name,
             stackTraceHolder = Throwable(),
             eventName = method.name,
-            args = args ?: arrayOf()
+            args = args ?: arrayOf(),
+            parameterNames = parameterNames.toTypedArray()
         )
 
         /**

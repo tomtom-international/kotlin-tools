@@ -42,7 +42,8 @@ data class TraceEvent(
     val interfaceName: String,
     val stackTraceHolder: Throwable?,
     val eventName: String,
-    val args: Array<Any?>
+    val args: Array<Any?>,
+    val parameterNames: Array<String>
 ) {
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
@@ -64,6 +65,7 @@ data class TraceEvent(
         if (stackTraceHolder != other.stackTraceHolder) return false
         if (eventName != other.eventName) return false
         if (!args.contentDeepEquals(other.args)) return false
+        if (!parameterNames.contentEquals(other.parameterNames)) return false
 
         return true
     }
@@ -79,6 +81,7 @@ data class TraceEvent(
         result = 31 * result + (stackTraceHolder?.hashCode() ?: 0)
         result = 31 * result + eventName.hashCode()
         result = 31 * result + args.contentDeepHashCode()
+        result = 31 * result + parameterNames.contentHashCode()
         return result
     }
 }
