@@ -300,20 +300,21 @@ class Tracer private constructor(
         /**
          * Get the parameter names for the method.
          * For performance reasons, Make sure this code is executed only once per method call.
+         * Also make sure the parameter names are only provided if there is exactly 1 name for each parameter only.
          */
-        val parameterNames: Array<String>
+        val parameterNames: Array<String>?
         if (parameterNamesCache.containsKey(method)) {
-            parameterNames = parameterNamesCache.get(method)!!
+            parameterNames = parameterNamesCache.get(method)
         } else {
             val kotlinFunction = method.kotlinFunction
-            if (kotlinFunction == null) {
-                parameterNames = arrayOf()
-            } else {
-                parameterNames = kotlinFunction.parameters.filter { it.name != null }.map { it.name!! }.toTypedArray()
+            parameterNames = if (kotlinFunction == null || args == null) null else {
+                val nonEmptyParametersNames = kotlinFunction.parameters
+                    .filter { it.name != null }.map { it.name!! }.toTypedArray()
+                if (args.size != nonEmptyParametersNames.size) null else {
+                    parameterNamesCache[method] = nonEmptyParametersNames
+                    nonEmptyParametersNames
+                }
             }
-
-            // The cache may be updated in parallel by multiple threads, so make sure we use a concurrent hash map.
-            parameterNamesCache.put(method, parameterNames)
         }
 
         // Send the event to the event processor consumer, non-blocking.
