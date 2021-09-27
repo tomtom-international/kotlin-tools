@@ -29,7 +29,7 @@ import kotlin.reflect.jvm.jvmName
  */
 fun MockKMatcherScope.traceEq(
     context: String,
-    traceDiagnosticContext: Map<String, Any?>? = null,
+    traceThreadLocalContext: Map<String, Any?>? = null,
     logLevel: LogLevel,
     functionName: String,
     vararg args: Any
@@ -39,7 +39,7 @@ fun MockKMatcherScope.traceEq(
         traceEvent.logLevel == logLevel &&
                 traceEvent.taggingClassName == TracerTest::class.jvmName &&
                 traceEvent.context == context &&
-                traceEvent.traceDiagnosticContext == traceDiagnosticContext &&
+                traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
                 traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
                 traceEvent.eventName == functionName &&
                 traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
@@ -91,10 +91,10 @@ fun setUpTracerTest() {
     /**
      * For every test case remove all consumer, cancel the processor (which will be restarted
      * at next add consumer) and flush all events. Make sure that when the processor starts,
-     * it starts on the thread of this test and clears all threadlocal data.
+     * it starts on the thread of this test and clears all thread-local data.
      */
     runBlocking {
-        TraceDiagnosticContext.clear()
+        TraceThreadLocalContext.clear()
         TraceLog.setLogger()
         Tracer.eventProcessorScope = CoroutineScope(Dispatchers.Unconfined)
         Tracer.setTraceEventLoggingMode(Tracer.Companion.LoggingMode.SYNC)

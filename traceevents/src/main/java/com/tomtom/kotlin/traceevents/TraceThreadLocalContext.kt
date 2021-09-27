@@ -16,12 +16,12 @@
 package com.tomtom.kotlin.traceevents
 
 /**
- * This class allows storing ThreadLocal trace context.
+ * This class allows storing thread-local trace context.
  *
  * Inspired by basic MDC implementation from org.org.slf4j.helpers.BasicMDCAdapter.
  * This implementation allows storing any object type, not just strings, in a map.
  */
-object TraceDiagnosticContext {
+object TraceThreadLocalContext {
 
     private val inheritableThreadLocal = object : InheritableThreadLocal<MutableMap<String, Any>?>() {
         fun childValue(parentValue: Map<String, Any>?) = parentValue?.let { HashMap(it) }

@@ -386,28 +386,27 @@ Note that only `GenericTraceEventConsumer`s are able to retrieve the context str
 of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer interface), cannot
 access the context while processing events.
 
-### Adding threadlocal diagnostic context to trace events
+### Adding thread-local, or MDC-style diagnostic, context to trace events
 
-The `context` mechanism described above is specifically for differentiating between multiple tracers.
-But sometimes it's useful to be able to retrieve more dynamic information from a trace event that perhaps
+Sometimes it's useful to be able to retrieve more dynamic information from a trace event that perhaps
 wasn't even available at the location where the event was generated, but at an earlier time. This effectively
 allows the developer to create much richer events than are normally possible.  
 
-Java logging introduced MDC, mapped diagnostic context, for that. This allowed Java users to add threadlocal
-data that was added to log lines. The `tracevents` module allows something similar with the `TraceDiagnosticContext`
+Java logging introduced MDC, mapped diagnostic context, for that. This allowed Java users to add thread-local
+data that was added to log lines. The `tracevents` module allows something similar with the `TraceThreadLocalContext`
 feature.
 
 Here's an example of storing additional context in trace events.
 
 ```
-TraceDiagnosticContext.put("currentRequest", myRequest)
+TraceThreadLocalContext.put("currentRequest", myRequest)
 ```
 
-This would add a map called `traceDiagnosticContext` to the event with value `{"currentRequest": "myRequest"}` 
+This would add a map called `traceThreadLocalContext` to the event with value `{"currentRequest": "myRequest"}` 
 to each trace event generated from the same thread as this call to `put` was on. 
 
-The map `traceDiagnosticContext` is available for `GenericTraceEventConsumer`s only and it is `null` when
-no threadlocal data was stored, or a non-empty map when data was stored.
+The map `traceThreadLocalContext` is available for `GenericTraceEventConsumer`s only and it is `null` when
+no thread-local data was stored, or a non-empty map when data was stored.
 
 This is particularly useful for adding information that isn't necessarily available at the location where the
 trace event is generated. Without this feature, such events would require more parameters, just for the sake
@@ -417,7 +416,7 @@ For example, suppose you've written a media player and wish to generate a `skipT
 presses the "skip to next" button. You would like to know the current song name when the 
 user presses the button, but that information is not available in the "skip to next" method.
 
-Let's have a look at what this looks like without the `TraceDiagnosticContext`.
+Let's have a look at what this looks like without the `TraceThreadLocalContext`.
 
 Let's assume the media player always plays random songs and when you press "skip to next" it selects a
 new random song. The interface for the events for the media player could look like:
@@ -457,14 +456,14 @@ eventPlaySong(songName = "Breakfast in America")
 Especially when these events are interlaced with other events, it becomes really hard to figure out which
 song was playing then "skip to next" was pressed. And if the program is multi-threaded, it becomes undoable.
 
-Now, let's have a look at the code when `TraceDiagnosticContext` is used. Eveything remains the same except
+Now, let's have a look at the code when `TraceThreadLocalContext` is used. Eveything remains the same except
 for the implementation of `playRandomSong`:
 
 
 ```
 fun playRandomSong() {
     val song = chooseRandomSong(allSongs)
-    TraceDiagnosticContext.put("songName", song.name) // <-- store the song name in (threadlocal) data
+    TraceThreadLocalContext.put("songName", song.name) // <-- store the song name in (thread-local) data
     eventPlaySong(song.name)                          // <-- generate an event with the current song name
     startPlaying(song)
 }
@@ -473,10 +472,10 @@ fun playRandomSong() {
 The events that are generated now, look like this:
 
 ```
-eventPlaySong(songName = "Dancing Queen", traceDiagnosticContext = null)
-eventPlaySong(songName = "Bohemian Rhapsody", traceDiagnosticContext = {"songName": "Dancing Queen"})
-eventSkipToNext(traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
-eventPlaySong(songName = "Breakfast in America", traceDiagnosticContext = {"songName": "Bohemian Rhapsody"})
+eventPlaySong(songName = "Dancing Queen", traceThreadLocalContext = null)
+eventPlaySong(songName = "Bohemian Rhapsody", traceThreadLocalContext = {"songName": "Dancing Queen"})
+eventSkipToNext(traceThreadLocalContext = {"songName": "Bohemian Rhapsody"})
+eventPlaySong(songName = "Breakfast in America", traceThreadLocalContext = {"songName": "Bohemian Rhapsody"})
 ```
 
 Now it becomes trivial to see that "Bohemian Rhapsody" was skipped, and that "Breakfast in America" was played
@@ -625,14 +624,14 @@ And then choose the pre-defined style `Kotlin Style Guide`. Voila!
 
 Author: Rijn Buve
 
-Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski, Chris Owen
+Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
 ### 1.5.0
 
-* Added ability to store threadlocal diagnostic context to trace events. This context can be processed
-  by `GenericTraceEventConsumer`s. Initial idea by Chris Owen.
+* Added ability to store thread-local (MDC-style) context to trace events using `TraceThreadLocalContext`. 
+  This context can be processed by `GenericTraceEventConsumer`s. Initial idea by Chris Owen.
 
 ### 1.4.1
 

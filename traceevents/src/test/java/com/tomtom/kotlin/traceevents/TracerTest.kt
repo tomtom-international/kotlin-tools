@@ -211,14 +211,14 @@ class TracerTest {
     }
 
     @Test
-    fun `generic consumer with diagnostic context`() {
+    fun `generic consumer with thread-local context`() {
         // GIVEN
         val consumer = spyk(GenericConsumer())
         Tracer.addTraceEventConsumer(consumer)
 
         // WHEN
         sut.eventNoArgs()
-        TraceDiagnosticContext.put("id", 123)
+        TraceThreadLocalContext.put("id", 123)
         sut.eventNoArgs()
 
 
