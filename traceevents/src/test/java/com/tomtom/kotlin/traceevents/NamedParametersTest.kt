@@ -40,7 +40,7 @@ class NamedParametersTest {
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.getNamedParametersMap()}}")
+            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.getNamedParametersMap()}")
     }
 
     @Before

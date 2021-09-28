@@ -306,13 +306,12 @@ class Tracer private constructor(
          * this method may be called by multiple threads, so it must be thread-safe as well.
          * Also make sure the parameter names are only provided if there is exactly 1 name for each parameter only.
          */
-        val parameterNames: Array<String>? =
-            parameterNamesCache.getOrPut(method) {
-                method.kotlinFunction?.parameters
-                    ?.mapNotNull { it.name }
-                    ?.takeIf { it.size == args?.size }
-                    ?.toTypedArray()
-            }
+        val parameterNames = parameterNamesCache[method] ?: method.kotlinFunction
+            ?.parameters
+            ?.mapNotNull { it.name }
+            ?.takeIf { it.size == args?.size }
+            ?.toTypedArray()
+            ?.also { parameterNamesCache[method] = it }
 
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
