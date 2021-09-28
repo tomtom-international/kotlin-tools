@@ -40,31 +40,7 @@ class NamedParametersTest {
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.getNamedParametersMap()}")
-    }
-
-    companion object {
-        val TAG = TracerTest::class.simpleName
-        val sut = Tracer.Factory.create<MyEvents>(this)
-
-        fun MockKMatcherScope.traceEq(
-            context: String,
-            traceThreadLocalContext: Map<String, Any?>? = null,
-            logLevel: LogLevel,
-            functionName: String,
-            vararg args: Any
-        ) =
-            match<TraceEvent> { traceEvent ->
-                val eq = traceEvent.logLevel == logLevel &&
-                        traceEvent.taggingClassName == NamedParametersTest::class.jvmName &&
-                        traceEvent.context == context &&
-                        traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
-                        traceEvent.interfaceName == MyEvents::class.jvmName &&
-                        traceEvent.eventName == functionName &&
-                        traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-                        traceEvent.args.contentDeepEquals(args)
-                eq
-            }
+            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.getNamedParametersMap()}}")
     }
 
     @Before
@@ -137,5 +113,29 @@ class NamedParametersTest {
                     "$TIME DEBUG NamedParametersTest: event=event(final, 789, [])\n" +
                     "$TIME DEBUG TAG: {message=final, someInt=789, anyList=[]}\n"
         assertEquals(expected, actual)
+    }
+
+    companion object {
+        val TAG = TracerTest::class.simpleName
+        val sut = Tracer.Factory.create<MyEvents>(this)
+
+        fun MockKMatcherScope.traceEq(
+            context: String,
+            traceThreadLocalContext: Map<String, Any?>? = null,
+            logLevel: LogLevel,
+            functionName: String,
+            vararg args: Any
+        ) =
+            match<TraceEvent> { traceEvent ->
+                val eq = traceEvent.logLevel == logLevel &&
+                    traceEvent.taggingClassName == NamedParametersTest::class.jvmName &&
+                    traceEvent.context == context &&
+                    traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
+                    traceEvent.interfaceName == MyEvents::class.jvmName &&
+                    traceEvent.eventName == functionName &&
+                    traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                    traceEvent.args.contentDeepEquals(args)
+                eq
+            }
     }
 }

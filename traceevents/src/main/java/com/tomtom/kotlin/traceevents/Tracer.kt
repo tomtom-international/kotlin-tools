@@ -177,7 +177,10 @@ class Tracer private constructor(
              * @return [TraceEventListener]-derived object, normally called the "tracer", to be used
              *     as `tracer.someEvent()`.
              */
-            inline fun <reified T : TraceEventListener> create(taggingObject: Any, context: String = "") =
+            inline fun <reified T : TraceEventListener> create(
+                taggingObject: Any,
+                context: String = ""
+            ) =
                 createForListener_internal<T>(
                     tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
@@ -303,18 +306,13 @@ class Tracer private constructor(
          * this method may be called by multiple threads, so it must be thread-safe as well.
          * Also make sure the parameter names are only provided if there is exactly 1 name for each parameter only.
          */
-        val parameterNames: Array<String>?
-        if (parameterNamesCache.containsKey(method)) {
-            parameterNames = parameterNamesCache.get(method)
-        } else {
-            parameterNames = if (args == null) null else {
-                val nonEmptyParameterNames = method.kotlinFunction?.parameters?.mapNotNull { it.name }?.toTypedArray()
-                if (args.size != nonEmptyParameterNames?.size) null else {
-                    parameterNamesCache[method] = nonEmptyParameterNames
-                    nonEmptyParameterNames
-                }
+        val parameterNames: Array<String>? =
+            parameterNamesCache.getOrPut(method) {
+                method.kotlinFunction?.parameters
+                    ?.mapNotNull { it.name }
+                    ?.takeIf { it.size == args?.size }
+                    ?.toTypedArray()
             }
-        }
 
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
@@ -444,8 +442,8 @@ class Tracer private constructor(
                 LogLevel.WARN,
                 logTag,
                 "Trace event channel is full, " +
-                        "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
-                        "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
+                    "nrLostTraceEventsSinceLastMsg=$nrLostTraceEventsSinceLastMsg, " +
+                    "nrLostTraceEventsTotal=$nrLostTraceEventsTotal"
             )
             nrLostTraceEventsSinceLastMsg = 0L
             timeLastLostTraceEvent = now
@@ -566,7 +564,10 @@ class Tracer private constructor(
          * @param contextRegex Regular expression to filter trace events. Only events from tracers with a context
          * that matches the regular expression will be received. If omitted, or `null`, all events will be received.
          */
-        fun addTraceEventConsumer(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+        fun addTraceEventConsumer(
+            traceEventConsumer: TraceEventConsumer,
+            contextRegex: Regex? = null
+        ) {
             traceEventConsumers.add(traceEventConsumer, contextRegex)
 
             /**
@@ -589,7 +590,10 @@ class Tracer private constructor(
          * @param contextRegex If this is `null`, all trace event consumers for the same tracers will be removed.
          * Otherwise only the specific trace event consumer for that regular expression is removed.
          */
-        fun removeTraceEventConsumer(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+        fun removeTraceEventConsumer(
+            traceEventConsumer: TraceEventConsumer,
+            contextRegex: Regex? = null
+        ) {
             traceEventConsumers.remove(traceEventConsumer, contextRegex)
         }
 
@@ -600,7 +604,8 @@ class Tracer private constructor(
          * trace event consumer for specific contexts are removed.
          */
         fun removeAllTraceEventConsumers(contextRegex: Regex? = null) {
-            traceEventConsumers.all().asSequence().forEach { removeTraceEventConsumer(it, contextRegex) }
+            traceEventConsumers.all().asSequence()
+                .forEach { removeTraceEventConsumer(it, contextRegex) }
         }
 
         /**
@@ -688,20 +693,20 @@ class Tracer private constructor(
             if (args == null || args.isEmpty() ||
                 args[0] == null || args[0]!!::class != String::class ||
                 (args.size == 2 &&
-                        args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
+                    args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
                 args.size > 2
             ) {
                 TraceLog.log(
                     LogLevel.ERROR,
                     TAG,
                     "Incorrect log call, expected arguments (String, Throwable), " +
-                            "args=${
-                                args?.joinToString {
-                                    it?.let {
-                                        it.javaClass.simpleName + ":" + it.toString()
-                                    } ?: "null"
-                                }
-                            }"
+                        "args=${
+                            args?.joinToString {
+                                it?.let {
+                                    it.javaClass.simpleName + ":" + it.toString()
+                                } ?: "null"
+                            }
+                        }"
                 )
                 return false
             }
@@ -868,7 +873,7 @@ class Tracer private constructor(
                  */
                 val item = stack[i + 2]
                 "${item.fileName ?: "(unknown)"}:${item.methodName}(" +
-                        "${if (item.lineNumber >= 0) item.lineNumber.toString() else "unknown"})"
+                    "${if (item.lineNumber >= 0) item.lineNumber.toString() else "unknown"})"
             } else {
 
                 // This shouldn't happen, but we certainly shouldn't throw here.
