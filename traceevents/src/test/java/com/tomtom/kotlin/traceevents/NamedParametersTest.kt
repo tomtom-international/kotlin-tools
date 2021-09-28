@@ -63,9 +63,9 @@ class NamedParametersTest {
         // THEN
         coVerifySequence {
             consumer.event()
-            consumer.event(eq("my string"), eq(123), eq(listOf(1, 2, 3)))
-            consumer.event(eq("more"), eq(456), eq(listOf(5)))
-            consumer.event(eq("final"), eq(789), eq(listOf()))
+            consumer.event("my string", 123, listOf(1, 2, 3))
+            consumer.event("more", 456, listOf(5))
+            consumer.event("final", 789, listOf())
         }
     }
 

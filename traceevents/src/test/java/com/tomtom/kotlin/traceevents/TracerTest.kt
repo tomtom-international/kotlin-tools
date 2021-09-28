@@ -92,10 +92,10 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString(eq("abc"))
-            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
-            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
-            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
+            consumer.eventString("abc")
+            consumer.eventIntsString(10, 20, "abc")
+            consumer.eventIntsString(10, 20, "abc")
+            consumer.eventIntsString(10, 20, "abc")
         }
     }
 
@@ -113,8 +113,8 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString(eq("abc"))
-            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
+            consumer.eventString("abc")
+            consumer.eventIntsString(10, 20, "abc")
         }
     }
 
@@ -131,7 +131,7 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumer.eventString(eq("abc"))
+            consumer.eventString("abc")
         }
     }
 
@@ -351,8 +351,8 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString(eq("abc"))
-            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
+            consumer.eventString("abc")
+            consumer.eventIntsString(10, 20, "abc")
         }
 
         // WHEN
@@ -378,12 +378,12 @@ class TracerTest {
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
-            consumer.eventString(eq("abc"))
-            consumer.eventIntsString(eq(10), eq(20), eq("abc"))
+            consumer.eventString("abc")
+            consumer.eventIntsString(10, 20, "abc")
 
             // Make sure we only have the last added events here.
             consumer.equals(consumer)   // <-- This call is added because `remove` uses it.
-            consumer.eventIntsString(eq(11), eq(22), eq("xyz"))
+            consumer.eventIntsString(11, 22, "xyz")
         }
     }
 
@@ -401,9 +401,9 @@ class TracerTest {
 
         // THEN
         verifySequence {
-            consumer.d(eq("abc"))
-            consumer.d(eq("null"), isNull())
-            consumer.d(eq("non-null"), eq(e))
+            consumer.d("abc")
+            consumer.d("null", isNull())
+            consumer.d("non-null", e)
         }
     }
 
@@ -425,11 +425,11 @@ class TracerTest {
             consumer.incorrectLogSignatureFound()
             consumer.v()
             consumer.incorrectLogSignatureFound()
-            consumer.d(eq(1))
+            consumer.d(1)
             consumer.incorrectLogSignatureFound()
-            consumer.i(eq("test"), eq(2))
+            consumer.i("test", 2)
             consumer.incorrectLogSignatureFound()
-            consumer.w(eq("test"), eq(e), 3)
+            consumer.w("test", e, 3)
         }
     }
 
@@ -446,9 +446,9 @@ class TracerTest {
 
         // THEN
         verifySequence {
-            consumer.eventNullable(eq(1))
+            consumer.eventNullable(1)
             consumer.eventNullable(isNull())
-            consumer.eventNullable(eq(2))
+            consumer.eventNullable(2)
         }
     }
 
@@ -466,10 +466,10 @@ class TracerTest {
 
         // THEN
         verifySequence {
-            consumer.eventList(eq(listOf<Int?>(1, 2)))
-            consumer.eventList(eq(listOf<Int?>(3, null)))
-            consumer.eventList(eq(listOf<Int?>(null, 4)))
-            consumer.eventList(eq(listOf<Int?>(null, null)))
+            consumer.eventList(listOf<Int?>(1, 2))
+            consumer.eventList(listOf<Int?>(3, null))
+            consumer.eventList(listOf<Int?>(null, 4))
+            consumer.eventList(listOf<Int?>(null, null))
         }
     }
 
@@ -487,10 +487,10 @@ class TracerTest {
 
         // THEN
         verifySequence {
-            consumer.eventArray(eq(arrayOf<Int?>(1, 2)))
-            consumer.eventArray(eq(arrayOf<Int?>(3, null)))
-            consumer.eventArray(eq(arrayOf<Int?>(null, 4)))
-            consumer.eventArray(eq(arrayOf<Int?>(null, null)))
+            consumer.eventArray(arrayOf<Int?>(1, 2))
+            consumer.eventArray(arrayOf<Int?>(3, null))
+            consumer.eventArray(arrayOf<Int?>(null, 4))
+            consumer.eventArray(arrayOf<Int?>(null, null))
         }
     }
 
@@ -530,8 +530,8 @@ class TracerTest {
 
         // THEN
         coVerifySequence {
-            consumerWithoutToString.eventWithoutToString(eq(objectWithoutToString))
-            consumerWithoutToString.eventWithoutToString(eq(anotherObjectWithoutToString))
+            consumerWithoutToString.eventWithoutToString(objectWithoutToString)
+            consumerWithoutToString.eventWithoutToString(anotherObjectWithoutToString)
         }
     }
 
