@@ -301,7 +301,11 @@ There are 2 types of trace events consumers:
    `TraceEventListener` interface.
 
    These consumers receive every event thrown in the system. They receive the event information as
-   part of their `GenericTraceEventConsumer.consumeTraceEvent` implementation.
+   part of their `GenericTraceEventConsumer.consumeTraceEvent` implementation. This method gets
+   a `TraceEvent` parameter that contains all information about the trace event, including date/time
+   of occurence, class name, context information (per tracer instance, or even per thread the trace
+   was created on), and the values of the parameters of the trace event method call (which can be
+   obtained positionally, or by name from `getNamedParametersMap`, as a convenience).
 
    Generic consumers typically forward events to another system, such as the Android `Log`, store
    them in a database, or perhaps even send them across application (or machine) boundaries.
@@ -627,6 +631,12 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
+
+### 1.5.1
+
+* Added `getNamedParametersMap` to `TraceEvent`, which allows generic trace event consumers to access parameters and 
+their values through a map that maps parameters names to their values. The other way to access parameter values
+is by using `args`, which is an array with parameter values, in the order of the method declaration.  
 
 ### 1.5.0
 

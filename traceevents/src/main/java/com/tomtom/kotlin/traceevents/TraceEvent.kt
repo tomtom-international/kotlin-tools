@@ -31,6 +31,9 @@ import java.time.LocalDateTime
  * @param stackTraceHolder Throwable from which a stack trace can be produced. `null` when unavailable.
  * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
+ * @param parameterNames Names of the parameters, in the same order as the `args` values. Normally, you would use
+ * `getNamedParametersMap` to access the parameters names and values. If `null` the map could not be created for some reason.
+ * You can still use the `args` array in that case.
  */
 data class TraceEvent(
     val dateTime: LocalDateTime,
@@ -42,8 +45,21 @@ data class TraceEvent(
     val interfaceName: String,
     val stackTraceHolder: Throwable?,
     val eventName: String,
-    val args: Array<Any?>
+    val args: Array<Any?>,
+    val parameterNames: Array<String>?
 ) {
+    init {
+        check(parameterNames == null || args.size == parameterNames.size)
+    }
+
+    /**
+     * Gets the method parameters as a map that maps the parameter name to its value.
+     * Returns an empty map for parameterless methods and `null` if 1 or more parameter names are
+     * not available for some reason.
+     */
+    fun getNamedParametersMap() =
+        parameterNames?.indices?.associateBy({ parameterNames[it] }, { args[it] })
+
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
      * an `Array`. Otherwise, `equals` would always return `false`.
@@ -64,7 +80,7 @@ data class TraceEvent(
         if (stackTraceHolder != other.stackTraceHolder) return false
         if (eventName != other.eventName) return false
         if (!args.contentDeepEquals(other.args)) return false
-
+        if (!parameterNames.contentEquals(other.parameterNames)) return false
         return true
     }
 
@@ -79,6 +95,7 @@ data class TraceEvent(
         result = 31 * result + (stackTraceHolder?.hashCode() ?: 0)
         result = 31 * result + eventName.hashCode()
         result = 31 * result + args.contentDeepHashCode()
+        result = 31 * result + parameterNames.contentHashCode()
         return result
     }
 }

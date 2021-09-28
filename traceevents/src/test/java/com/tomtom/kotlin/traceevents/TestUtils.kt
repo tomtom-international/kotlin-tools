@@ -24,27 +24,6 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import kotlin.reflect.jvm.jvmName
 
-/**
- * Utility function to check if a trace events matches the given parameters.
- */
-fun MockKMatcherScope.traceEq(
-    context: String,
-    traceThreadLocalContext: Map<String, Any?>? = null,
-    logLevel: LogLevel,
-    functionName: String,
-    vararg args: Any
-) =
-    match<TraceEvent> { traceEvent ->
-
-        traceEvent.logLevel == logLevel &&
-                traceEvent.taggingClassName == TracerTest::class.jvmName &&
-                traceEvent.context == context &&
-                traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
-                traceEvent.interfaceName == TracerTest.MyEvents::class.jvmName &&
-                traceEvent.eventName == functionName &&
-                traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-                traceEvent.args.contentDeepEquals(args)
-    }
 
 /**
  * Function to capture stdout output to a string.
