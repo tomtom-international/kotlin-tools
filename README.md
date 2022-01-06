@@ -632,6 +632,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.5.2-1.5.3
+
+* Updated dependencies.
+
 ### 1.5.1
 
 * Added `getNamedParametersMap` to `TraceEvent`, which allows generic trace event consumers to access parameters and 
