@@ -5,7 +5,7 @@
 [![Release](https://img.shields.io/github/release/tomtom-international/kotlin-tools.svg?maxAge=3600)](https://github.com/tomtom-international/kotlin-tools/releases)
 [![Maven Central](https://img.shields.io/maven-central/v/com.tomtom.kotlin/kotlin-tools.svg?maxAge=3600)](https://maven-badges.herokuapp.com/maven-central/com.tomtom.kotlin/kotlin-tools)
 
-Copyright (C) 2020, TomTom International BV
+Copyright (C) 2022, TomTom International BV
 
 ## Introduction
 
