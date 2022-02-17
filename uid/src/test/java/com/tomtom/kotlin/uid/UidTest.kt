@@ -15,7 +15,6 @@
  */
 package com.tomtom.kotlin.uid
 
-import com.tomtom.kotlin.uid.Uid
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

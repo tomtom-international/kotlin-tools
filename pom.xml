@@ -81,6 +81,7 @@
         <module>traceevents</module>
         <module>uid</module>
         <module>memoization</module>
+        <module>extensions</module>
     </modules>
 
     <properties>
