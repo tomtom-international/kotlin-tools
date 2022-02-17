@@ -21,6 +21,9 @@ Currently, the library contains:
 
 * `memoization` - This modules the ability to cache function results.
 
+* `extensions` - General-purpose extension functions that can make your code more concise and
+  readable.
+
 ### Building and testing the library
 
 Use Maven to run the unit tests as follows:
@@ -527,12 +530,12 @@ to the documentation in the `Tracer` class.
 ## Module: Uid
 
 Generic immutable unique ID class. Really just an abstraction of UUIDs. Used to uniquely identify
-things. No 2 Uid objects shall be equal unless they are the same instance of the Uid class or their
-underlying UUIDs are equal.
+things. No 2 `Uid` objects shall be equal unless they are the same instance of the `Uid` class or
+their underlying UUIDs are equal.
 
-The class has a generic type T to allow creating typesafe Uid's, like `Uid<Message>`. The class
-represents UUIDs as Strings internally, to avoid loads of UUID to String conversions all the time.
-This makes the class considerably faster in use than the regular Java UUID class.
+The class has a generic type `T` to allow creating typesafe `Uid`'s, like `Uid<Message>`. The class
+represents UUIDs as `String`s internally, to avoid loads of UUID to `String` conversions all the
+time. This makes the class considerably faster in use than the regular Java UUID class.
 
 Examples:
 
@@ -543,21 +546,20 @@ var personId = Uid<Person>()      // Creates a new unique person ID.
 messageId = personId              // <-- Does not compile, the IDs are type safe.
 
 val testId = Uid.fromString("1-2-3-4-5")    // Allows shorthand notation for UUIDs,
-// easy for testing, or input.
+                                            // easy for testing, or input.
 
 val s = messageId.toString()      // Serialized to string.
 val id = Uid<Message>(s)          // Deserialized from string. Faster than `fromString`
-// if the format is known to be the serialized format.
+                                  // if the format is known to be the serialized format.
 
-val messageId: Uid<Message>()              // If you need, you can translate IDs from one
-val personId: messageId as Uid<Person>     // type to another using 'as'. This is useful if
-// the type information was lost, for example,
-// in serialization.
+val messageId: Uid<Message>               // If you need, you can translate IDs from one type to
+val personId = messageId as Uid<Person>   // another using 'as'. This is useful if the type 
+                                          // information was lost, for example, in serialization.
 ```
 
 ## Module: Function Memoization
 
-Provides `memoize` extension to Kotlin functions that allows optimizing expensive functions by
+Provides the `memoize` extension to Kotlin functions that allows optimizing expensive functions by
 caching the results corresponding to some set of specific inputs.
 
 In order for memoization to work properly:
@@ -567,7 +569,7 @@ In order for memoization to work properly:
   parameters), and
 - the function should not exhibit any side effects, other than the returned result.
 
-To memoize a function, use the extenstion:
+To memoize a function, use the extension:
 
 - `memoize(Int)` - Extension creates Least Recently Used (LRU) cached function that will remove
   least recently used item if number of stored results exceeds provided limit.
@@ -584,9 +586,36 @@ function1(11) // First call with 11 - actual function is called and result is ca
 function1(10) // Second call with 10 - value is returned from cache.
 ```
 
+## Module: Extensions
+
+General-purpose extension functions that can make your code more concise and readable. These
+extension functions aim to compliment Kotlin's functional programming style where Kotlin's default
+syntax and stdlib requires unwanted boilerplate code.
+
+For example, it allows replacing the following snippet:
+
+```kotlin
+someComponent.getSomeNullableValue()
+    .let { it ?: someComponent.getFallbackValue() }
+    .let { it as? Boolean }
+    ?.let {
+        if (it) doSomething()
+        else null
+    }
+```
+
+with:
+
+```kotlin
+someComponent.getSomeNullableValue()
+    .ifNull { someComponent.getFallbackValue() }
+    .safeCast<Boolean>()
+    .ifTrue { doSomething() }
+```
+
 ## License
 
-Copyright (C) 2020-2020, TomTom (http://tomtom.com). Licensed under the Apache License, Version
+Copyright (C) 2020-2022, TomTom (http://tomtom.com). Licensed under the Apache License, Version
 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain
 a copy of the License at
 
@@ -632,6 +661,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.6.0
+
+* Added extensions module, providing general-purpose extension functions that can make your code more concise and
+  readable.
+
 ### 1.5.2-1.5.3
 
 * Updated dependencies.
@@ -673,7 +707,7 @@ is by using `args`, which is an array with parameter values, in the order of the
 
 ### 1.2.1 - 1.2.2
 
-* Updated dependecies and copyright.
+* Updated dependencies and copyright.
 
 ### 1.2.0
 

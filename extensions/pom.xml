@@ -27,17 +27,17 @@
         <version>1.6.0</version>
     </parent>
 
-    <artifactId>uid</artifactId>
+    <artifactId>extensions</artifactId>
     <packaging>jar</packaging>
 
-    <name>Uid</name>
+    <name>Extensions</name>
 
     <!--
         Don't add a description if you want the project not to be picked up by the maven-mailinglist-plugin
         (if the plugin is enabled).
     -->
     <description>
-        Uids uses UUIDs for unique IDs, but are more efficient in their handling.
+        General-purpose extension functions that can make your code more concise and readable.
     </description>
 
     <dependencies>
@@ -49,8 +49,14 @@
         <!-- Test scope. -->
 
         <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit</artifactId>
             <scope>test</scope>
         </dependency>
 
