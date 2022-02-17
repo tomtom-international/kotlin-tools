@@ -19,7 +19,10 @@ package com.tomtom.kotlin.extensions
 /**
  * Checks whether the collection contains duplicated elements.
  */
-fun Collection<*>.containsDuplicates(): Boolean = toSet().size != size
+fun Iterable<*>.containsDuplicates(): Boolean {
+    val elements = mutableSetOf<Any?>()
+    return any { !elements.add(it) }
+}
 
 /**
  * Checks whether the collection contains no duplicated elements.
