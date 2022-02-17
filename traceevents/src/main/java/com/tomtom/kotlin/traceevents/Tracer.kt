@@ -49,8 +49,8 @@ import kotlin.reflect.jvm.kotlinFunction
  * These consumers receive every event thrown in the system. They receive the event information
  * as part of their [GenericTraceEventConsumer.consumeTraceEvent] implementation.
  *
- * Generic consumers typically forward events to another system, such as the Android [TraceLog], store
- * them in a database, or perhaps even send them across application (or machine) boundaries.
+ * Generic consumers typically forward events to another system, such as the Android [TraceLog],
+ * store them in a database, or perhaps even send them across application (or machine) boundaries.
  *
  * 2. Specific trace event consumers, that implement a specific [TraceEventListener] interface.
  *
@@ -90,7 +90,8 @@ import kotlin.reflect.jvm.kotlinFunction
  * be throttled to make sure sending many threads in succession does not overload the system.
  * If the event queue overflows, events are lost, rather than blocking the system. (Note that
  * if the event queue overflows, something weird is going on like sending 1000s of messages per
- * second - which you probably shouldn't do; note that this situation is logged to Android [TraceLog]).
+ * second - which you probably shouldn't do; note that this situation is logged to Android
+ * [TraceLog]).
  *
  * The events processor is enabled at start-up, but may be suspended at any time using
  * [Tracer.enableTraceEventLogging]. When the event processor is suspended, trace events in the
@@ -128,11 +129,12 @@ import kotlin.reflect.jvm.kotlinFunction
  * DISAMBIGUATION OF TRACE EVENT TRACERS
  * -------------------------------------
  *
- * Sometimes multiple tracers may exist for a single class (if multiple instances of the tracer are initiated).
- * In those cases, it may be necessary to be able disambiguate the tracer that the trace events came from.
- * This is solved by adding a `context` string to the `create` method. This context string is passed to
- * trace event consumers. Alternatively, trace event consumers can specify a regular expression to make sure
- * they only get the trace events for the specified tracer context(s).
+ * Sometimes multiple tracers may exist for a single class (if multiple instances of the tracer are
+ * initiated). In those cases, it may be necessary to be able to disambiguate the tracer that the
+ * trace events came from. This is solved by adding a `context` string to the `create` method. This
+ * context string is passed to trace event consumers. Alternatively, trace event consumers can
+ * specify a regular expression to make sure they only get the trace events for the specified
+ * tracer context(s).
  *
  * ```
  * // Declare 2 tracers.
@@ -148,12 +150,11 @@ import kotlin.reflect.jvm.kotlinFunction
  * Tracer.addTraceEventConsumer(consumerAll);
  * ```
  *
- * Note that only `GenericTraceEventConsumer`s are able to retrieve the context passed by the tracer (as it is
- * part of the `TraceEvent` data object. Specific `TraceEventConsumer`s (that implement the original tracer
- * interface), cannot access the context.
- *
+ * Note that only `GenericTraceEventConsumer`s are able to retrieve the context passed by the
+ * tracer (as it is part of the `TraceEvent` data object). Specific `TraceEventConsumer`s (that
+ * implement the original tracer interface), cannot access the context.
  */
-class Tracer private constructor(
+public class Tracer private constructor(
     private val tracerClassName: String,
     private val taggingClassName: String,
     private val context: String
@@ -161,8 +162,8 @@ class Tracer private constructor(
     private val logTag = stripPackageFromClassName(tracerClassName)
     private val parameterNamesCache: ConcurrentHashMap<Method, Array<String>> = ConcurrentHashMap()
 
-    class Factory {
-        companion object {
+    public class Factory {
+        public companion object {
 
             /**
              * Get an event logger for a specific class. Should normally be created once per class
@@ -177,11 +178,11 @@ class Tracer private constructor(
              * @return [TraceEventListener]-derived object, normally called the "tracer", to be used
              *     as `tracer.someEvent()`.
              */
-            inline fun <reified T : TraceEventListener> create(
+            public inline fun <reified T : TraceEventListener> create(
                 taggingObject: Any,
                 context: String = ""
-            ) =
-                createForListener_internal<T>(
+            ): T =
+                createForListener_internal(
                     tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
                     traceEventListener = T::class,
@@ -196,8 +197,9 @@ class Tracer private constructor(
              * location.
              */
             @Suppress("NOTHING_TO_INLINE")
-            inline fun createLoggerOnly(taggingObject: Any, context: String = "") =
-                createForListenerAndLogger_internal<TraceEventListener>(
+            public inline fun createLoggerOnly(taggingObject: Any, context: String = ""):
+                TraceEventListener =
+                createForListenerAndLogger_internal(
                     tracerClassName = getTraceClassName_internal(Throwable()),
                     taggingClass = taggingObject::class,
                     traceEventListener = TraceEventListener::class,
@@ -207,21 +209,23 @@ class Tracer private constructor(
 
             /**
              * Helper function to get the creator class name.
-             * Called by inline function (must be public).
              */
-            fun getTraceClassName_internal(throwable: Throwable) =
+            @Suppress("FunctionName")
+            @PublishedApi
+            internal fun getTraceClassName_internal(throwable: Throwable): String =
                 throwable.stackTrace[0].className.replace("\$Companion", "")
 
             /**
              * Helper function to create event listener.
-             * Called by inline function (must be public).
              */
-            fun <T : TraceEventListener> createForListener_internal(
+            @Suppress("FunctionName")
+            @PublishedApi
+            internal fun <T : TraceEventListener> createForListener_internal(
                 tracerClassName: String,
                 taggingClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>,
                 context: String
-            ): T = createForListenerAndLogger_internal<T>(
+            ): T = createForListenerAndLogger_internal(
                 tracerClassName = tracerClassName,
                 taggingClass = taggingClass,
                 traceEventListener = traceEventListener,
@@ -231,13 +235,13 @@ class Tracer private constructor(
 
             /**
              * Method to create tracer for listener.
-             * Called by inline function (must be public).
              *
              * @param isLoggerOnly Specifies the tracer was explicitly created with the
              * [createLoggerOnly] function.
              */
-            @Suppress("UNCHECKED_CAST")
-            fun <T : TraceEventListener> createForListenerAndLogger_internal(
+            @Suppress("FunctionName", "UNCHECKED_CAST")
+            @PublishedApi
+            internal fun <T : TraceEventListener> createForListenerAndLogger_internal(
                 tracerClassName: String,
                 taggingClass: KClass<*>,
                 traceEventListener: KClass<out TraceEventListener>,
@@ -279,7 +283,6 @@ class Tracer private constructor(
      * @return Always null; the signature of events functions must be void/Unit.
      */
     override fun invoke(proxy: Any, method: Method, args: Array<Any?>?): Any? {
-
         /**
          * The [proxy] is always a [TraceEventListener] as [Factory.create] creates a proxy
          * object for a subclass of that interface.
@@ -471,7 +474,7 @@ class Tracer private constructor(
         }
     }
 
-    companion object {
+    public companion object {
         private val TAG = Tracer::class.simpleName!!
         private const val STACK_TRACE_DEPTH = 5L
 
@@ -492,7 +495,7 @@ class Tracer private constructor(
         /**
          * Specifies whether logging trace events should be done on the caller's thread or not.
          */
-        enum class LoggingMode { SYNC, ASYNC }
+        public enum class LoggingMode { SYNC, ASYNC }
 
         internal var loggingMode = LoggingMode.SYNC
 
@@ -537,19 +540,19 @@ class Tracer private constructor(
         /**
          * Register a handler for the [toString] method of a class.
          */
-        inline fun <reified T : Any> registerToString(noinline toStringFun: T.() -> String) {
+        public inline fun <reified T : Any> registerToString(noinline toStringFun: T.() -> String) {
             addToRegisteredFunctions(T::class, toStringFun)
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun <T> addToRegisteredFunctions(clazz: KClass<*>, toStringFun: T.() -> String) {
+        public fun <T> addToRegisteredFunctions(clazz: KClass<*>, toStringFun: T.() -> String) {
             toStringRegistry[clazz.toString()] = toStringFun as Any.() -> String
         }
 
         /**
          * Reset all [toString] handlers.
          */
-        fun resetToDefaults() {
+        public fun resetToDefaults() {
             toStringRegistry.clear()
             registerToString<Array<*>> { "[${joinToString()}]" }
         }
@@ -563,7 +566,7 @@ class Tracer private constructor(
          * @param contextRegex Regular expression to filter trace events. Only events from tracers with a context
          * that matches the regular expression will be received. If omitted, or `null`, all events will be received.
          */
-        fun addTraceEventConsumer(
+        public fun addTraceEventConsumer(
             traceEventConsumer: TraceEventConsumer,
             contextRegex: Regex? = null
         ) {
@@ -589,7 +592,7 @@ class Tracer private constructor(
          * @param contextRegex If this is `null`, all trace event consumers for the same tracers will be removed.
          * Otherwise only the specific trace event consumer for that regular expression is removed.
          */
-        fun removeTraceEventConsumer(
+        public fun removeTraceEventConsumer(
             traceEventConsumer: TraceEventConsumer,
             contextRegex: Regex? = null
         ) {
@@ -602,7 +605,7 @@ class Tracer private constructor(
          * @param contextRegex If this is `null`, all trace event consumers will be removed. Otherwise,
          * trace event consumer for specific contexts are removed.
          */
-        fun removeAllTraceEventConsumers(contextRegex: Regex? = null) {
+        public fun removeAllTraceEventConsumers(contextRegex: Regex? = null) {
             traceEventConsumers.all().asSequence()
                 .forEach { removeTraceEventConsumer(it, contextRegex) }
         }
@@ -611,7 +614,7 @@ class Tracer private constructor(
          * Blocking call to eat all events from the event queue until empty. The event processor is
          * temporarily disabled (and reactivated afterwards).
          */
-        suspend fun flushTraceEvents() {
+        public suspend fun flushTraceEvents() {
 
             // Suspend processor, start discarding events.
             val wasEnabled = enabled
@@ -630,7 +633,7 @@ class Tracer private constructor(
         /**
          * Enable or disable trace event logging altogether.
          */
-        fun enableTraceEventLogging(enable: Boolean) {
+        public fun enableTraceEventLogging(enable: Boolean) {
             enabled = enable
         }
 
@@ -639,7 +642,7 @@ class Tracer private constructor(
          * or async (events are queued and logged in a separate thread).
          * Default is async, so event processing doesn't get in the way of the caller thread.
          */
-        fun setTraceEventLoggingMode(loggingMode: LoggingMode) {
+        public fun setTraceEventLoggingMode(loggingMode: LoggingMode) {
             this.loggingMode = loggingMode
             when (loggingMode) {
                 LoggingMode.ASYNC -> addTraceEventConsumer(loggingTraceEventConsumer)
@@ -729,10 +732,10 @@ class Tracer private constructor(
 
         internal fun stripPackageFromClassName(ownerClassName: String): String {
             val indexPeriod = ownerClassName.lastIndexOf('.')
-            if (indexPeriod >= 0 && ownerClassName.length > indexPeriod) {
-                return ownerClassName.substring(indexPeriod + 1)
+            return if (indexPeriod >= 0 && ownerClassName.length > indexPeriod) {
+                ownerClassName.substring(indexPeriod + 1)
             } else {
-                return ownerClassName
+                ownerClassName
             }
         }
 
@@ -835,7 +838,6 @@ class Tracer private constructor(
             }
 
         private fun getSourceCodeLocation(stackTraceHolder: Throwable): String {
-
             /**
              * For Java 9, we suggest the following optimization:
              *
@@ -844,7 +846,7 @@ class Tracer private constructor(
              *
              * Get the stack up to a maximum of [STACK_TRACE_DEPTH] levels deep. Our caller must be
              * in those first calls. If it's not, the unit tests fails and informs the developer
-             * the reconsider the value of [STACK_TRACE_DEPTH].
+             * to reconsider the value of [STACK_TRACE_DEPTH].
              *
              * <pre>
              *     val stack = StackWalker.getInstance().walk {
@@ -881,7 +883,6 @@ class Tracer private constructor(
         }
 
         init {
-
             // Always switch on synchronous logging by default.
             setTraceEventLoggingMode(LoggingMode.SYNC)
             enableTraceEventLogging(true)

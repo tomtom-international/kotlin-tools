@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class LogContextTest {
+internal class LogContextTest {
 
     @Before
     fun setUp() {

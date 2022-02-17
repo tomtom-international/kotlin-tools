@@ -19,9 +19,9 @@ package com.tomtom.kotlin.extensions
 /**
  * Checks whether the collection contains duplicated elements.
  */
-fun Collection<*>.containsDuplicates(): Boolean = toSet().size != size
+public fun Collection<*>.containsDuplicates(): Boolean = toSet().size != size
 
 /**
  * Checks whether the collection contains no duplicated elements.
  */
-fun Collection<*>.containsNoDuplicates(): Boolean = !containsDuplicates()
+public fun Collection<*>.containsNoDuplicates(): Boolean = !containsDuplicates()

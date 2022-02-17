@@ -19,7 +19,7 @@ package com.tomtom.kotlin.memoization
  * Creates a memoized function that caches result during first call and returns that value on subsequent calls.
  * Important: Use with care, as the cache for this function is unbound. If function parameters
  */
-fun <R> (() -> R).memoize(): () -> R =
+public fun <R> (() -> R).memoize(): () -> R =
     object : () -> R {
         val result by lazy(LazyThreadSafetyMode.NONE) { this@memoize() }
         override fun invoke(): R = result
@@ -28,13 +28,13 @@ fun <R> (() -> R).memoize(): () -> R =
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, R> ((P1) -> R).memoize(cacheSize: Int): (P1) -> R =
+public fun <P1, R> ((P1) -> R).memoize(cacheSize: Int): (P1) -> R =
     Function1Cache(this, cacheSize = cacheSize)
 
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
+public fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
     object : (P1, P2) -> R {
         private val cache = { pair: Pair<P1, P2> ->
             this@memoize(pair.first, pair.second)
@@ -46,7 +46,7 @@ fun <P1, P2, R> ((P1, P2) -> R).memoize(cacheSize: Int): (P1, P2) -> R =
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) -> R =
+public fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) -> R =
     object : (P1, P2, P3) -> R {
         private val cache = { triple: Triple<P1, P2, P3> ->
             this@memoize(triple.first, triple.second, triple.third)
@@ -58,7 +58,7 @@ fun <P1, P2, P3, R> ((P1, P2, P3) -> R).memoize(cacheSize: Int): (P1, P2, P3) ->
 /**
  * Creates a LRU style cached function that will return cached result when the same input occurs again.
  */
-fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2, P3, P4) -> R =
+public fun <P1, P2, P3, P4, R> ((P1, P2, P3, P4) -> R).memoize(cacheSize: Int): (P1, P2, P3, P4) -> R =
     object : (P1, P2, P3, P4) -> R {
         private val cache = { quadruple: Quadruple<P1, P2, P3, P4> ->
             this@memoize(quadruple.first, quadruple.second, quadruple.third, quadruple.fourth)

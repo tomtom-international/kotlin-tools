@@ -29,7 +29,8 @@ import java.util.UUID
  *
  * @param T Type tag for ID, to make IDs type-safe.
  */
-data class Uid<T> private constructor(private val uuid: String) : Serializable {
+@Suppress("DataClassPrivateConstructor")
+public data class Uid<T> private constructor(private val uuid: String) : Serializable {
 
     /**
      * Returns a hex string representation of this Uid. Opposite of [fromHexString].
@@ -37,7 +38,7 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
      *
      * @return Hex string representation of ID, exactly 32 characters long.
      */
-    fun toHexString(): String {
+    public fun toHexString(): String {
         val compactUuid = UUID.fromString(uuid)
         val msb = java.lang.Long.toHexString(compactUuid.mostSignificantBits)
         val lsb = java.lang.Long.toHexString(compactUuid.leastSignificantBits)
@@ -51,17 +52,18 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
      * @param uid String representation of the Uid.
      * @return True in case String representation matches instance. False otherwise.
      */
-    fun matchesFromString(uid: String) = this == fromString<T>(uid)
+    public fun matchesFromString(uid: String): Boolean =
+        this == fromString<T>(uid)
 
     /**
      * Returns the string representation of this Uid. Opposite of [fromString].
      *
      * @return String representation of ID.
      */
-    override fun toString() = uuid
+    override fun toString(): String = uuid
 
-    companion object {
-        private val serialVersionUID = 1L
+    public companion object {
+        private const val serialVersionUID = 1L
         private const val UUID_DASH = '-'
         private const val UUID_MIN_LENGTH = 9
         private const val UUID_MAX_LENGTH = 36
@@ -70,7 +72,8 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
         /**
          * Create a new, unique UUID-based ID.
          */
-        fun <T> new() = Uid<T>(UUID.randomUUID().toString())
+        public fun <T> new(): Uid<T> =
+            Uid(UUID.randomUUID().toString())
 
         /**
          * Instantiates a [Uid] with a string. Mainly used when de-serializing existing entities.
@@ -84,9 +87,10 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
          *
          * @param uuidAsString An existing string representation of a UUID.
          * @throws [IllegalArgumentException] If name does not conform to the string representation
-         * as described in [UUID.toString]. Use [isValid] to make sure the string is valid.
+         * as described in [UUID.toString]. Use [Uid.fromStringIfValid] to make sure the string is
+         * valid.
          */
-        fun <T> fromString(uuidAsString: String): Uid<T> {
+        public fun <T> fromString(uuidAsString: String): Uid<T> {
             /**
              * This code has been optimized to NOT just call [UUID.fromString] to convert the
              * UUID-String into a String (and catch an [IllegalArgumentException]).
@@ -101,15 +105,15 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
 
             // Check dashes.
             val convertedUuidString = if (areDashesAtCorrectPosition(uuidAsString)) {
-                uuidAsString.toLowerCase().also {
+                uuidAsString.lowercase().also {
                     require(onlyContainsValidUuidCharacters(it)) {
                         "Incorrect UUID format, uuid=$uuidAsString"
                     }
                 }
             } else {
-                UUID.fromString(uuidAsString).toString().toLowerCase()
+                UUID.fromString(uuidAsString).toString().lowercase()
             }
-            return Uid<T>(convertedUuidString)
+            return Uid(convertedUuidString)
         }
 
         /**
@@ -118,11 +122,11 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
          * @param id String representation of UUID.
          * @return Valid UUID, or null.
          */
-        fun <T> fromStringIfValid(id: String?) =
+        public fun <T> fromStringIfValid(id: String?): Uid<T>? =
             if (id == null) {
                 null
             } else try {
-                fromString<T>(id)
+                fromString(id)
             } catch (ignored: IllegalArgumentException) {
                 null
             }
@@ -133,17 +137,17 @@ data class Uid<T> private constructor(private val uuid: String) : Serializable {
          * @param <T> Uid type.
          * @param id  Hex string representation of ID, must be exactly 32 characters long.
          * @return Uid.
-         * @throws [IllegalArgumentException] If name does not conform to the string
-         * representation as described in [UUID.toString]. Use [isValid] to make sure the
-         * string is valid.
-        </T> */
-        fun <T> fromHexString(id: String): Uid<T> {
+         * @throws [IllegalArgumentException] If name does not conform to the string representation
+         * as described in [UUID.toString]. Use [fromStringIfValid] to make sure the string is
+         * valid.
+         */
+        public fun <T> fromHexString(id: String): Uid<T> {
             require(id.length == 32)
             val msb: Long =
                 id.substring(0, 8).toLong(16) shl 32 or id.substring(8, 16).toLong(16)
             val lsb: Long =
                 id.substring(16, 24).toLong(16) shl 32 or id.substring(24, 32).toLong(16)
-            return Uid<T>(UUID(msb, lsb).toString())
+            return Uid(UUID(msb, lsb).toString())
         }
 
         /**

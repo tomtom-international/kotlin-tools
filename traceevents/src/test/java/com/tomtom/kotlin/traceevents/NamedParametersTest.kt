@@ -24,7 +24,7 @@ import org.junit.Test
 import kotlin.reflect.jvm.jvmName
 import kotlin.test.assertEquals
 
-class NamedParametersTest {
+internal class NamedParametersTest {
 
     interface MyEvents : TraceEventListener {
         fun event()
@@ -116,7 +116,6 @@ class NamedParametersTest {
     }
 
     companion object {
-        val TAG = TracerTest::class.simpleName
         val sut = Tracer.Factory.create<MyEvents>(this)
 
         fun MockKMatcherScope.traceEq(

@@ -20,7 +20,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class LogOtherClassTest {
+internal class LogOtherClassTest {
 
     @Before
     fun setUp() {

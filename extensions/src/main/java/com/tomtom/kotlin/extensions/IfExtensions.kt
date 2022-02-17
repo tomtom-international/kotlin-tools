@@ -35,7 +35,7 @@ package com.tomtom.kotlin.extensions
  * It may be inefficient to invert the logic to `someValue.takeIf { someCondition }` when
  * `someValue` isn't readily available.
  */
-fun <T> Boolean?.ifTrue(block: () -> T): T? =
+public fun <T> Boolean?.ifTrue(block: () -> T): T? =
     if (this == true) block() else null
 
 /**
@@ -72,5 +72,5 @@ fun <T> Boolean?.ifTrue(block: () -> T): T? =
  * chain-calling constructs however, the Elvis operator can easily lead to reduced readability.
  * `let` helps with this, but adds boilerplate that distracts from the functional flow.
  */
-fun <T> T?.ifNull(block: () -> T) : T =
+public fun <T> T?.ifNull(block: () -> T) : T =
     this ?: block()

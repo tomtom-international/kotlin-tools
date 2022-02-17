@@ -27,10 +27,10 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.javaMethod
 
 /**
- * This class registers event tracer consumer and finds (and caches) the functions in those
- * consumer to call (by inspection) when events need to be handled.
+ * This class registers event tracer consumers and finds (and caches) the functions in those
+ * consumers to call (by inspection) when events need to be handled.
  */
-class TraceEventConsumerCollection {
+public class TraceEventConsumerCollection {
 
     /**
      * Add a trace event consumer, possibly for a specific context only (specified as a regex).
@@ -41,7 +41,7 @@ class TraceEventConsumerCollection {
      * @param contextRegex If the regex matches the trace event context, the consumer will be called.
      *                     If the regex is null, the consumer gets all events.
      */
-    fun add(traceEventConsumer: TraceEventConsumer, contextRegex: Regex?) {
+    public fun add(traceEventConsumer: TraceEventConsumer, contextRegex: Regex?) {
         traceEventsConsumersWithContext.add(TraceEventConsumerWithContext(traceEventConsumer, contextRegex))
     }
 
@@ -55,7 +55,7 @@ class TraceEventConsumerCollection {
      * @param contextRegex Only the consumer for the given regex is removed. The consumer is removed
      *                     for all contexts if the regex is null.
      */
-    fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
+    public fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
         traceEventsConsumersWithContext.removeAll {
             it.traceEventConsumer == traceEventConsumer &&
                     (contextRegex == null || it.contextRegex == contextRegex)
@@ -68,7 +68,7 @@ class TraceEventConsumerCollection {
      *
      * @param contextRegex Regex used when adding the consumer(s), or null to list all consumers.
      */
-    fun all(contextRegex: Regex? = null): Iterable<TraceEventConsumer> {
+    public fun all(contextRegex: Regex? = null): Iterable<TraceEventConsumer> {
         return traceEventsConsumersWithContext.asIterable()
             .filter { contextRegex == null || it.contextRegex == contextRegex }
             .map { it.traceEventConsumer }
@@ -80,10 +80,9 @@ class TraceEventConsumerCollection {
      *
      * @param traceEvent Trace event to consume.
      */
-    suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
-
+    public suspend fun consumeTraceEvent(traceEvent: TraceEvent) {
         // Make sure we call each trace event consumer at most once.
-        var calledConsumers = mutableSetOf<TraceEventConsumer>();
+        val calledConsumers = mutableSetOf<TraceEventConsumer>()
 
         // Trace events are offered to every handler that can handle the event.
         for (traceEventConsumerWithContext in traceEventsConsumersWithContext) {
@@ -98,7 +97,7 @@ class TraceEventConsumerCollection {
                 traceEventConsumerWithContext.contextRegex == null ||
                 traceEventConsumerWithContext.contextRegex!!.matches(traceEvent.context)
             ) {
-                calledConsumers.add(traceEventConsumerWithContext.traceEventConsumer);
+                calledConsumers.add(traceEventConsumerWithContext.traceEventConsumer)
                 if (traceEventConsumerWithContext.traceEventConsumer is GenericTraceEventConsumer) {
                     traceEventConsumerWithContext.traceEventConsumer.consumeTraceEvent(traceEvent)
                 } else {
@@ -266,7 +265,7 @@ class TraceEventConsumerCollection {
      */
     private val traceEventFunctions = HashMap<Key, Method>()
 
-    companion object {
+    private companion object {
         val TAG = TraceEventConsumerCollection::class.simpleName!!
     }
 }

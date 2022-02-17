@@ -17,16 +17,13 @@ package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import com.tomtom.kotlin.traceevents.TraceLog.Logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class LogTest {
+internal class LogTest {
 
     class LoggerCalled : Logger {
         var called = false

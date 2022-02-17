@@ -30,26 +30,25 @@ package com.tomtom.kotlin.traceevents
  * private val tracer = Tracer.Factory.create<TraceEventListener>(this)
  * ...
  * tracer.d("A debug message")
-
  * ```
  */
-interface TraceEventListener {
+public interface TraceEventListener {
 
     // Verbose
-    fun v(message: String, e: Throwable? = null) {}
+    public fun v(message: String, e: Throwable? = null) {}
 
     // Debug
-    fun d(message: String, e: Throwable? = null) {}
+    public fun d(message: String, e: Throwable? = null) {}
 
     // Info
-    fun i(message: String, e: Throwable? = null) {}
+    public fun i(message: String, e: Throwable? = null) {}
 
     // Warn
-    fun w(message: String, e: Throwable? = null) {}
+    public fun w(message: String, e: Throwable? = null) {}
 
     // Error
-    fun e(message: String, e: Throwable? = null) {}
+    public fun e(message: String, e: Throwable? = null) {}
 
     // Called if an incorrect log function signature was used by a subclass.
-    fun incorrectLogSignatureFound() {}
+    public fun incorrectLogSignatureFound() {}
 }

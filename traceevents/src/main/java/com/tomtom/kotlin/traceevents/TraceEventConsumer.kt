@@ -39,4 +39,4 @@ package com.tomtom.kotlin.traceevents
  * }
  * ```
  */
-interface TraceEventConsumer
+public interface TraceEventConsumer

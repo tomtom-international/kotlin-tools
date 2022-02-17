@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class LogInstanceTest {
+internal class LogInstanceTest {
 
     @Before
     fun setUp() {
@@ -56,7 +56,7 @@ class LogInstanceTest {
         val tracerFromCompanionObject = Tracer.Factory.create<TestEvents>(this)
 
         fun captureTracerWithOwnerFromOtherClass(ownerObject: Any): String {
-            val tracerFromInstance = Tracer.Factory.create<LogInstanceTest.TestEvents>(ownerObject)
+            val tracerFromInstance = Tracer.Factory.create<TestEvents>(ownerObject)
             return captureStdoutReplaceTime(TIME) {
                 tracerFromInstance.someEvent("test3")
             }

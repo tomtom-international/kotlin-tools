@@ -20,7 +20,7 @@ package com.tomtom.kotlin.traceevents
  * more detailed explanation on how to use this class (and how to create specific trace event
  * handlers as well).
  */
-interface GenericTraceEventConsumer : TraceEventListener, TraceEventConsumer {
+public interface GenericTraceEventConsumer : TraceEventListener, TraceEventConsumer {
 
     /**
      * The function [consumeTraceEvent] logs a trace event as type-safe objects (including the
@@ -28,5 +28,5 @@ interface GenericTraceEventConsumer : TraceEventListener, TraceEventConsumer {
      *
      * @param traceEvent Trace event.
      */
-    suspend fun consumeTraceEvent(traceEvent: TraceEvent)
+    public suspend fun consumeTraceEvent(traceEvent: TraceEvent)
 }
