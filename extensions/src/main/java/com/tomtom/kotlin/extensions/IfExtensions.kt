@@ -23,7 +23,7 @@ package com.tomtom.kotlin.extensions
  * This can be used to replace:
  *
  * ```kotlin
- * if (someCondition) someValue else null
+ * if (someCondition == true) someValue else null
  * ```
  *
  * with a more functional-programming-friendly syntax:

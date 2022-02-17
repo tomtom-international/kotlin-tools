@@ -610,7 +610,7 @@ with:
 someComponent.getSomeNullableValue()
     .ifNull { someComponent.getFallbackValue() }
     .safeCast<Boolean>()
-    ?.ifTrue { doSomething() }
+    .ifTrue { doSomething() }
 ```
 
 ## License

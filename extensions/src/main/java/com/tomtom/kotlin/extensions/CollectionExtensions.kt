@@ -16,7 +16,6 @@
 
 package com.tomtom.kotlin.extensions
 
-
 /**
  * Checks whether the collection contains duplicated elements.
  */
