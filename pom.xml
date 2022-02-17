@@ -78,10 +78,10 @@
     </scm>
 
     <modules>
+        <module>extensions</module>
+        <module>memoization</module>
         <module>traceevents</module>
         <module>uid</module>
-        <module>memoization</module>
-        <module>extensions</module>
     </modules>
 
     <properties>
