@@ -21,29 +21,35 @@ package com.tomtom.kotlin.traceevents
  * Inspired by basic MDC implementation from org.org.slf4j.helpers.BasicMDCAdapter.
  * This implementation allows storing any object type, not just strings, in a map.
  */
-object TraceThreadLocalContext {
+public object TraceThreadLocalContext {
 
     private val inheritableThreadLocal = object : InheritableThreadLocal<MutableMap<String, Any>?>() {
         fun childValue(parentValue: Map<String, Any>?) = parentValue?.let { HashMap(it) }
     }
 
-    val keys: Set<Any>?
+    public val keys: Set<Any>?
         get() = inheritableThreadLocal.get()?.keys
 
-    fun put(key: String, value: Any) =
+    public fun put(key: String, value: Any) {
         inheritableThreadLocal.get()?.let { it[key] = value }
             ?: inheritableThreadLocal.set(HashMap(mapOf(key to value)))
+    }
 
-    fun get(key: String) = inheritableThreadLocal.get()?.get(key)
+    public fun get(key: String): Any? =
+        inheritableThreadLocal.get()?.get(key)
 
-    fun remove(key: String) = inheritableThreadLocal.get()?.remove(key)
+    public fun remove(key: String): Any? =
+        inheritableThreadLocal.get()?.remove(key)
 
-    fun clear() {
+    public fun clear() {
         inheritableThreadLocal.get()?.clear()
         inheritableThreadLocal.remove()
     }
 
-    fun getCopyOfContextMap(): Map<String, Any>? = inheritableThreadLocal.get()?.let { HashMap(it) }
+    public fun getCopyOfContextMap(): Map<String, Any>? =
+        inheritableThreadLocal.get()?.let { HashMap(it) }
 
-    fun setContextMap(contextMap: Map<String, Any>) = inheritableThreadLocal.set(HashMap(contextMap))
+    public fun setContextMap(contextMap: Map<String, Any>) {
+        inheritableThreadLocal.set(HashMap(contextMap))
+    }
 }

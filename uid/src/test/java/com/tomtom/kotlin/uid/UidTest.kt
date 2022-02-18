@@ -22,7 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class UidTest {
+internal class UidTest {
 
     // Below is some code that does NOT compile to show the type safety features of Uid.
 
@@ -51,7 +51,7 @@ class UidTest {
     }
 
     @Test
-    fun testIsValid() {
+    fun testFromStringIfValid() {
         assertNotNull(Uid.fromStringIfValid<Any>("d32b6789-bfbb-4194-87f3-72ce34609902"))
         assertNotNull(Uid.fromStringIfValid<Any>("0-0-0-0-0"))
         assertNull(Uid.fromStringIfValid<Any>("0-0-0-0-0-0"))
@@ -79,7 +79,7 @@ class UidTest {
     fun testAs() {
         val a = Uid.new<Long>()
         val b = a as Uid<Int>
-        assertTrue(a.equals(b))
+        assertEquals(a, b)
     }
 
     @Test

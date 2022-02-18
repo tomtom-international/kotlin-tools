@@ -29,7 +29,7 @@ import org.junit.Test
 import kotlin.reflect.jvm.jvmName
 import kotlin.test.assertEquals
 
-class TracerTest {
+internal class TracerTest {
 
     interface MyEvents : TraceEventListener {
         fun eventNoArgs()
@@ -53,7 +53,7 @@ class TracerTest {
 
     class GenericConsumer : GenericTraceEventConsumer, TraceEventConsumer {
         override suspend fun consumeTraceEvent(traceEvent: TraceEvent) =
-            TraceLog.log(LogLevel.DEBUG, "TAG", "${traceEvent.eventName}")
+            TraceLog.log(LogLevel.DEBUG, "TAG", traceEvent.eventName)
     }
 
     interface WrongListener : TraceEventListener {
@@ -564,7 +564,6 @@ class TracerTest {
     }
 
     companion object {
-        val TAG = TracerTest::class.simpleName
         val sut = Tracer.Factory.create<MyEvents>(this)
         val sutMain = Tracer.Factory.create<MyEvents>(this, "the main tracer")
         val sutOther = Tracer.Factory.create<MyEvents>(this, "another tracer")

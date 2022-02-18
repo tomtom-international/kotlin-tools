@@ -35,7 +35,7 @@ import java.time.LocalDateTime
  * `getNamedParametersMap` to access the parameters names and values. If `null` the map could not be created for some reason.
  * You can still use the `args` array in that case.
  */
-data class TraceEvent(
+public data class TraceEvent(
     val dateTime: LocalDateTime,
     val logLevel: LogLevel,
     val tracerClassName: String,
@@ -57,7 +57,7 @@ data class TraceEvent(
      * Returns an empty map for parameterless methods and `null` if 1 or more parameter names are
      * not available for some reason.
      */
-    fun getNamedParametersMap() =
+    public fun getNamedParametersMap(): Map<String, Any?>? =
         parameterNames?.indices?.associateBy({ parameterNames[it] }, { args[it] })
 
     /**

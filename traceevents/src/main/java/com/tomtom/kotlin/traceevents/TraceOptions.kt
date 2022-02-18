@@ -36,11 +36,10 @@ package com.tomtom.kotlin.traceevents
  * @param includeEventInterface Specifies whether the interface name of the [TraceEventListener]
  * interface should be logged or not.
  * Default is false.
- *
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
-annotation class TraceOptions(
+public annotation class TraceOptions(
     val includeExceptionStackTrace: Boolean = true,
     val includeTaggingClass: Boolean = false,
     val includeFileLocation: Boolean = false,

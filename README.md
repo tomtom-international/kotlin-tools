@@ -661,6 +661,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.6.1
+
+* Enables explicit API, requiring stricter type and visibility definitions of our public APIs.
+
 ### 1.6.0
 
 * Added extensions module, providing general-purpose extension functions that can make your code more concise and

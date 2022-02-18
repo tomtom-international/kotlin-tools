@@ -54,7 +54,7 @@ package com.tomtom.kotlin.extensions
  * chain-calling constructs however, the `as` operator can easily lead to reduced readability. `let`
  * helps with this, but adds boilerplate that distracts from the functional flow.
  */
-inline fun <reified T> Any.cast(): T =
+public inline fun <reified T> Any.cast(): T =
     this as T
 
 /**
@@ -95,5 +95,5 @@ inline fun <reified T> Any.cast(): T =
  * chain-calling constructs however, the `as?` operator can easily lead to reduced readability.
  * `let` helps with this, but adds boilerplate that distracts from the functional flow.
  */
-inline fun <reified T> Any.safeCast(): T? =
+public inline fun <reified T> Any.safeCast(): T? =
     this as? T

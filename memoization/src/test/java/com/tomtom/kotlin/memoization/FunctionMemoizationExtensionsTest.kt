@@ -19,7 +19,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class FunctionMemoizationExtensionsTest {
+internal class FunctionMemoizationExtensionsTest {
     private var callCounter = 0
     private val testString = "Test"
 

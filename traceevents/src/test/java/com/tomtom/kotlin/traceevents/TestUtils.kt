@@ -15,20 +15,17 @@
  */
 package com.tomtom.kotlin.traceevents
 
-import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import io.mockk.MockKMatcherScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import kotlin.reflect.jvm.jvmName
 
 
 /**
  * Function to capture stdout output to a string.
  */
-fun captureStdout(block: () -> Unit) =
+internal fun captureStdout(block: () -> Unit) =
     ByteArrayOutputStream().use { outputStream ->
         PrintStream(outputStream).use { printStream ->
             val previousOut = System.out
@@ -38,13 +35,14 @@ fun captureStdout(block: () -> Unit) =
         }
         val output = outputStream.toString()
         println(output)
-        output
+        // Trim \r characters to ensure the value can be used for test assertions on Windows.
+        output.replace("\r", "")
     }
 
 /**
  * Function to capture output and replace times.
  */
-fun captureStdoutReplaceTime(
+internal fun captureStdoutReplaceTime(
     timeReplacement: String,
     block: () -> Unit
 ) = replaceTime(captureStdout { block() }, timeReplacement)
@@ -52,21 +50,20 @@ fun captureStdoutReplaceTime(
 /**
  * Function to replace a time pattern.
  */
-fun replaceTime(msg: String?, replaceWith: String) = msg?.replace(
-    "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+){0,1}\\]".toRegex(),
+internal fun replaceTime(msg: String?, replaceWith: String) = msg?.replace(
+    "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?]".toRegex(),
     replaceWith
 ) ?: ""
 
 /**
  * Function to replace a number pattern.
  */
-fun replaceNumber(msg: String?, replaceWith: String) = msg?.replace(
+internal fun replaceNumber(msg: String?, replaceWith: String) = msg?.replace(
     "\\b[0-9]+\\b".toRegex(RegexOption.MULTILINE),
     replaceWith
 ) ?: ""
 
-fun setUpTracerTest() {
-
+internal fun setUpTracerTest() {
     /**
      * For every test case remove all consumer, cancel the processor (which will be restarted
      * at next add consumer) and flush all events. Make sure that when the processor starts,
@@ -85,8 +82,6 @@ fun setUpTracerTest() {
     }
 }
 
-/**
- * Replacements for times and numbers.
- */
-const val TIME = "[TIME]"
-const val NUMBER = "[NUMBER]"
+// Replacements for times and numbers.
+internal const val TIME = "[TIME]"
+internal const val NUMBER = "[NUMBER]"

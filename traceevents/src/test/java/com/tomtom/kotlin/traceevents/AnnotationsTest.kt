@@ -20,7 +20,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class AnnotationsTest {
+internal class AnnotationsTest {
 
     interface FunctionAnnotationEvents : TraceEventListener {
         @TraceLogLevel(LogLevel.ERROR)
