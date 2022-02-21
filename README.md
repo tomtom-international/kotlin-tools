@@ -661,6 +661,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.6.2
+
+* Removed cast extensions.
+
 ### 1.6.1
 
 * Enables explicit API, requiring stricter type and visibility definitions of our public APIs.
