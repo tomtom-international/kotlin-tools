@@ -597,7 +597,6 @@ For example, it allows replacing the following snippet:
 ```kotlin
 someComponent.getSomeNullableValue()
     .let { it ?: someComponent.getFallbackValue() }
-    .let { it as? Boolean }
     ?.let {
         if (it) doSomething()
         else null
@@ -609,7 +608,6 @@ with:
 ```kotlin
 someComponent.getSomeNullableValue()
     .ifNull { someComponent.getFallbackValue() }
-    .safeCast<Boolean>()
     .ifTrue { doSomething() }
 ```
 
@@ -660,6 +658,10 @@ Author: Rijn Buve
 Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
+
+### 1.6.2
+
+* Removed cast extensions.
 
 ### 1.6.1
 
