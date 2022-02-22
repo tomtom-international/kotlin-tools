@@ -81,8 +81,8 @@ internal class IfExtensionsTest {
             sut.callOnNonNull()
         } else {
 
-            // AND in else it won't compile if uncommented
-            // sut.callOnNonNull()
+            // AND in else it requires a null-check with ?
+             sut?.callOnNonNull()
         }
     }
 
