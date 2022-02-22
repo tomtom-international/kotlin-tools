@@ -16,6 +16,10 @@
 
 package com.tomtom.kotlin.extensions
 
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
+
 /**
  * Executes [block] if `this` is `true`, and returns the result. If `this` is `false` or `null`, it
  * returns `null`.
@@ -32,11 +36,17 @@ package com.tomtom.kotlin.extensions
  * someCondition.ifTrue { someValue }
  * ```
  *
- * It may be inefficient to invert the logic to `someValue.takeIf { someCondition }` when
- * `someValue` isn't readily available.
+ * This is useful when it is not efficient to invert the logic to
+ * `someValue.takeIf { someCondition }` when `someValue` isn't readily available.
  */
-public inline fun <T> Boolean?.ifTrue(block: () -> T): T? =
-    if (this == true) block() else null
+@OptIn(ExperimentalContracts::class)
+public inline fun <T> Boolean?.ifTrue(block: () -> T): T? {
+    contract {
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
+        returnsNotNull() implies (this@ifTrue != null)
+    }
+    return if (this == true) block() else null
+}
 
 /**
  * Returns `this` if it is not null. Otherwise, it executes [block] and returns the result.
@@ -72,5 +82,10 @@ public inline fun <T> Boolean?.ifTrue(block: () -> T): T? =
  * chain-calling constructs however, the Elvis operator can easily lead to reduced readability.
  * `let` helps with this, but adds boilerplate that distracts from the functional flow.
  */
-public inline fun <T> T?.ifNull(block: () -> T) : T =
-    this ?: block()
+@OptIn(ExperimentalContracts::class)
+public inline fun <T> T?.ifNull(block: () -> T): T {
+    contract {
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
+    }
+    return this ?: block()
+}

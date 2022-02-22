@@ -231,6 +231,7 @@
                 <configuration>
                     <args>
                         <arg>-Xexplicit-api=strict</arg>
+                        <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
                     </args>
                 </configuration>
             </plugin>
