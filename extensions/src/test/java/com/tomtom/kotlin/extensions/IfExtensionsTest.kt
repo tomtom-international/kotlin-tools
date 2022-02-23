@@ -67,6 +67,26 @@ internal class IfExtensionsTest {
     }
 
     @Test
+    fun `ifTrue contract returnsNotNull`() {
+        // GIVEN
+        val sut: Boolean? = null
+
+        @Suppress("unused")
+        fun Any.callOnNonNull() {}
+
+        // WHEN ifTrue returns something other than null
+        if (sut.ifTrue { 1 } != null) {
+
+            // THEN no null-check is needed on sut
+            sut.callOnNonNull()
+        } else {
+
+            // AND in else it requires a null-check with ?
+             sut?.callOnNonNull()
+        }
+    }
+
+    @Test
     fun `ifNull on null`() {
         // GIVEN
         val sut: Int? = null

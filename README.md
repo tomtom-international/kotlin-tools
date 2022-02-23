@@ -659,6 +659,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.6.3
+
+* Added [Kotlin Contracts](https://github.com/Kotlin/KEEP/blob/master/proposals/kotlin-contracts.md) to `ifTrue` and
+ `ifNull`.
+
 ### 1.6.2
 
 * Removed cast extensions.
