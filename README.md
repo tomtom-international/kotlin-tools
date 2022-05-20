@@ -659,6 +659,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.6.5
+
+* Reduce use of reflection on critical path of trace events.
+
 ### 1.6.4
 
 * Updated dependencies.
