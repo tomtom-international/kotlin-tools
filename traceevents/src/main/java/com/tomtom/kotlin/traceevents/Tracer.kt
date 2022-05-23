@@ -277,7 +277,7 @@ public class Tracer private constructor(
      * overhead for the system. Any actions taken as a result of the event should be scheduled onto
      * another thread (and throttled if needed).
      *
-     * @param proxy Proxied object.
+     * @param proxy Proxy object.
      * @param method Method being called.
      * @param args Additional arguments to method, may be null.
      * @return Always null; the signature of events functions must be void/Unit.
@@ -303,19 +303,6 @@ public class Tracer private constructor(
             return null
         }
 
-        /**
-         * Get the parameter names for the method.
-         * For performance reasons, make sure this code is normally executed only once per method call. Note that
-         * this method may be called by multiple threads, so it must be thread-safe as well.
-         * Also make sure the parameter names are only provided if there is exactly 1 name for each parameter only.
-         */
-        val parameterNames = parameterNamesCache[method] ?: method.kotlinFunction
-            ?.parameters
-            ?.mapNotNull { it.name }
-            ?.takeIf { it.size == args?.size }
-            ?.toTypedArray()
-            ?.also { parameterNamesCache[method] = it }
-
         // Send the event to the event processor consumer, non-blocking.
         val now = LocalDateTime.now()
         val event = TraceEvent(
@@ -329,7 +316,22 @@ public class Tracer private constructor(
             stackTraceHolder = Throwable(),
             eventName = method.name,
             args = args ?: arrayOf(),
-            parameterNames = parameterNames
+            parameterNamesProvider = {
+                /**
+                 * Get the parameter names for the trace event method.
+                 * For performance reasons, make sure this code is normally executed only once per trace event method
+                 * and only when the parameter names a requested by a trace event consumer. Note that this lambda may be
+                 * called by multiple threads, so it must be thread-safe as well.
+                 * Also make sure the parameter names are only provided if there is exactly 1 name for each parameter
+                 * only.
+                 */
+                parameterNamesCache[method] ?: method.kotlinFunction
+                    ?.parameters
+                    ?.mapNotNull { it.name }
+                    ?.takeIf { it.size == args?.size }
+                    ?.toTypedArray()
+                    ?.also { parameterNamesCache[method] = it }
+            }
         )
 
         /**

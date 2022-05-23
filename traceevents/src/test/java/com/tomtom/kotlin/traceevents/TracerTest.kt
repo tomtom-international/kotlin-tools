@@ -382,6 +382,7 @@ internal class TracerTest {
             consumer.eventIntsString(10, 20, "abc")
 
             // Make sure we only have the last added events here.
+            @Suppress("ReplaceCallWithBinaryOperator", "UnusedEquals")
             consumer.equals(consumer)   // <-- This call is added because `remove` uses it.
             consumer.eventIntsString(11, 22, "xyz")
         }
@@ -556,11 +557,6 @@ internal class TracerTest {
     fun `register toString for SomeClass`() {
         Tracer.registerToString<SomeClass> { "x=$x" }
         assertEquals("x=10", Tracer.convertToStringUsingRegistry(SomeClass()))
-    }
-
-    @Test
-    fun `equals and hashCode`() {
-        EqualsVerifier.forClass(TraceEvent::class.java).verify()
     }
 
     companion object {

@@ -31,9 +31,8 @@ import java.time.LocalDateTime
  * @param stackTraceHolder Throwable from which a stack trace can be produced. `null` when unavailable.
  * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
- * @param parameterNames Names of the parameters, in the same order as the `args` values. Normally, you would use
- * `getNamedParametersMap` to access the parameters names and values. If `null` the map could not be created for some reason.
- * You can still use the `args` array in that case.
+ * @param parameterNamesProvider Provides the names of the parameters, in the same order as the `args` values.
+ *   See [parameterNames] and [getNamedParametersMap].
  */
 public data class TraceEvent(
     val dateTime: LocalDateTime,
@@ -46,19 +45,33 @@ public data class TraceEvent(
     val stackTraceHolder: Throwable?,
     val eventName: String,
     val args: Array<Any?>,
-    val parameterNames: Array<String>?
+    internal val parameterNamesProvider: () -> Array<String>?
 ) {
-    init {
-        check(parameterNames == null || args.size == parameterNames.size)
+    /**
+     * Names of the parameters, in the same order as the `args` values. Normally, you would use [getNamedParametersMap]
+     * to access the parameters names and values. If `null` the map could not be created for some reason.
+     * You can still use the `args` array in that case.
+     *
+     * Obtaining the parameters names requires reflection. Do not use when performance is critical.
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    val parameterNames: Array<String>? by lazy {
+        parameterNamesProvider.invoke().also {
+            check(it == null || args.size == it.size)
+        }
     }
 
     /**
      * Gets the method parameters as a map that maps the parameter name to its value.
      * Returns an empty map for parameterless methods and `null` if 1 or more parameter names are
      * not available for some reason.
+     *
+     * Obtaining the parameters names requires reflection. Do not use when performance is critical.
      */
     public fun getNamedParametersMap(): Map<String, Any?>? =
-        parameterNames?.indices?.associateBy({ parameterNames[it] }, { args[it] })
+        parameterNames?.let { parameterNames ->
+            parameterNames.indices.associateBy({ parameterNames[it] }, { args[it] })
+        }
 
     /**
      * Need to override the `equals` and `hashCode` functions, as the class contains
@@ -80,7 +93,7 @@ public data class TraceEvent(
         if (stackTraceHolder != other.stackTraceHolder) return false
         if (eventName != other.eventName) return false
         if (!args.contentDeepEquals(other.args)) return false
-        if (!parameterNames.contentEquals(other.parameterNames)) return false
+        if (parameterNamesProvider != other.parameterNamesProvider) return false
         return true
     }
 
@@ -95,7 +108,7 @@ public data class TraceEvent(
         result = 31 * result + (stackTraceHolder?.hashCode() ?: 0)
         result = 31 * result + eventName.hashCode()
         result = 31 * result + args.contentDeepHashCode()
-        result = 31 * result + parameterNames.contentHashCode()
+        result = 31 * result + parameterNamesProvider.hashCode()
         return result
     }
 }

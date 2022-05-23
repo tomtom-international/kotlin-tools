@@ -659,6 +659,11 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.7.0
+
+* Reduce use of reflection on the critical path of trace events by not obtaining the trace event parameter names on the
+  thread that traces the event. Only obtain the trace event parameter names when requested by a trace event consumer.
+
 ### 1.6.4
 
 * Updated dependencies.
