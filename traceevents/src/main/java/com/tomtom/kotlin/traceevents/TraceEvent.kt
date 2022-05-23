@@ -52,7 +52,7 @@ public data class TraceEvent(
      * to access the parameters names and values. If `null` the map could not be created for some reason.
      * You can still use the `args` array in that case.
      *
-     * Obtaining the parameters names requires reflection.
+     * Obtaining the parameters names requires reflection. Do not use when performance is critical.
      */
     @Suppress("MemberVisibilityCanBePrivate")
     val parameterNames: Array<String>? by lazy {
@@ -66,7 +66,7 @@ public data class TraceEvent(
      * Returns an empty map for parameterless methods and `null` if 1 or more parameter names are
      * not available for some reason.
      *
-     * Obtaining the parameters names requires reflection.
+     * Obtaining the parameters names requires reflection. Do not use when performance is critical.
      */
     public fun getNamedParametersMap(): Map<String, Any?>? =
         parameterNames?.let { parameterNames ->
