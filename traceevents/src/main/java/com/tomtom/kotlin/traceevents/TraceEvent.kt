@@ -32,6 +32,7 @@ import java.time.LocalDateTime
  * @param eventName Function name in interface, which represents the trace event name.
  * @param args Trace event arguments. Specified as array, to avoid expensive array/list conversions.
  * @param parameterNamesProvider Provides the names of the parameters, in the same order as the `args` values.
+ *   The provider can return `null` to indicate that the parameters names could not be created for some reason.
  *   See [parameterNames] and [getNamedParametersMap].
  */
 public data class TraceEvent(

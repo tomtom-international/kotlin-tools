@@ -266,6 +266,6 @@ public class TraceEventConsumerCollection {
     private val traceEventFunctions = HashMap<Key, Method>()
 
     private companion object {
-        val TAG = TraceEventConsumerCollection::class.simpleName!!
+        const val TAG = "TraceEventConsumerCollection"
     }
 }
