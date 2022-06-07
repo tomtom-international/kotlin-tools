@@ -559,6 +559,11 @@ internal class TracerTest {
         assertEquals("x=10", Tracer.convertToStringUsingRegistry(SomeClass()))
     }
 
+    @Test
+    fun `TAG matches class name`() {
+        assertEquals(Tracer::class.simpleName, Tracer.TAG)
+    }
+
     companion object {
         val sut = Tracer.Factory.create<MyEvents>(this)
         val sutMain = Tracer.Factory.create<MyEvents>(this, "the main tracer")

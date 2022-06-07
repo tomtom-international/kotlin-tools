@@ -659,6 +659,15 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.7.1
+
+* Remove use of reflection on the critical path of creating a `Tracer` object by removing the use of
+  `KClass<*>.isCompanion`. Remove the `$Companion` suffix from the tagging class instead.
+* Initialize `Tracer` library faster by removing the use of reflection to obtain Tracer library class names.
+* Replace the use of `LocalDateTime` with `Instant` to measure elapsed time. This omits loading timezone data during
+  initialization of the `Tracer` library.
+* Improve documentation of `TracerEvent.parameterNamesProvider`.
+
 ### 1.7.0
 
 * Reduce use of reflection on the critical path of trace events by not obtaining the trace event parameter names on the

@@ -23,6 +23,7 @@ import java.io.StringWriter
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
@@ -251,19 +252,12 @@ public class Tracer private constructor(
                 require(isLoggerOnly || traceEventListener != TraceEventListener::class) {
                     "Derive an interface from TraceEventListener, or use createLoggerOnly()"
                 }
-                val taggingClassTopLevel =
-                    if (taggingClass.isCompanion) {
-                        // Don't use the companion object class, but the top-level class.
-                        taggingClass.javaObjectType.enclosingClass?.kotlin!!
-                    } else {
-                        taggingClass.javaObjectType.kotlin
-                    }
                 return Proxy.newProxyInstance(
                     traceEventListener.java.classLoader,
                     arrayOf<Class<*>?>(traceEventListener.java),
                     Tracer(
                         tracerClassName = tracerClassName,
-                        taggingClassName = taggingClassTopLevel.jvmName,
+                        taggingClassName = taggingClass.jvmName.removeSuffix("\$Companion"),
                         context = context
                     )
                 ) as T
@@ -364,7 +358,7 @@ public class Tracer private constructor(
                 )
             }
         }
-        offerTraceEvent(event, now)
+        offerTraceEvent(event)
         return null
     }
 
@@ -398,10 +392,7 @@ public class Tracer private constructor(
      * Offer [event] to the processing queue. If trace logging is set to [LoggingMode.SYNC], this
      * function also outputs the trace using a logger, in this thread.
      */
-    private fun offerTraceEvent(
-        event: TraceEvent,
-        now: LocalDateTime?
-    ) {
+    private fun offerTraceEvent(event: TraceEvent) {
         if (!traceEventChannel.trySend(event).isSuccess) {
             when (loggingMode) {
                 LoggingMode.SYNC ->
@@ -439,6 +430,7 @@ public class Tracer private constructor(
         }
 
         // If we lost events, write a log message to indicate so, but at most once every x seconds.
+        val now = Instant.now()
         if (nrLostTraceEventsSinceLastMsg > 0 &&
             timeLastLostTraceEvent.plusSeconds(LIMIT_WARN_SECS).isBefore(now)
         ) {
@@ -477,7 +469,7 @@ public class Tracer private constructor(
     }
 
     public companion object {
-        private val TAG = Tracer::class.simpleName!!
+        internal const val TAG = "Tracer"
         private const val STACK_TRACE_DEPTH = 5L
 
         /**
@@ -532,7 +524,7 @@ public class Tracer private constructor(
         private const val LIMIT_WARN_SECS = 10L
         private var nrLostTraceEventsSinceLastMsg = 0L
         private var nrLostTraceEventsTotal = 0L
-        private var timeLastLostTraceEvent = LocalDateTime.now().minusSeconds(LIMIT_WARN_SECS)
+        private var timeLastLostTraceEvent = Instant.now().minusSeconds(LIMIT_WARN_SECS)
 
         /**
          * Registry of [toString] functions for classes, to be used instead of their own variants.
