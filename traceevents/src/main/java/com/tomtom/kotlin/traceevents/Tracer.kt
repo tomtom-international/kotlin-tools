@@ -472,7 +472,7 @@ public class Tracer private constructor(
     }
 
     public companion object {
-        private const val TAG = "Tracer"
+        internal const val TAG = "Tracer"
         private const val STACK_TRACE_DEPTH = 5L
 
         /**
