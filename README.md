@@ -662,7 +662,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 ### 1.7.1
 
 * Remove use of reflection on the critical path of creating a `Tracer` object by removing the use of
-  `KClass<*>.isCompanion`. Use top level enclosing class for the tagging class instead.
+  `KClass<*>.isCompanion`. Remove the `$Companion` suffix from the tagging class instead.
 * Initialize `Tracer` library faster by removing the use of reflection to obtain Tracer library class names.
 * Replace the use of `LocalDateTime` with `Instant` to measure elapsed time. This omits loading timezone data during
   initialization of the `Tracer` library.

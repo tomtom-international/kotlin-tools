@@ -257,14 +257,11 @@ public class Tracer private constructor(
                     arrayOf<Class<*>?>(traceEventListener.java),
                     Tracer(
                         tracerClassName = tracerClassName,
-                        taggingClassName = taggingClass.topLevelEnclosingClassOrThis.jvmName,
+                        taggingClassName = taggingClass.jvmName.removeSuffix("\$Companion"),
                         context = context
                     )
                 ) as T
             }
-
-            private val KClass<*>.topLevelEnclosingClassOrThis: KClass<*>
-                get() = javaObjectType.enclosingClass?.kotlin?.topLevelEnclosingClassOrThis ?: this
         }
     }
 
