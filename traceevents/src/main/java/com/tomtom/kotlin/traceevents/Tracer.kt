@@ -634,7 +634,7 @@ public class Tracer private constructor(
         /**
          * Set trace logging to sync (events are logged to logger in same thread as event caller)
          * or async (events are queued and logged in a separate thread).
-         * Default is async, so event processing doesn't get in the way of the caller thread.
+         * Default is sync (so events and calls to a logger are traced in order).
          */
         public fun setTraceEventLoggingMode(loggingMode: LoggingMode) {
             this.loggingMode = loggingMode

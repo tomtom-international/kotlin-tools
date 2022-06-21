@@ -659,6 +659,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.7.2
+
+* Fixed documentation on logging sync instead of async by default. No functional change.
+
 ### 1.7.1
 
 * Remove use of reflection on the critical path of creating a `Tracer` object by removing the use of
