@@ -22,8 +22,11 @@ import io.mockk.coVerifySequence
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifySequence
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import nl.jqno.equalsverifier.EqualsVerifier
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import kotlin.reflect.jvm.jvmName
@@ -564,6 +567,63 @@ internal class TracerTest {
         assertEquals(Tracer::class.simpleName, Tracer.TAG)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `wait for trace events to be processed`() = runTest {
+        // GIVEN
+        Tracer.eventProcessorScope = TestScope()
+
+        val consumer = spyk(SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        sut.eventNoArgs()
+        sut.eventString("abc")
+
+        coVerify(exactly = 0) {
+            consumer.eventNoArgs()
+            consumer.eventString("abc")
+        }
+
+        // WHEN
+        advanceEventProcessorScopeUntilIdleAsync {
+            Tracer.waitForEmptyTraceEventsQueue()
+        }
+
+        // THEN
+        coVerifySequence {
+            consumer.eventNoArgs()
+            consumer.eventString("abc")
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `wait for trace events to be flushed`() = runTest {
+        // GIVEN
+        Tracer.eventProcessorScope = TestScope()
+
+        val consumer = spyk(SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        sut.eventNoArgs()
+        sut.eventString("abc")
+
+        // WHEN
+        val flushTraceEventsResult = async {
+            advanceEventProcessorScopeUntilIdleAsync {
+                Tracer.flushTraceEvents()
+            }
+        }
+        Tracer.waitForEmptyTraceEventsQueue()
+
+        // THEN
+        flushTraceEventsResult.await()
+        coVerify(exactly = 0) {
+            consumer.eventNoArgs()
+            consumer.eventString("abc")
+        }
+    }
+
     companion object {
         val sut = Tracer.Factory.create<MyEvents>(this)
         val sutMain = Tracer.Factory.create<MyEvents>(this, "the main tracer")
@@ -580,13 +640,13 @@ internal class TracerTest {
         ) =
             match<TraceEvent> { traceEvent ->
                 traceEvent.logLevel == logLevel &&
-                    traceEvent.taggingClassName == TracerTest::class.jvmName &&
-                    traceEvent.context == context &&
-                    traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
-                    traceEvent.interfaceName == MyEvents::class.jvmName &&
-                    traceEvent.eventName == functionName &&
-                    traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-                    traceEvent.args.contentDeepEquals(args)
+                        traceEvent.taggingClassName == TracerTest::class.jvmName &&
+                        traceEvent.context == context &&
+                        traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
+                        traceEvent.interfaceName == MyEvents::class.jvmName &&
+                        traceEvent.eventName == functionName &&
+                        traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                        traceEvent.args.contentDeepEquals(args)
             }
     }
 }
