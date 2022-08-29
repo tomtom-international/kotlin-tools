@@ -661,13 +661,13 @@ internal class TracerTest {
         ) =
             match<TraceEvent> { traceEvent ->
                 traceEvent.logLevel == logLevel &&
-                        traceEvent.taggingClassName == TracerTest::class.jvmName &&
-                        traceEvent.context == context &&
-                        traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
-                        traceEvent.interfaceName == MyEvents::class.jvmName &&
-                        traceEvent.eventName == functionName &&
-                        traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
-                        traceEvent.args.contentDeepEquals(args)
+                    traceEvent.taggingClassName == TracerTest::class.jvmName &&
+                    traceEvent.context == context &&
+                    traceEvent.traceThreadLocalContext == traceThreadLocalContext &&
+                    traceEvent.interfaceName == MyEvents::class.jvmName &&
+                    traceEvent.eventName == functionName &&
+                    traceEvent.args.map { it?.javaClass } == args.map { it.javaClass } &&
+                    traceEvent.args.contentDeepEquals(args)
             }
     }
 }
