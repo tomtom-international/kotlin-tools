@@ -23,14 +23,16 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifySequence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import kotlin.reflect.jvm.jvmName
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 internal class TracerTest {
 
@@ -569,9 +571,35 @@ internal class TracerTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `wait for trace events to be processed`() = runTest {
+    fun `has queued trace events before processing`() = runTest {
         // GIVEN
-        Tracer.eventProcessorScope = TestScope()
+        val testScope = TestScope()
+        Tracer.eventProcessorScope = testScope
+
+        val consumer = spyk(SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+
+        // THEN
+        assertFalse(Tracer.hasQueuedTraceEvents)
+
+        // WHEN
+        sut.eventNoArgs()
+        sut.eventString("abc")
+
+        // THEN
+        coVerify(exactly = 0) {
+            consumer.eventNoArgs()
+            consumer.eventString("abc")
+        }
+        assertTrue(Tracer.hasQueuedTraceEvents)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `has no more queued trace events after processing`() = runTest {
+        // GIVEN
+        val testScope = TestScope()
+        Tracer.eventProcessorScope = testScope
 
         val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
@@ -579,28 +607,23 @@ internal class TracerTest {
         sut.eventNoArgs()
         sut.eventString("abc")
 
-        coVerify(exactly = 0) {
-            consumer.eventNoArgs()
-            consumer.eventString("abc")
-        }
-
         // WHEN
-        advanceEventProcessorScopeUntilIdleAsync {
-            Tracer.waitForEmptyTraceEventsQueue()
-        }
+        testScope.advanceUntilIdle()
 
         // THEN
         coVerifySequence {
             consumer.eventNoArgs()
             consumer.eventString("abc")
         }
+        assertFalse(Tracer.hasQueuedTraceEvents)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `wait for trace events to be flushed`() = runTest {
+    fun `has no more queued trace events after flushing`() = runTest {
         // GIVEN
-        Tracer.eventProcessorScope = TestScope()
+        val testScope = TestScope()
+        Tracer.eventProcessorScope = testScope
 
         val consumer = spyk(SpecificConsumer())
         Tracer.addTraceEventConsumer(consumer)
@@ -609,19 +632,17 @@ internal class TracerTest {
         sut.eventString("abc")
 
         // WHEN
-        val flushTraceEventsResult = async {
-            advanceEventProcessorScopeUntilIdleAsync {
-                Tracer.flushTraceEvents()
-            }
+        advanceEventProcessorScopeUntilIdleAsync {
+            Tracer.flushTraceEvents()
         }
-        Tracer.waitForEmptyTraceEventsQueue()
+        testScope.advanceUntilIdle()
 
         // THEN
-        flushTraceEventsResult.await()
         coVerify(exactly = 0) {
             consumer.eventNoArgs()
             consumer.eventString("abc")
         }
+        assertFalse(Tracer.hasQueuedTraceEvents)
     }
 
     companion object {

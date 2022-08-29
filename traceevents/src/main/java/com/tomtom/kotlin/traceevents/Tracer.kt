@@ -401,9 +401,7 @@ public class Tracer private constructor(
      * function also outputs the trace using a logger, in this thread.
      */
     private fun offerTraceEvent(event: TraceEvent) {
-        if (traceEventChannel.trySend(event).isSuccess) {
-            onTraceEventChannelUpdated()
-        } else {
+        if (!traceEventChannel.trySend(event).isSuccess) {
             when (loggingMode) {
                 LoggingMode.SYNC ->
 
@@ -526,7 +524,19 @@ public class Tracer private constructor(
          */
         private const val CHANNEL_CAPACITY = 10000
         private val traceEventChannel = Channel<TraceEvent>(CHANNEL_CAPACITY)
-        private val traceEventChannelIsEmpty = MutableStateFlow(true)
+
+        /**
+         * Whether there are trace events in the queue to be processed.
+         *
+         * This can be valuable in tests to assert whether certain trace events were _not_ sent. When testing that a
+         * trace event was sent, it's typically sufficient to add a timeout on the verification. However, when testing
+         * that an event _wasn't_ sent, it is necessary to ensure that all queued trace events have been processed.
+         * Checking that this is `false` allows ensuring that.
+         */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        public val hasQueuedTraceEvents: Boolean
+            get() = !traceEventChannel.isEmpty
+
         private val traceEventConsumers = TraceEventConsumerCollection()
 
         /**
@@ -629,7 +639,6 @@ public class Tracer private constructor(
                 while (traceEventChannel.tryReceive().getOrNull() != null) {
                     // Loop until queue is empty.
                 }
-                onTraceEventChannelUpdated()
             }.join()
 
             // Re-activate event processor if needed.
@@ -675,8 +684,6 @@ public class Tracer private constructor(
         private suspend fun processTraceEvents() {
             TraceLog.log(LogLevel.DEBUG, TAG, "Started trace event processor")
             for (traceEvent in traceEventChannel) {
-                onTraceEventChannelUpdated()
-
                 /**
                  * If the event processor is disabled, it simply discards all events
                  * from the queue, until it is enabled again.
@@ -685,34 +692,6 @@ public class Tracer private constructor(
                     traceEventConsumers.consumeTraceEvent(traceEvent)
                 }
             }
-        }
-
-        /**
-         * Must be called after [traceEventChannel] has been updated, for example by calling
-         * [Channel.trySend] or removing elements by iterating over it.
-         *
-         * This updates whether the channel is empty. Though having to call this method to keep
-         * track of that is not ideal, there appears to be no better alternative. [Channel]s only
-         * allow receiving the elements within it (by a single collector) and do not allow observing
-         * updates to its queue.
-         */
-        @OptIn(ExperimentalCoroutinesApi::class)
-        private fun onTraceEventChannelUpdated() {
-            traceEventChannelIsEmpty.tryEmit(traceEventChannel.isEmpty)
-        }
-
-        /**
-         * A function that suspends until all queued trace events have been processed. It returns
-         * once the trace event queue is empty.
-         *
-         * This is not commonly needed in production use-cases, but can be valuable in tests to
-         * assert whether certain trace events were _not_ sent. When testing that a trace event was
-         * sent, it's typically sufficient to add a timeout on the verification. However, when
-         * testing that an event _wasn't_ sent, it is necessary to ensure that all queued trace
-         * events have been processed. Calling this method achieves that.
-         */
-        public suspend fun waitForEmptyTraceEventsQueue() {
-            traceEventChannelIsEmpty.first { it }
         }
 
         internal fun useSimpleLogFunction(
