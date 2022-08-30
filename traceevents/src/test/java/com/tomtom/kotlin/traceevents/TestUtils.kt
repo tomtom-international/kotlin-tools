@@ -17,7 +17,12 @@ package com.tomtom.kotlin.traceevents
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
@@ -72,13 +77,39 @@ internal fun setUpTracerTest() {
     runBlocking {
         TraceThreadLocalContext.clear()
         TraceLog.setLogger()
-        Tracer.eventProcessorScope = CoroutineScope(Dispatchers.Unconfined)
         Tracer.setTraceEventLoggingMode(Tracer.Companion.LoggingMode.SYNC)
         Tracer.enableTraceEventLogging(true)
         Tracer.removeAllTraceEventConsumers()
-        Tracer.cancelAndJoinEventProcessor()
+        advanceEventProcessorScopeUntilIdleAsync {
+            Tracer.cancelAndJoinEventProcessor()
+        }
+        Tracer.eventProcessorScope = CoroutineScope(Dispatchers.Unconfined)
         Tracer.flushTraceEvents()
         Tracer.resetToDefaults()
+    }
+}
+
+/**
+ * Dispatches coroutine jobs launched on the [Tracer.eventProcessorScope] once [block] is
+ * suspended. This is necessary to unsuspend [block] when using a [TestScope]. Because [TestScope]
+ * does not dispatch jobs until calling a method like [TestScope.advanceUntilIdle], any [block]
+ * waiting for [Tracer.eventProcessorScope] would wait indefinitely without using this method.
+ *
+ * If [Tracer.eventProcessorScope] is not a [TestScope], [block] executes as usual.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+internal suspend fun advanceEventProcessorScopeUntilIdleAsync(
+    block: suspend CoroutineScope.() -> Unit
+) {
+    coroutineScope {
+        val advanceUntilIdleResult =
+            Tracer.eventProcessorScope
+                .let { it as? TestScope }
+                ?.let { async { it.advanceUntilIdle() } }
+
+        block()
+
+        advanceUntilIdleResult?.await()
     }
 }
 

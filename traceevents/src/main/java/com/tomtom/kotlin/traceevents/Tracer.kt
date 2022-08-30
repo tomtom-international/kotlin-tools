@@ -16,8 +16,14 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.InvocationHandler
@@ -515,7 +521,20 @@ public class Tracer private constructor(
          * Capacity definition for the channel that queues traces.
          */
         private const val CHANNEL_CAPACITY = 10000
-        internal val traceEventChannel = Channel<TraceEvent>(CHANNEL_CAPACITY)
+        private val traceEventChannel = Channel<TraceEvent>(CHANNEL_CAPACITY)
+
+        /**
+         * Whether there are trace events in the queue to be processed.
+         *
+         * This can be valuable in tests to assert whether certain trace events were _not_ sent. When testing that a
+         * trace event was sent, it's typically sufficient to add a timeout on the verification. However, when testing
+         * that an event _wasn't_ sent, it is necessary to ensure that all queued trace events have been processed.
+         * Checking that this is `false` allows ensuring that.
+         */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        public val hasQueuedTraceEvents: Boolean
+            get() = !traceEventChannel.isEmpty
+
         private val traceEventConsumers = TraceEventConsumerCollection()
 
         /**
@@ -663,7 +682,6 @@ public class Tracer private constructor(
         private suspend fun processTraceEvents() {
             TraceLog.log(LogLevel.DEBUG, TAG, "Started trace event processor")
             for (traceEvent in traceEventChannel) {
-
                 /**
                  * If the event processor is disabled, it simply discards all events
                  * from the queue, until it is enabled again.
