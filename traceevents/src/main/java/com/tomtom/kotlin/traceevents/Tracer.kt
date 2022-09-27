@@ -399,7 +399,8 @@ public class Tracer private constructor(
      * function also outputs the trace using a logger, in this thread.
      */
     private fun offerTraceEvent(event: TraceEvent) {
-        if (!traceEventChannel.trySend(event).isSuccess) {
+        // Don't queue the event unless processing is activated.
+        if (isEventProcessorStarted() && !traceEventChannel.trySend(event).isSuccess) {
             when (loggingMode) {
                 LoggingMode.SYNC ->
 
@@ -589,7 +590,7 @@ public class Tracer private constructor(
              * The event processor is started only when the first consumer is registered and stays
              * active for the lifetime of the application.
              */
-            if (!::eventProcessorJob.isInitialized || eventProcessorJob.isCancelled) {
+            if (!isEventProcessorStarted()) {
                 eventProcessorJob =
                     eventProcessorScope.launch(CoroutineName("processTraceEvents")) {
                         processTraceEvents()
@@ -691,6 +692,13 @@ public class Tracer private constructor(
                 }
             }
         }
+
+        /**
+         * This function returns the status of the event processor to start event processing and
+         * to block the event queue till event processing is started.
+         */
+        private fun isEventProcessorStarted(): Boolean =
+            !(!::eventProcessorJob.isInitialized || eventProcessorJob.isCancelled);
 
         internal fun useSimpleLogFunction(
             logLevel: LogLevel,

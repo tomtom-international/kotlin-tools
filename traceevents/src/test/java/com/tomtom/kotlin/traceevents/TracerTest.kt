@@ -363,10 +363,9 @@ internal class TracerTest {
         // WHEN
         runBlocking {
 
-            // Remove event consumer and stop processor.
+            // Remove event consumer.
             Tracer.removeTraceEventConsumer(consumer)
-            Tracer.cancelAndJoinEventProcessor()
-
+            // Processor is not stopped to queue more events.
             // Add more events.
             sut.eventNoArgs()
             sut.eventString("def")
@@ -374,11 +373,14 @@ internal class TracerTest {
 
             // Flush last 3 events.
             Tracer.flushTraceEvents()
+            // Stop processor.
+            Tracer.cancelAndJoinEventProcessor()
+            // Add customer back to start processing which allows adding more events to the queue.
+            Tracer.addTraceEventConsumer(consumer)
 
             // And add 1 event.
             sut.eventIntsString(11, 22, "xyz")
         }
-        Tracer.addTraceEventConsumer(consumer)
 
         // THEN
         coVerifySequence {
@@ -567,6 +569,44 @@ internal class TracerTest {
     @Test
     fun `TAG matches class name`() {
         assertEquals(Tracer::class.simpleName, Tracer.TAG)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `has not queued trace events before consumer is added`() = runTest {
+        // GIVEN
+        val testScope = TestScope()
+        Tracer.eventProcessorScope = testScope
+
+        // THEN
+        assertFalse(Tracer.hasQueuedTraceEvents)
+
+        // WHEN
+        sut.eventNoArgs()
+        sut.eventString("abc")
+
+        // THEN
+        assertFalse(Tracer.hasQueuedTraceEvents)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `has queued trace events after consumer is added`() = runTest {
+        // GIVEN
+        val testScope = TestScope()
+        Tracer.eventProcessorScope = testScope
+
+        // THEN
+        assertFalse(Tracer.hasQueuedTraceEvents)
+
+        // WHEN
+        val consumer = spyk(SpecificConsumer())
+        Tracer.addTraceEventConsumer(consumer)
+        sut.eventNoArgs()
+        sut.eventString("abc")
+
+        // THEN
+        assertTrue(Tracer.hasQueuedTraceEvents)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
