@@ -659,6 +659,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.8.1
+
+* Events traces are not queued till the processing starts.
+
 ### 1.8.0
 
 * Added `Tracer.hasQueuedTraceEvents: Boolean` to support testing that certain trace events were _not_ sent.
