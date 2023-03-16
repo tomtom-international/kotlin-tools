@@ -659,6 +659,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.8.2
+
+* Dependencies updated.
+
 ### 1.8.1
 
 * Events traces are not queued till the processing starts.
