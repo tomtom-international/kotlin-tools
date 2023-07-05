@@ -166,8 +166,20 @@ public class Tracer private constructor(
     private val taggingClassName: String,
     private val context: String
 ) : InvocationHandler {
+    /**
+     * A data class used to store the annotations of a trace event method.
+     * For performance reasons, this data is only retrieved once per method and then stored in the cache.
+     */
+    private data class MethodAnnotationsCache(
+        val logLevel: LogLevel,
+        val includeExceptionStackTrace: Boolean,
+        val includeTaggingClass: Boolean,
+        val includeFileLocation: Boolean,
+        val includeEventInterface: Boolean,
+    )
     private val logTag = stripPackageFromClassName(tracerClassName)
     private val parameterNamesCache: ConcurrentHashMap<Method, Array<String>> = ConcurrentHashMap()
+    private val methodAnnotationsCache: ConcurrentHashMap<Method, MethodAnnotationsCache> = ConcurrentHashMap()
 
     public class Factory {
         public companion object {
@@ -288,11 +300,6 @@ public class Tracer private constructor(
          * object for a subclass of that interface.
          */
         proxy as TraceEventListener
-        val logLevelAnnotation = logLevelFromAnnotation(method)
-        val includeExceptionStackTraceAnnotation = includeExceptionStackTraceFromAnnotation(method)
-        val includeTaggingClassAnnotation = includeTaggingClassAnnotation(method)
-        val includeFileLocationAnnotation = includeFileLocationAnnotation(method)
-        val includeEventInterfaceAnnotation = includeEventInterfaceAnnotation(method)
 
         /**
          * Skip event when the method is a standard (possibly auto-generated) class method.
@@ -303,17 +310,75 @@ public class Tracer private constructor(
             return null
         }
 
+        val logFunctionLogLevel = simpleLogFunctionNameToLogLevel(method.name)
+        val isTraceEventOfferRequired = isEventProcessorStarted()
+
+        if (loggingMode == LoggingMode.SYNC && logFunctionLogLevel != null) {
+            /**
+             * Log the event to the standard logger here, rather than on a consumer thread, to make
+             * sure the order of events and other log messages remains logical.
+             */
+            if (!useSimpleLogFunction(logFunctionLogLevel, logTag, args)) {
+
+                // Signal the listener an incorrect signature was found.
+                proxy.incorrectLogSignatureFound()
+            }
+            // Nothing else to do if the trace event does not need to be sent.
+            if (!isTraceEventOfferRequired) return null
+        }
+
+        val annotationsCache = methodAnnotationsCache[method] ?: MethodAnnotationsCache(
+            logLevel = logLevelAnnotation(method),
+            includeExceptionStackTrace = includeExceptionStackTraceAnnotation(method),
+            includeTaggingClass = includeTaggingClassAnnotation(method),
+            includeFileLocation = includeFileLocationAnnotation(method),
+            includeEventInterface = includeEventInterfaceAnnotation(method),
+        ).also {
+            methodAnnotationsCache[method] = it
+        }
+
+        val throwable =
+            if (annotationsCache.includeExceptionStackTrace || isTraceEventOfferRequired) Throwable() else null
+        val interfaceName =
+            if (annotationsCache.includeEventInterface || isTraceEventOfferRequired) method.declaringClass.name else null
+        val traceThreadLocalContext = TraceThreadLocalContext.getCopyOfContextMap()
+        if (loggingMode == LoggingMode.SYNC && logFunctionLogLevel == null) {
+            /**
+             * Log the event to the standard logger here, rather than on a consumer thread, to make
+             * sure the order of events and other log messages remains logical.
+             * Only format the message for non-standard Log events. Use the annotated log level.
+             */
+            TraceLog.log(
+                annotationsCache.logLevel, logTag,
+                "event=${
+                    createLogMessage(
+                        dateTime = null,
+                        eventName = method.name,
+                        args = args ?: arrayOf(),
+                        stackTraceHolder = throwable,
+                        taggingClassName = if (annotationsCache.includeTaggingClass) taggingClassName else null,
+                        interfaceName = if (annotationsCache.includeEventInterface) interfaceName else null,
+                        context = context,
+                        traceThreadLocalContext = traceThreadLocalContext,
+                        includeExceptionStackTrace = annotationsCache.includeExceptionStackTrace,
+                        includeFileLocation = annotationsCache.includeFileLocation
+                    )
+                }"
+            )
+            // Nothing else to do if the trace event does not need to be sent.
+            if (!isTraceEventOfferRequired) return null
+        }
+
         // Send the event to the event processor consumer, non-blocking.
-        val now = LocalDateTime.now()
         val event = TraceEvent(
-            dateTime = now,
-            logLevel = logLevelAnnotation,
+            dateTime = LocalDateTime.now(),
+            logLevel = annotationsCache.logLevel,
             tracerClassName = tracerClassName,
             taggingClassName = taggingClassName,
             context = context,
-            traceThreadLocalContext = TraceThreadLocalContext.getCopyOfContextMap(),
-            interfaceName = method.declaringClass.name,
-            stackTraceHolder = Throwable(),
+            traceThreadLocalContext = traceThreadLocalContext,
+            interfaceName = interfaceName as String,
+            stackTraceHolder = throwable,
             eventName = method.name,
             args = args ?: arrayOf(),
             parameterNamesProvider = {
@@ -333,48 +398,17 @@ public class Tracer private constructor(
                     ?.also { parameterNamesCache[method] = it }
             }
         )
-
-        /**
-         * Log the event to the standard logger here, rather than on a consumer thread, to make
-         * sure the order of events and other log messages remains logical.
-         */
-        if (loggingMode == LoggingMode.SYNC) {
-            val logLevel = simpleLogFunctionNameToLogLevel(event.eventName)
-            if (logLevel != null) {
-                if (!useSimpleLogFunction(logLevel, logTag, args)) {
-
-                    // Signal the listener an incorrect signature was found.
-                    proxy.incorrectLogSignatureFound()
-                }
-            } else {
-
-                // Only format the message for non-standard Log events. Use the annotated log level.
-                TraceLog.log(
-                    logLevelAnnotation, logTag,
-                    "event=${
-                        createLogMessage(
-                            event,
-                            includeTime = false,
-                            includeExceptionStackTrace = includeExceptionStackTraceAnnotation,
-                            includeTaggingClass = includeTaggingClassAnnotation,
-                            includeFileLocation = includeFileLocationAnnotation,
-                            includeEventInterface = includeEventInterfaceAnnotation
-                        )
-                    }"
-                )
-            }
-        }
         offerTraceEvent(event)
         return null
     }
 
     // Helpers to get the annotation values. Function level overrides interface level.
-    private fun logLevelFromAnnotation(method: Method) =
+    private fun logLevelAnnotation(method: Method) =
         method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
             ?: method.declaringClass.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
             ?: LogLevel.DEBUG
 
-    private fun includeExceptionStackTraceFromAnnotation(method: Method) =
+    private fun includeExceptionStackTraceAnnotation(method: Method) =
         method.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
             ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
             ?: true
@@ -478,6 +512,7 @@ public class Tracer private constructor(
     public companion object {
         internal const val TAG = "Tracer"
         private const val STACK_TRACE_DEPTH = 5L
+        private const val LOG_MESSAGE_INITIAL_CAPACITY = 200
 
         /**
          * Names of simple, predefined log functions (from standard loggers).
@@ -549,7 +584,7 @@ public class Tracer private constructor(
         /**
          * Registry of [toString] functions for classes, to be used instead of their own variants.
          */
-        private val toStringRegistry = mutableMapOf<String, Any.() -> String>()
+        private val toStringRegistry = hashMapOf<String, Any.() -> String>()
 
         /**
          * Register a handler for the [toString] method of a class.
@@ -560,7 +595,14 @@ public class Tracer private constructor(
 
         @Suppress("UNCHECKED_CAST")
         public fun <T> addToRegisteredFunctions(clazz: KClass<*>, toStringFun: T.() -> String) {
-            toStringRegistry[clazz.toString()] = toStringFun as Any.() -> String
+            with(toStringFun as Any.() -> String) {
+                // Store both the runtime Java class and the KClass name for performance reasons: retrieving the Java
+                // class name of an object is much faster than getting the KClass, but sometimes the Java class might
+                // not be found in the registry (for example, any kotlin Array will have `kotlin.Array` as KClass but
+                // its Java class might be `Object[]` or `Integer[]` or `Float[]`, etc).
+                toStringRegistry[clazz.java.name] = this
+                toStringRegistry[clazz.toString()] = this
+            }
         }
 
         /**
@@ -712,7 +754,7 @@ public class Tracer private constructor(
              * Nevertheless, we want to be robust against this sort of mistake as we cannot
              * resolve this compile-time.
              */
-            if (args == null || args.isEmpty() ||
+            if (args.isNullOrEmpty() ||
                 args[0] == null || args[0]!!::class != String::class ||
                 (args.size == 2 &&
                     args[1] != null && !args[1]!!::class.isSubclassOf(Throwable::class)) ||
@@ -763,16 +805,15 @@ public class Tracer private constructor(
             if (item == null) {
                 "null"
             } else {
-                // Try registered function first.
-                toStringRegistry[item::class.toString()]?.invoke(item)
-                    ?: if (item.javaClass.getMethod("toString").declaringClass == Any::class.java) {
-
-                        // Only default [toString] is available, from [Any].
-                        "${item.javaClass.simpleName}(...)"
-                    } else {
-
-                        // Use [toString] as defined in class itself.
-                        item.toString()
+                // Try registered function first using `javaClass` as key (faster)
+                toStringRegistry[item.javaClass.name]?.invoke(item)
+                // Try registered function using `item::class` as key (slower)
+                    ?: toStringRegistry[item::class.toString()]?.invoke(item)
+                    // Use [toString] as defined in class itself.
+                    ?: item.toString().also {
+                        // Cache this `javaClass` in the registry so that an item of the same class can be found more
+                        // quickly.
+                        toStringRegistry[item.javaClass.name] = { toString() }
                     }
             }
 
@@ -786,76 +827,93 @@ public class Tracer private constructor(
             includeTaggingClass: Boolean,
             includeFileLocation: Boolean,
             includeEventInterface: Boolean
-        ): String {
-            val sb = StringBuilder()
-
-            // Timestamp.
-            if (includeTime) {
-                sb.append("[${traceEvent.dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] ")
-            }
-
-            // Event.
-            sb.append(
-                "${traceEvent.eventName}(${
-                    traceEvent.args.joinToString {
-                        convertToStringUsingRegistry(it)
-                    }
-                })"
+        ): String =
+            createLogMessage(
+                if (includeTime) traceEvent.dateTime else null,
+                traceEvent.eventName,
+                traceEvent.args,
+                traceEvent.stackTraceHolder,
+                if (includeTaggingClass) traceEvent.taggingClassName else null,
+                if (includeEventInterface) traceEvent.interfaceName else null,
+                traceEvent.context,
+                traceEvent.traceThreadLocalContext,
+                includeExceptionStackTrace,
+                includeFileLocation
             )
 
-            // Called-from file location.
-            if (includeFileLocation) {
-                val fileLocation = if (traceEvent.stackTraceHolder != null) {
-                    getSourceCodeLocation(traceEvent.stackTraceHolder)
-                } else {
-                    "unavailable"
+        private fun createLogMessage(
+            dateTime: LocalDateTime?,
+            eventName: String,
+            args: Array<Any?>,
+            stackTraceHolder: Throwable?,
+            taggingClassName: String?,
+            interfaceName: String?,
+            context: String,
+            traceThreadLocalContext: Map<String, Any?>?,
+            includeExceptionStackTrace: Boolean,
+            includeFileLocation: Boolean,
+            ): String =
+            buildString(LOG_MESSAGE_INITIAL_CAPACITY) {
+                // Timestamp.
+                dateTime?.let {
+                    append("[${dateTime.format(DateTimeFormatter.ISO_DATE_TIME)}] ")
                 }
-                sb.append(", fileLocation=$fileLocation")
-            }
 
-            // Source class name.
-            if (includeTaggingClass) {
-                sb.append(", taggingClass=${stripPackageFromClassName(traceEvent.taggingClassName)}")
-            }
+                // Event.
+                append(eventName).append("(")
+                args.joinTo(this, transform = ::convertToStringUsingRegistry)
+                append(")")
 
-            // Event interface name.
-            if (includeEventInterface) {
-                sb.append(", eventInterface=${traceEvent.interfaceName}")
-            }
+                // Called-from file location.
+                if (includeFileLocation) {
+                    val fileLocation = if (stackTraceHolder != null) {
+                        getSourceCodeLocation(stackTraceHolder)
+                    } else {
+                        "unavailable"
+                    }
+                    append(", fileLocation=$fileLocation")
+                }
 
-            // Context.
-            if (traceEvent.context.isNotEmpty()) {
-                sb.append(", context=${traceEvent.context}")
-            }
+                // Source class name.
+                taggingClassName?.let {
+                    val strippedTaggingClassName = stripPackageFromClassName(taggingClassName)
+                    append(", taggingClass=").append(strippedTaggingClassName)
+                }
 
-            // Thread-local context
-            if (traceEvent.traceThreadLocalContext != null) {
-                sb.append(", traceThreadLocalContext=${traceEvent.traceThreadLocalContext}")
-            }
+                // Event interface name.
+                interfaceName?.let {
+                    append(", eventInterface=").append(interfaceName)
+                }
 
-            // Stack trace for last parameter, if it's an exception.
-            if (includeExceptionStackTrace && traceEvent.args.isNotEmpty()) {
-                (traceEvent.args.last() as? Throwable)?.let {
-                    sb.append("\n")
-                    sb.append(formatThrowable(it, includeExceptionStackTrace))
+                // Context.
+                if (context.isNotEmpty()) {
+                    append(", context=").append(context)
+                }
+
+                // Thread-local context
+                traceThreadLocalContext?.let {
+                    append(", traceThreadLocalContext=").append(traceThreadLocalContext)
+                }
+
+                // Stack trace for last parameter, if it's an exception.
+                if (includeExceptionStackTrace && args.isNotEmpty()) {
+                    (args.last() as? Throwable)?.let {
+                        appendLine()
+                        append(formatThrowable(it))
+                    }
                 }
             }
-            return sb.toString()
-        }
 
         /**
          * Format a [Throwable]
          */
-        internal fun formatThrowable(e: Throwable, logStackTrace: Boolean) =
-            if (logStackTrace) {
-                val stringWriter = StringWriter()
-                val printWriter = PrintWriter(stringWriter)
-                e.printStackTrace(printWriter)
-                printWriter.flush()
-                stringWriter.toString()
-            } else {
-                e.message
-            }
+        internal fun formatThrowable(e: Throwable): String {
+            val stringWriter = StringWriter()
+            val printWriter = PrintWriter(stringWriter)
+            e.printStackTrace(printWriter)
+            printWriter.flush()
+            return stringWriter.toString()
+        }
 
         private fun getSourceCodeLocation(stackTraceHolder: Throwable): String {
             /**
