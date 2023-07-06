@@ -166,10 +166,14 @@ public class Tracer private constructor(
     private val taggingClassName: String,
     private val context: String
 ) : InvocationHandler {
+    private val logTag = stripPackageFromClassName(tracerClassName)
+    private val parameterNamesCache: ConcurrentHashMap<Method, Array<String>> = ConcurrentHashMap()
+
     /**
-     * A data class used to store the annotations of a trace event method.
+     * A cache used to store the annotations of a trace event method.
      * For performance reasons, this data is only retrieved once per method and then stored in the cache.
      */
+    private val methodAnnotationsCache: ConcurrentHashMap<Method, MethodAnnotationsCache> = ConcurrentHashMap()
     private data class MethodAnnotationsCache(
         val logLevel: LogLevel,
         val includeExceptionStackTrace: Boolean,
@@ -177,9 +181,6 @@ public class Tracer private constructor(
         val includeFileLocation: Boolean,
         val includeEventInterface: Boolean,
     )
-    private val logTag = stripPackageFromClassName(tracerClassName)
-    private val parameterNamesCache: ConcurrentHashMap<Method, Array<String>> = ConcurrentHashMap()
-    private val methodAnnotationsCache: ConcurrentHashMap<Method, MethodAnnotationsCache> = ConcurrentHashMap()
 
     public class Factory {
         public companion object {
@@ -327,14 +328,16 @@ public class Tracer private constructor(
             if (!isTraceEventOfferRequired) return null
         }
 
-        val annotationsCache = methodAnnotationsCache[method] ?: MethodAnnotationsCache(
-            logLevel = logLevelAnnotation(method),
-            includeExceptionStackTrace = includeExceptionStackTraceAnnotation(method),
-            includeTaggingClass = includeTaggingClassAnnotation(method),
-            includeFileLocation = includeFileLocationAnnotation(method),
-            includeEventInterface = includeEventInterfaceAnnotation(method),
-        ).also {
-            methodAnnotationsCache[method] = it
+        val annotationsCache = methodAnnotationsCache.getOrPut(method) {
+            with(method) {
+                MethodAnnotationsCache(
+                    logLevel = logLevel,
+                    includeExceptionStackTrace = includeExceptionStackTrace,
+                    includeTaggingClass = includeTaggingClass,
+                    includeFileLocation = includeFileLocation,
+                    includeEventInterface = includeEventInterface
+                )
+            }
         }
 
         val throwable =
@@ -354,7 +357,7 @@ public class Tracer private constructor(
                     createLogMessage(
                         dateTime = null,
                         eventName = method.name,
-                        args = args ?: arrayOf(),
+                        args = args ?: emptyArray(),
                         stackTraceHolder = throwable,
                         taggingClassName = if (annotationsCache.includeTaggingClass) taggingClassName else null,
                         interfaceName = if (annotationsCache.includeEventInterface) interfaceName else null,
@@ -380,7 +383,7 @@ public class Tracer private constructor(
             interfaceName = interfaceName as String,
             stackTraceHolder = throwable,
             eventName = method.name,
-            args = args ?: arrayOf(),
+            args = args ?: emptyArray(),
             parameterNamesProvider = {
                 /**
                  * Get the parameter names for the trace event method.
@@ -403,29 +406,29 @@ public class Tracer private constructor(
     }
 
     // Helpers to get the annotation values. Function level overrides interface level.
-    private fun logLevelAnnotation(method: Method) =
-        method.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
-            ?: method.declaringClass.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
+    private val Method.logLevel
+        get() = getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
+            ?: declaringClass.getDeclaredAnnotation(TraceLogLevel::class.java)?.logLevel
             ?: LogLevel.DEBUG
 
-    private fun includeExceptionStackTraceAnnotation(method: Method) =
-        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
-            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
+    private val Method.includeExceptionStackTrace
+        get() = getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
+            ?: declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeExceptionStackTrace
             ?: true
 
-    private fun includeTaggingClassAnnotation(method: Method) =
-        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeTaggingClass
-            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeTaggingClass
+    private val Method.includeTaggingClass
+        get() = getDeclaredAnnotation(TraceOptions::class.java)?.includeTaggingClass
+            ?: declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeTaggingClass
             ?: false
 
-    private fun includeFileLocationAnnotation(method: Method) =
-        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeFileLocation
-            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeFileLocation
+    private val Method.includeFileLocation
+        get() = getDeclaredAnnotation(TraceOptions::class.java)?.includeFileLocation
+            ?: declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeFileLocation
             ?: false
 
-    private fun includeEventInterfaceAnnotation(method: Method) =
-        method.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface
-            ?: method.declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface
+    private val Method.includeEventInterface
+        get() = getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface
+            ?: declaringClass.getDeclaredAnnotation(TraceOptions::class.java)?.includeEventInterface
             ?: false
 
     /**
