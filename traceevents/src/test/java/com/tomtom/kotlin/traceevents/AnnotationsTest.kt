@@ -50,33 +50,73 @@ internal class AnnotationsTest {
 
     @Test
     fun `check function level annotations`() {
+        // GIVEN
         val tracer = Tracer.Factory.create<FunctionAnnotationEvents>(this)
+
+        // WHEN
         val actual = captureStdoutReplaceTime(TIME) {
             tracer.eventError()
             tracer.eventTaggingClass()
         }
+
+        // THEN
         val expected = "$TIME ERROR AnnotationsTest: event=eventError()\n" +
             "$TIME DEBUG AnnotationsTest: event=eventTaggingClass(), taggingClass=AnnotationsTest\n"
         assertEquals(expected, actual, NUMBER)
+
+        // WHEN a second set of events is invoked
+        val actual2 = captureStdoutReplaceTime(TIME) {
+            tracer.eventError()
+            tracer.eventTaggingClass()
+        }
+
+        // THEN the log message is still as expected
+        assertEquals(expected, actual2, NUMBER)
     }
 
     @Test
     fun `check interface level annotations`() {
+        // GIVEN
         val tracer = Tracer.Factory.create<InterfaceAnnotationsEvents>(this)
+
+        // WHEN
         val actual = captureStdoutReplaceTime(TIME) {
             tracer.event()
         }
+
+        // THEN
         val expected = "$TIME ERROR AnnotationsTest: event=event(), taggingClass=AnnotationsTest\n"
         assertEquals(expected, actual, NUMBER)
+
+        // WHEN a second event is invoked
+        val actual2 = captureStdoutReplaceTime(TIME) {
+            tracer.event()
+        }
+
+        // THEN the log message is still as expected
+        assertEquals(expected, actual2, NUMBER)
     }
 
     @Test
     fun `check mixed level annotations`() {
+        // GIVEN
         val tracer = Tracer.Factory.create<MixedAnnotationsEvents>(this)
+
+        // WHEN
         val actual = captureStdoutReplaceTime(TIME) {
             tracer.event()
         }
+
+        // THEN
         val expected = "$TIME ERROR AnnotationsTest: event=event(), taggingClass=AnnotationsTest\n"
         assertEquals(expected, actual, NUMBER)
+
+        // WHEN a second set of events is invoked
+        val actual2 = captureStdoutReplaceTime(TIME) {
+            tracer.event()
+        }
+
+        // THEN the log message is still as expected
+        assertEquals(expected, actual2, NUMBER)
     }
 }

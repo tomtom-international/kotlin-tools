@@ -659,6 +659,21 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.8.3
+
+* Introduce caching of trace event method annotations in the `Tracer.invoke()` function.
+* Skip creation of a `TraceEvent` object if there are no event consumers. This saves us from performing an expensive
+  `LocalDateTime.now()` call.
+* Skip retrieval of trace event method annotations for simple log function invocations, if there are no event consumers.
+* Remove string concatenations in `createLogMessage()` functions. Only use `StringBuilder` functions.
+* Change `toStringRegistry` to use `item::javaClass.name` as key, and use `item::class.toString()` only as fallback.
+* Skip reading `item.javaClass.getMethod("toString").declaringClass` in `convertToStringUsingRegistry()`: the
+  `item.toString()` function of `Any` will anyway print the name of the class.
+* Fix execution of unit tests requiring mockk-jvm (`extensions` and `traceevents` modules): no unit test for these
+  modules was being run anymore, after the 1.8.2 update.
+* Fix the `IfExtensionsTest` unit tests: these tests were broken by mockk 1.13.4 (due to
+  https://github.com/mockk/mockk/issues/1033).
+
 ### 1.8.2
 
 * Dependencies updated.

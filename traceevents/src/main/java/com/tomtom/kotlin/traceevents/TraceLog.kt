@@ -66,7 +66,7 @@ public interface TraceLog {
             message: String,
             e: Throwable?
         ) = "[${LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)}] $logLevel " +
-                "$tag: $message${e?.let { ", ${Tracer.formatThrowable(it, true)}" } ?: ""}"
+                "$tag: $message${e?.let { ", ${Tracer.formatThrowable(it)}" } ?: ""}"
 
         private var theLogger: Logger = DefaultLoggerToStdout
     }
