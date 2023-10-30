@@ -100,9 +100,7 @@ internal class IfExtensionsTest {
     fun `ifNull on null`() {
         // GIVEN
         val sut: Int? = null
-        val ifNullBlock: () -> Int = spyk {
-            every { this@spyk.invoke() } answers { 1 }
-        }
+        val ifNullBlock = spyk({ 1 })
 
         // WHEN
         val result = sut.ifNull(ifNullBlock)
