@@ -100,7 +100,6 @@ internal class IfExtensionsTest {
     fun `ifNull on null`() {
         // GIVEN
         val sut: Int? = null
-        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
         val ifNullBlock: () -> Int = spyk {
             every { this@spyk.invoke() } answers { 1 }
         }
@@ -121,7 +120,6 @@ internal class IfExtensionsTest {
     fun `ifNull with different types`() {
         // GIVEN
         val sut = A
-        // TODO: replace with `spyk({ B })` when https://github.com/mockk/mockk/issues/1033 is fixed.
         val ifNullBlock: () -> Base = spyk {
             every { this@spyk.invoke() } answers { B }
         }
