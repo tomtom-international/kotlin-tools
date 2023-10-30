@@ -29,7 +29,6 @@ internal class IfExtensionsTest {
     fun `ifTrue on true`() {
         // GIVEN
         val sut = true
-        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
         val ifTrueBlock: () -> Int = spyk {
             every { this@spyk.invoke() } answers { 1 }
         }
@@ -46,7 +45,6 @@ internal class IfExtensionsTest {
     fun `ifTrue on false`() {
         // GIVEN
         val sut = false
-        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
         val ifTrueBlock: () -> Int = spyk {
             every { this@spyk.invoke() } answers { 1 }
         }
@@ -63,7 +61,6 @@ internal class IfExtensionsTest {
     fun `ifTrue on null`() {
         // GIVEN
         val sut: Boolean? = null
-        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
         val ifTrueBlock: () -> Int = spyk {
             every { this@spyk.invoke() } answers { 1 }
         }
