@@ -659,6 +659,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.8.4
+
+* Dependency updates in `pom.xml`. No code changes.
+
 ### 1.8.3
 
 * Introduce caching of trace event method annotations in the `Tracer.invoke()` function.
