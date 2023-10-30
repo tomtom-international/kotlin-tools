@@ -107,9 +107,9 @@
         <equalsverifier.version>3.15.2</equalsverifier.version>
         <junit.version>4.13.2</junit.version>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
-        <kotlin.version>1.9.20-RC2</kotlin.version>
-        <kotlin-test.version>1.9.20-RC2</kotlin-test.version>
-        <kotlin-test-junit.version>1.9.20-RC2</kotlin-test-junit.version>
+        <kotlin.version>1.9.10</kotlin.version>
+        <kotlin-test.version>1.9.10</kotlin-test.version>
+        <kotlin-test-junit.version>1.9.10</kotlin-test-junit.version>
         <kotlinx.html.version>0.7.3</kotlinx.html.version>
         <kotlinx-coroutines-core.version>1.7.3</kotlinx-coroutines-core.version>
         <mockito-core.version>5.6.0</mockito-core.version>
