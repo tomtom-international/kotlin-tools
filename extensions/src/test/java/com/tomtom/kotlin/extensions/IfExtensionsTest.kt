@@ -29,9 +29,7 @@ internal class IfExtensionsTest {
     fun `ifTrue on true`() {
         // GIVEN
         val sut = true
-        val ifTrueBlock: () -> Int = spyk {
-            every { this@spyk.invoke() } answers { 1 }
-        }
+        val ifTrueBlock = spyk({ 1 })
 
         // WHEN
         val result = sut.ifTrue(ifTrueBlock)
@@ -45,9 +43,7 @@ internal class IfExtensionsTest {
     fun `ifTrue on false`() {
         // GIVEN
         val sut = false
-        val ifTrueBlock: () -> Int = spyk {
-            every { this@spyk.invoke() } answers { 1 }
-        }
+        val ifTrueBlock = spyk({ 1 })
 
         // WHEN
         val result = sut.ifTrue(ifTrueBlock)
@@ -61,9 +57,7 @@ internal class IfExtensionsTest {
     fun `ifTrue on null`() {
         // GIVEN
         val sut: Boolean? = null
-        val ifTrueBlock: () -> Int = spyk {
-            every { this@spyk.invoke() } answers { 1 }
-        }
+        val ifTrueBlock = spyk({ 1 })
 
         // WHEN
         val result = sut.ifTrue(ifTrueBlock)
@@ -115,9 +109,7 @@ internal class IfExtensionsTest {
     fun `ifNull with different types`() {
         // GIVEN
         val sut = A
-        val ifNullBlock: () -> Base = spyk {
-            every { this@spyk.invoke() } answers { B }
-        }
+        val ifNullBlock = spyk({ B })
 
         // WHEN
         val result: Base = sut.ifNull(ifNullBlock)
