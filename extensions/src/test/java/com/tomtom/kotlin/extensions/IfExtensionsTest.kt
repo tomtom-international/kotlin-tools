@@ -29,7 +29,10 @@ internal class IfExtensionsTest {
     fun `ifTrue on true`() {
         // GIVEN
         val sut = true
-        val ifTrueBlock = spyk({ 1 })
+        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
+        val ifTrueBlock: () -> Int = spyk {
+            every { this@spyk.invoke() } answers { 1 }
+        }
 
         // WHEN
         val result = sut.ifTrue(ifTrueBlock)
@@ -43,7 +46,10 @@ internal class IfExtensionsTest {
     fun `ifTrue on false`() {
         // GIVEN
         val sut = false
-        val ifTrueBlock = spyk({ 1 })
+        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
+        val ifTrueBlock: () -> Int = spyk {
+            every { this@spyk.invoke() } answers { 1 }
+        }
 
         // WHEN
         val result = sut.ifTrue(ifTrueBlock)
@@ -57,7 +63,10 @@ internal class IfExtensionsTest {
     fun `ifTrue on null`() {
         // GIVEN
         val sut: Boolean? = null
-        val ifTrueBlock = spyk({ 1 })
+        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
+        val ifTrueBlock: () -> Int = spyk {
+            every { this@spyk.invoke() } answers { 1 }
+        }
 
         // WHEN
         val result = sut.ifTrue(ifTrueBlock)
@@ -91,7 +100,10 @@ internal class IfExtensionsTest {
     fun `ifNull on null`() {
         // GIVEN
         val sut: Int? = null
-        val ifNullBlock = spyk({ 1 })
+        // TODO: replace with `spyk({ 1 })` when https://github.com/mockk/mockk/issues/1033 is fixed.
+        val ifNullBlock: () -> Int = spyk {
+            every { this@spyk.invoke() } answers { 1 }
+        }
 
         // WHEN
         val result = sut.ifNull(ifNullBlock)
@@ -109,7 +121,10 @@ internal class IfExtensionsTest {
     fun `ifNull with different types`() {
         // GIVEN
         val sut = A
-        val ifNullBlock = spyk({ B })
+        // TODO: replace with `spyk({ B })` when https://github.com/mockk/mockk/issues/1033 is fixed.
+        val ifNullBlock: () -> Base = spyk {
+            every { this@spyk.invoke() } answers { B }
+        }
 
         // WHEN
         val result: Base = sut.ifNull(ifNullBlock)
