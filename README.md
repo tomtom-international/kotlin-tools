@@ -659,11 +659,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
-### 1.8.5
-
-* Dependency updates in `pom.xml`. No code changes.
-
-### 1.8.4
+### 1.8.4-1.8.6
 
 * Dependency updates in `pom.xml`. No code changes.
 
