@@ -43,7 +43,7 @@ internal class LogOtherClassTest {
             tracerFromLogTest.withCalledFromFile("test")
         }
         val expected =
-            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogOtherClassTest.kt:invoke($NUMBER)\n"
+            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogOtherClassTest.kt:log_event_with_file_location__from_other_class\$lambda\$$NUMBER($NUMBER)\n"
         assertEquals(
             expected, replaceNumber(actual, NUMBER),
             "Perhaps you should increase STACK_TRACE_DEPTH?"

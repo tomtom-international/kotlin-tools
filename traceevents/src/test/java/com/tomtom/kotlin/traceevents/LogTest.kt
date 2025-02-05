@@ -196,7 +196,7 @@ internal class LogTest {
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
             "$TIME DEBUG LogTest: test1, java.lang.IllegalStateException: error1\n" +
-                "\tat com.tomtom.kotlin.traceevents.LogTest\$log message with exception to stdout\$actual\$1.invoke(LogTest.kt:"
+                "\tat com.tomtom.kotlin.traceevents.LogTest.log_message_with_exception_to_stdout\$lambda\$1(LogTest.kt:"
         val suffix =
             ")\n" +
                 "Caused by: java.lang.NullPointerException\n" +
@@ -248,7 +248,7 @@ internal class LogTest {
         val prefix =
             "$TIME DEBUG LogTest: event=withExceptionStackTrace(java.lang.IllegalStateException: error1), taggingClass=LogTest\n" +
                 "java.lang.IllegalStateException: error1\n" +
-                "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
+                "\tat com.tomtom.kotlin.traceevents.LogTest.log_event_with_exception_to_stdout_with_stacktrace\$lambda\$5(LogTest.kt:"
         val suffix =
             ")\n" +
                 "Caused by: java.lang.NullPointerException\n" +
@@ -277,7 +277,7 @@ internal class LogTest {
             tracerFromLogTest.withCalledFromFile("test")
         }
         val expected =
-            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogTest.kt:invoke($NUMBER)\n"
+            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogTest.kt:log_event_with_file_location\$lambda\$$NUMBER($NUMBER)\n"
         assertEquals(
             expected, replaceNumber(actual, NUMBER),
             "Perhaps you should increase STACK_TRACE_DEPTH?"
