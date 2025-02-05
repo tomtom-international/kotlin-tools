@@ -107,11 +107,11 @@ internal class NamedParametersTest {
         // THEN
         val expected =
             "$TIME DEBUG NamedParametersTest: event=event(my string, 123, [1, 2, 3])\n" +
-                    "$TIME DEBUG TAG: {message=my string, someInt=123, anyList=[1, 2, 3]}\n" +
-                    "$TIME DEBUG NamedParametersTest: event=event(more, 456, [5])\n" +
-                    "$TIME DEBUG TAG: {message=more, someInt=456, anyList=[5]}\n" +
-                    "$TIME DEBUG NamedParametersTest: event=event(final, 789, [])\n" +
-                    "$TIME DEBUG TAG: {message=final, someInt=789, anyList=[]}\n"
+                "$TIME DEBUG TAG: {message=my string, someInt=123, anyList=[1, 2, 3]}\n" +
+                "$TIME DEBUG NamedParametersTest: event=event(more, 456, [5])\n" +
+                "$TIME DEBUG TAG: {message=more, someInt=456, anyList=[5]}\n" +
+                "$TIME DEBUG NamedParametersTest: event=event(final, 789, [])\n" +
+                "$TIME DEBUG TAG: {message=final, someInt=789, anyList=[]}\n"
         assertEquals(expected, actual)
     }
 

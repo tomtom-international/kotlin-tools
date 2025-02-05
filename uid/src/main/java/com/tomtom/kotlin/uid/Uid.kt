@@ -16,7 +16,7 @@
 package com.tomtom.kotlin.uid
 
 import java.io.Serializable
-import java.util.UUID
+import java.util.*
 
 
 /**

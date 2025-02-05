@@ -95,25 +95,31 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Plugin versions. -->
-        <dokka-maven-plugin.version>1.9.20</dokka-maven-plugin.version>
+        <dokka-maven-plugin.version>2.0.0</dokka-maven-plugin.version>
         <maven-deploy-plugin.version>3.1.2</maven-deploy-plugin.version>
         <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
-        <maven-project-info-reports-plugin.version>3.5.0</maven-project-info-reports-plugin.version>
+        <maven-project-info-reports-plugin.version>3.8.0</maven-project-info-reports-plugin.version>
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
+        <versions-maven-plugin.version>2.18.0</versions-maven-plugin.version>
 
         <!-- Library versions. -->
-        <equalsverifier.version>3.16.1</equalsverifier.version>
+        <equalsverifier.version>3.18.2</equalsverifier.version>
         <junit.version>4.13.2</junit.version>
-        <junit-jupiter.version>5.10.2</junit-jupiter.version>
-        <kotlin.version>1.9.22</kotlin.version>
+        <junit-jupiter.version>5.11.4</junit-jupiter.version>
+        <junit-jupiter-api.version>${junit-jupiter.version}</junit-jupiter-api.version>
+        <junit-jupiter-engine.version>${junit-jupiter.version}</junit-jupiter-engine.version>
+        <kotlin.version>2.1.10</kotlin.version>
+        <kotlin-reflect.version>${kotlin.version}</kotlin-reflect.version>
+        <kotlin-stdlib.version>${kotlin.version}</kotlin-stdlib.version>
         <kotlin-test.version>${kotlin.version}</kotlin-test.version>
         <kotlin-test-junit.version>${kotlin.version}</kotlin-test-junit.version>
         <kotlinx.html.version>0.7.3</kotlinx.html.version>
-        <kotlinx-coroutines-core.version>1.8.0</kotlinx-coroutines-core.version>
-        <mockito-core.version>5.11.0</mockito-core.version>
-        <mockk.version>1.13.10</mockk.version>
+        <kotlinx-coroutines-core.version>1.10.1</kotlinx-coroutines-core.version>
+        <kotlinx-coroutines-test.version>${kotlinx-coroutines-core.version}</kotlinx-coroutines-test.version>
+        <mockito-core.version>5.15.2</mockito-core.version>
+        <mockk.version>1.13.16</mockk.version>
         <surefire-junit4-plugin.version>3.2.5</surefire-junit4-plugin.version>
     </properties>
 
@@ -185,13 +191,22 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.maven.surefire</groupId>
-                            <artifactId>surefire-junit4</artifactId>
-                            <version>${surefire-junit4-plugin.version}</version>
-                        </dependency>
-                    </dependencies>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit4</artifactId>
+                        <version>${surefire-junit4-plugin.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+                <configuration>
+                    <allowSnapshots>false</allowSnapshots>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -283,13 +298,13 @@
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-reflect</artifactId>
-                <version>${kotlin.version}</version>
+                <version>${kotlin-reflect.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib</artifactId>
-                <version>${kotlin.version}</version>
+                <version>${kotlin-stdlib.version}</version>
             </dependency>
 
             <dependency>
@@ -338,7 +353,14 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
-                <version>${junit-jupiter.version}</version>
+                <version>${junit-jupiter-api.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit-jupiter-engine.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -357,7 +379,7 @@
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>
                 <artifactId>kotlinx-coroutines-test</artifactId>
-                <version>${kotlinx-coroutines-core.version}</version>
+                <version>${kotlinx-coroutines-test.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

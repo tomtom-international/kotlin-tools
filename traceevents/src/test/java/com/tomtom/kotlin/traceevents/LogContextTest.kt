@@ -55,8 +55,8 @@ internal class LogContextTest {
         private const val CONTEXT_VALUE = "42"
 
         val tracerFromCompanionObject = Tracer.Factory.create<TestEvents>(
-                this,
-                context = CONTEXT_VALUE
+            this,
+            context = CONTEXT_VALUE
         )
     }
 }

@@ -19,11 +19,7 @@ import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
-import kotlin.reflect.full.allSuperclasses
-import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.isSuperclassOf
-import kotlin.reflect.full.valueParameters
+import kotlin.reflect.full.*
 import kotlin.reflect.jvm.javaMethod
 
 /**
@@ -58,7 +54,7 @@ public class TraceEventConsumerCollection {
     public fun remove(traceEventConsumer: TraceEventConsumer, contextRegex: Regex? = null) {
         traceEventsConsumersWithContext.removeAll {
             it.traceEventConsumer == traceEventConsumer &&
-                    (contextRegex == null || it.contextRegex == contextRegex)
+                (contextRegex == null || it.contextRegex == contextRegex)
         }
     }
 
@@ -134,17 +130,17 @@ public class TraceEventConsumerCollection {
                             // Catch all exceptions, to avoid killing the event processor.
                             TraceLog.log(
                                 LogLevel.ERROR, TAG, "Cannot invoke consumer, " +
-                                        "method=${method.name}, " +
-                                        "args=(${traceEvent.args.joinToString()})", e
+                                    "method=${method.name}, " +
+                                    "args=(${traceEvent.args.joinToString()})", e
                             )
                         }
                     } else {
                         TraceLog.log(
                             LogLevel.ERROR, TAG, "Method not found, " +
-                                    "traceEventConsumer=${traceEventConsumer::class}, " +
-                                    "traceEventListener=$traceEventListener, " +
-                                    "traceEvent.functionName=${traceEvent.eventName}, " +
-                                    "traceEvent.args.size=${traceEvent.args.size}"
+                                "traceEventConsumer=${traceEventConsumer::class}, " +
+                                "traceEventListener=$traceEventListener, " +
+                                "traceEvent.functionName=${traceEvent.eventName}, " +
+                                "traceEvent.args.size=${traceEvent.args.size}"
                         )
                     }
                 }
@@ -155,7 +151,7 @@ public class TraceEventConsumerCollection {
                     LogLevel.ERROR,
                     TAG,
                     "Event is not a subclass of ${TraceEventListener::class}, " +
-                            "traceEventListener=${traceEvent.interfaceName}"
+                        "traceEventListener=${traceEvent.interfaceName}"
                 )
             }
 
@@ -163,17 +159,17 @@ public class TraceEventConsumerCollection {
         } catch (e: ClassNotFoundException) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Class not found, " +
-                        "traceEventListener=${traceEvent.interfaceName}", e
+                    "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: LinkageError) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Linkage error, " +
-                        "traceEventListener=${traceEvent.interfaceName}", e
+                    "traceEventListener=${traceEvent.interfaceName}", e
             )
         } catch (e: ExceptionInInitializerError) {
             TraceLog.log(
                 LogLevel.ERROR, TAG, "Initialization error, " +
-                        "traceEventListener=${traceEvent.interfaceName}", e
+                    "traceEventListener=${traceEvent.interfaceName}", e
             )
         }
     }

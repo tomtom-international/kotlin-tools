@@ -19,9 +19,9 @@ package com.tomtom.kotlin.extensions
 import io.mockk.every
 import io.mockk.spyk
 import io.mockk.verify
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import org.junit.Test
 
 internal class IfExtensionsTest {
 
@@ -82,7 +82,8 @@ internal class IfExtensionsTest {
         val sut: Boolean? = null
 
         @Suppress("unused")
-        fun Any.callOnNonNull() {}
+        fun Any.callOnNonNull() {
+        }
 
         // WHEN ifTrue returns something other than null
         if (sut.ifTrue { 1 } != null) {
@@ -92,7 +93,7 @@ internal class IfExtensionsTest {
         } else {
 
             // AND in else it requires a null-check with ?
-             sut?.callOnNonNull()
+            sut?.callOnNonNull()
         }
     }
 

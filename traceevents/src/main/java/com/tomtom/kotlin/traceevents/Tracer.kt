@@ -16,14 +16,8 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.InvocationHandler
@@ -174,6 +168,7 @@ public class Tracer private constructor(
      * For performance reasons, this data is only retrieved once per method and then stored in the cache.
      */
     private val methodAnnotationsCache: ConcurrentHashMap<Method, MethodAnnotationsCache> = ConcurrentHashMap()
+
     private data class MethodAnnotationsCache(
         val logLevel: LogLevel,
         val includeExceptionStackTrace: Boolean,
@@ -855,7 +850,7 @@ public class Tracer private constructor(
             traceThreadLocalContext: Map<String, Any?>?,
             includeExceptionStackTrace: Boolean,
             includeFileLocation: Boolean,
-            ): String =
+        ): String =
             buildString(LOG_MESSAGE_INITIAL_CAPACITY) {
                 // Timestamp.
                 dateTime?.let {

@@ -196,12 +196,12 @@ internal class LogTest {
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
             "$TIME DEBUG LogTest: test1, java.lang.IllegalStateException: error1\n" +
-                    "\tat com.tomtom.kotlin.traceevents.LogTest\$log message with exception to stdout\$actual\$1.invoke(LogTest.kt:"
+                "\tat com.tomtom.kotlin.traceevents.LogTest\$log message with exception to stdout\$actual\$1.invoke(LogTest.kt:"
         val suffix =
             ")\n" +
-                    "Caused by: java.lang.NullPointerException\n" +
-                    "\t... $NUMBER more\n" +
-                    "\n"
+                "Caused by: java.lang.NullPointerException\n" +
+                "\t... $NUMBER more\n" +
+                "\n"
 
         assertTrue(actual.startsWith(prefix))
         assertTrue(replaceNumber(actual, NUMBER).endsWith(suffix))
@@ -247,13 +247,13 @@ internal class LogTest {
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
             "$TIME DEBUG LogTest: event=withExceptionStackTrace(java.lang.IllegalStateException: error1), taggingClass=LogTest\n" +
-                    "java.lang.IllegalStateException: error1\n" +
-                    "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
+                "java.lang.IllegalStateException: error1\n" +
+                "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
         val suffix =
             ")\n" +
-                    "Caused by: java.lang.NullPointerException\n" +
-                    "\t... $NUMBER more\n" +
-                    "\n"
+                "Caused by: java.lang.NullPointerException\n" +
+                "\t... $NUMBER more\n" +
+                "\n"
 
         assertTrue(actual.startsWith(prefix))
         assertTrue(replaceNumber(actual, NUMBER).endsWith(suffix))

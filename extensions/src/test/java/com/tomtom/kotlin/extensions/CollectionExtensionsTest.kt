@@ -16,9 +16,9 @@
 
 package com.tomtom.kotlin.extensions
 
+import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.Test
 
 internal class CollectionExtensionsTest {
 

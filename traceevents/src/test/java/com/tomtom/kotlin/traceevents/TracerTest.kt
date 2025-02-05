@@ -16,12 +16,7 @@
 package com.tomtom.kotlin.traceevents
 
 import com.tomtom.kotlin.traceevents.TraceLog.LogLevel
-import io.mockk.MockKMatcherScope
-import io.mockk.coVerify
-import io.mockk.coVerifySequence
-import io.mockk.spyk
-import io.mockk.verify
-import io.mockk.verifySequence
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope

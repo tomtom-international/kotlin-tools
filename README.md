@@ -5,7 +5,7 @@
 [![Release](https://img.shields.io/github/release/tomtom-international/kotlin-tools.svg?maxAge=3600)](https://github.com/tomtom-international/kotlin-tools/releases)
 [![Maven Central](https://img.shields.io/maven-central/v/com.tomtom.kotlin/kotlin-tools.svg?maxAge=3600)](https://maven-badges.herokuapp.com/maven-central/com.tomtom.kotlin/kotlin-tools)
 
-Copyright (C) 2022, TomTom International BV
+Copyright (C) 2025, TomTom International BV
 
 ## Introduction
 
@@ -397,7 +397,7 @@ access the context while processing events.
 
 Sometimes it's useful to be able to retrieve more dynamic information from a trace event that perhaps
 wasn't even available at the location where the event was generated, but at an earlier time. This effectively
-allows the developer to create much richer events than are normally possible.  
+allows the developer to create much richer events than are normally possible.
 
 Java logging introduced MDC, mapped diagnostic context, for that. This allowed Java users to add thread-local
 data that was added to log lines. The `tracevents` module allows something similar with the `TraceThreadLocalContext`
@@ -409,18 +409,18 @@ Here's an example of storing additional context in trace events.
 TraceThreadLocalContext.put("currentRequest", myRequest)
 ```
 
-This would add a map called `traceThreadLocalContext` to the event with value `{"currentRequest": "myRequest"}` 
-to each trace event generated from the same thread as this call to `put` was on. 
+This would add a map called `traceThreadLocalContext` to the event with value `{"currentRequest": "myRequest"}`
+to each trace event generated from the same thread as this call to `put` was on.
 
 The map `traceThreadLocalContext` is available for `GenericTraceEventConsumer`s only and it is `null` when
 no thread-local data was stored, or a non-empty map when data was stored.
 
 This is particularly useful for adding information that isn't necessarily available at the location where the
 trace event is generated. Without this feature, such events would require more parameters, just for the sake
-of adding context to events, which would clutter the main code. 
+of adding context to events, which would clutter the main code.
 
 For example, suppose you've written a media player and wish to generate a `skipToNext` event when the user
-presses the "skip to next" button. You would like to know the current song name when the 
+presses the "skip to next" button. You would like to know the current song name when the
 user presses the button, but that information is not available in the "skip to next" method.
 
 Let's have a look at what this looks like without the `TraceThreadLocalContext`.
@@ -465,7 +465,6 @@ song was playing then "skip to next" was pressed. And if the program is multi-th
 
 Now, let's have a look at the code when `TraceThreadLocalContext` is used. Eveything remains the same except
 for the implementation of `playRandomSong`:
-
 
 ```
 fun playRandomSong() {
@@ -546,15 +545,15 @@ var personId = Uid<Person>()      // Creates a new unique person ID.
 messageId = personId              // <-- Does not compile, the IDs are type safe.
 
 val testId = Uid.fromString("1-2-3-4-5")    // Allows shorthand notation for UUIDs,
-                                            // easy for testing, or input.
+// easy for testing, or input.
 
 val s = messageId.toString()      // Serialized to string.
 val id = Uid<Message>(s)          // Deserialized from string. Faster than `fromString`
-                                  // if the format is known to be the serialized format.
+// if the format is known to be the serialized format.
 
 val messageId: Uid<Message>               // If you need, you can translate IDs from one type to
 val personId = messageId as Uid<Person>   // another using 'as'. This is useful if the type 
-                                          // information was lost, for example, in serialization.
+// information was lost, for example, in serialization.
 ```
 
 ## Module: Function Memoization
@@ -613,7 +612,7 @@ someComponent.getSomeNullableValue()
 
 ## License
 
-Copyright (C) 2020-2022, TomTom (http://tomtom.com). Licensed under the Apache License, Version
+Copyright (C) 2020-2025, TomTom (http://tomtom.com). Licensed under the Apache License, Version
 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain
 a copy of the License at
 
@@ -659,7 +658,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
-### 1.8.4-1.8.6
+### 1.8.4-1.8.7
 
 * Dependency updates in `pom.xml`. No code changes.
 
@@ -715,7 +714,7 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 ### 1.6.3
 
 * Added [Kotlin Contracts](https://github.com/Kotlin/KEEP/blob/master/proposals/kotlin-contracts.md) to `ifTrue` and
- `ifNull`.
+  `ifNull`.
 
 ### 1.6.2
 
@@ -736,13 +735,13 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ### 1.5.1
 
-* Added `getNamedParametersMap` to `TraceEvent`, which allows generic trace event consumers to access parameters and 
-their values through a map that maps parameters names to their values. The other way to access parameter values
-is by using `args`, which is an array with parameter values, in the order of the method declaration.  
+* Added `getNamedParametersMap` to `TraceEvent`, which allows generic trace event consumers to access parameters and
+  their values through a map that maps parameters names to their values. The other way to access parameter values
+  is by using `args`, which is an array with parameter values, in the order of the method declaration.
 
 ### 1.5.0
 
-* Added ability to store thread-local (MDC-style) context to trace events using `TraceThreadLocalContext`. 
+* Added ability to store thread-local (MDC-style) context to trace events using `TraceThreadLocalContext`.
   This context can be processed by `GenericTraceEventConsumer`s. Initial idea by Chris Owen.
 
 ### 1.4.1
@@ -811,7 +810,8 @@ is by using `args`, which is an array with parameter values, in the order of the
 ### 1.0.12
 
 * Renamed
-  annotations: `@TraceOptions(includeExceptionStackTrace, includeTaggingClass, includeFileLocation, includeEventInterface)`
+  annotations:
+  `@TraceOptions(includeExceptionStackTrace, includeTaggingClass, includeFileLocation, includeEventInterface)`
 
 * Added ability to add tagging class to tracers.
 
@@ -824,6 +824,7 @@ is by using `args`, which is an array with parameter values, in the order of the
 * Cleaned up annotation `@TraceLogLevel` to only include trace level.
 
 *
+
 Added `@TraceOptions(includeExceptionStackTrace, includeCalledFromClass, includeCalledFromFile, includeEventInterface)`
 
 * Added `throwableHolder` to `TraceEvent` so event handlers can inspect the stack as well.
