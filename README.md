@@ -659,6 +659,10 @@ Contributors: Timon Kanters, Jeroen Erik Jensen, Krzysztof Karczewski
 
 ## Release notes
 
+### 1.9.0
+
+* Updated dependencies and fixed unit test for new Java versions.
+
 ### 1.8.4-1.8.6
 
 * Dependency updates in `pom.xml`. No code changes.

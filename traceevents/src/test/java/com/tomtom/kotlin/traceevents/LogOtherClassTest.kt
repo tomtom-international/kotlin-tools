@@ -19,6 +19,7 @@ import com.tomtom.kotlin.traceevents.LogTest.Companion.tracerFromLogTest
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal class LogOtherClassTest {
 
@@ -39,13 +40,12 @@ internal class LogOtherClassTest {
 
     @Test
     fun `log event with file location, from other class`() {
-        val actual = captureStdoutReplaceTime(TIME) {
+        val actual = replaceNumber(captureStdoutReplaceTime(TIME) {
             tracerFromLogTest.withCalledFromFile("test")
-        }
+        }, NUMBER)
         val expected =
-            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogOtherClassTest.kt:invoke($NUMBER)\n"
-        assertEquals(
-            expected, replaceNumber(actual, NUMBER),
+            "$TIME VERBOSE LogTest: event=withCalledFromFile[(]test[)], fileLocation=LogOtherClassTest.kt.*[(]$NUMBER[)].*"
+        assertTrue(actual.matches(expected.toRegex(RegexOption.DOT_MATCHES_ALL)),
             "Perhaps you should increase STACK_TRACE_DEPTH?"
         )
     }

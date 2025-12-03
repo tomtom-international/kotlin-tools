@@ -114,5 +114,5 @@ internal suspend fun advanceEventProcessorScopeUntilIdleAsync(
 }
 
 // Replacements for times and numbers.
-internal const val TIME = "[TIME]"
-internal const val NUMBER = "[NUMBER]"
+internal const val TIME = "<TIME>"
+internal const val NUMBER = "<NUMBER>"

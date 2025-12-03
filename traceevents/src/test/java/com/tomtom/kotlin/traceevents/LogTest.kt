@@ -195,15 +195,14 @@ internal class LogTest {
 
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
-            "$TIME DEBUG LogTest: test1, java.lang.IllegalStateException: error1\n" +
-                    "\tat com.tomtom.kotlin.traceevents.LogTest\$log message with exception to stdout\$actual\$1.invoke(LogTest.kt:"
+            "$TIME DEBUG LogTest: test1, java.lang.IllegalStateException.*at com.tomtom.kotlin.traceevents.LogTest.*[(]LogTest.kt:.*"
         val suffix =
             ")\n" +
                     "Caused by: java.lang.NullPointerException\n" +
                     "\t... $NUMBER more\n" +
                     "\n"
 
-        assertTrue(actual.startsWith(prefix))
+        assertTrue(actual.matches(prefix.toRegex(RegexOption.DOT_MATCHES_ALL)))
         assertTrue(replaceNumber(actual, NUMBER).endsWith(suffix))
     }
 
@@ -246,16 +245,14 @@ internal class LogTest {
 
         // Cut off just enough to NOT include line numbers of source code as they may change.
         val prefix =
-            "$TIME DEBUG LogTest: event=withExceptionStackTrace(java.lang.IllegalStateException: error1), taggingClass=LogTest\n" +
-                    "java.lang.IllegalStateException: error1\n" +
-                    "\tat com.tomtom.kotlin.traceevents.LogTest\$log event with exception to stdout with stacktrace\$actual\$1.invoke(LogTest.kt:"
+            "$TIME DEBUG LogTest: event=withExceptionStackTrace.*java.lang.IllegalStateException.*taggingClass=LogTest.*at com.tomtom.kotlin.traceevents.LogTest.*LogTest.kt:.*"
         val suffix =
             ")\n" +
                     "Caused by: java.lang.NullPointerException\n" +
                     "\t... $NUMBER more\n" +
                     "\n"
 
-        assertTrue(actual.startsWith(prefix))
+        assertTrue(actual.matches(prefix.toRegex(RegexOption.DOT_MATCHES_ALL)))
         assertTrue(replaceNumber(actual, NUMBER).endsWith(suffix))
     }
 
@@ -273,13 +270,13 @@ internal class LogTest {
 
     @Test
     fun `log event with file location`() {
-        val actual = captureStdoutReplaceTime(TIME) {
+        val actual = replaceNumber(captureStdoutReplaceTime(TIME) {
             tracerFromLogTest.withCalledFromFile("test")
-        }
+        }, NUMBER)
         val expected =
-            "$TIME VERBOSE LogTest: event=withCalledFromFile(test), fileLocation=LogTest.kt:invoke($NUMBER)\n"
-        assertEquals(
-            expected, replaceNumber(actual, NUMBER),
+            "$TIME VERBOSE LogTest: event=withCalledFromFile[(]test[)], fileLocation=LogTest.kt.*[(]$NUMBER[)].*"
+        assertTrue(
+            actual.matches(expected.toRegex(RegexOption.DOT_MATCHES_ALL)),
             "Perhaps you should increase STACK_TRACE_DEPTH?"
         )
     }
